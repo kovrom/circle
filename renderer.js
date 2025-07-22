@@ -1,0 +1,1330 @@
+// Use secure API provided by preload script - access directly from window
+if (!window.electronAPI) {
+    console.error('electronAPI not available - preload script may have failed');
+}
+
+class DigitalSignage {
+    constructor() {
+        this.config = {};
+        this.currentIndex = 0;
+        this.autoRotateTimer = null;
+        this.autoRotateCountdown = null;
+        this.moonPhaseTimer = null;
+        this.weatherTimer = null;
+        this.uvTimer = null;
+        this.sunriseTime = null;
+        this.sunsetTime = null;
+        this.touchStartX = 0;
+        this.touchStartY = 0;
+        this.isTransitioning = false;
+        this.isScreensaverActive = false;
+        this.ipcListeners = [];
+        this.eventListeners = [];
+        
+        this.init();
+    }
+
+    // Comprehensive cleanup method to prevent memory leaks
+    cleanup() {
+        window.electronAPI.log.info('Starting DigitalSignage cleanup...');
+        
+        // Clear all timers
+        if (this.moonPhaseTimer) {
+            clearTimeout(this.moonPhaseTimer);
+            clearInterval(this.moonPhaseTimer);
+            this.moonPhaseTimer = null;
+        }
+        if (this.weatherTimer) {
+            clearTimeout(this.weatherTimer);
+            clearInterval(this.weatherTimer);
+            this.weatherTimer = null;
+        }
+        if (this.uvTimer) {
+            clearInterval(this.uvTimer);
+            this.uvTimer = null;
+        }
+        if (this.autoRotateTimer) {
+            clearTimeout(this.autoRotateTimer);
+            this.autoRotateTimer = null;
+        }
+        if (this.autoRotateCountdown) {
+            clearInterval(this.autoRotateCountdown);
+            this.autoRotateCountdown = null;
+        }
+        
+        // Remove all IPC listeners
+        this.ipcListeners.forEach(({ event, unsubscribe }) => {
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        });
+        this.ipcListeners = [];
+        
+        // Remove all DOM event listeners
+        this.eventListeners.forEach(({ element, event, listener, options }) => {
+            if (element && element.removeEventListener) {
+                element.removeEventListener(event, listener, options);
+            }
+        });
+        this.eventListeners = [];
+        
+        window.electronAPI.log.info('DigitalSignage cleanup completed');
+    }
+
+    // Helper method to add tracked IPC listeners
+    addIpcListener(event, listener) {
+        const unsubscribe = window.electronAPI.on(event, listener);
+        this.ipcListeners.push({ event, unsubscribe });
+    }
+
+    // Helper method to add tracked DOM event listeners
+    addEventListenerTracked(element, event, listener, options) {
+        element.addEventListener(event, listener, options);
+        this.eventListeners.push({ element, event, listener, options });
+    }
+
+    async init() {
+        // Set up IPC listeners with tracking
+        this.addIpcListener('config-loaded', async (config) => {
+            this.config = config;
+            await this.setupApp();
+        });
+
+        this.addIpcListener('view-changed', ({ index, url, backgroundColor }) => {
+            this.currentIndex = index;
+            this.updateUI();
+            if (backgroundColor) {
+                this.applyBackgroundColor(backgroundColor);
+            }
+        });
+
+        this.addIpcListener('webview-error', ({ index, url, error }) => {
+            if (index === this.currentIndex) {
+                this.showError(`Failed to load: ${url}\nError: ${error}`);
+            }
+        });
+
+        this.addIpcListener('webview-loaded', ({ index, url }) => {
+            if (index === this.currentIndex) {
+                this.hideError();
+            }
+        });
+
+        this.addIpcListener('config-reloaded', (newConfig) => {
+            this.config = newConfig;
+            this.createIndicators();
+            this.currentIndex = 0;
+            this.updateUI();
+        });
+
+        // Screensaver IPC listeners
+        this.addIpcListener('screensaver-shown', () => {
+            this.isScreensaverActive = true;
+        });
+
+        this.addIpcListener('screensaver-hidden', () => {
+            this.isScreensaverActive = false;
+        });
+
+        this.addIpcListener('screensaver-error', ({ url, error }) => {
+            window.electronAPI.log.error(`Screensaver failed to load: ${url}`, error);
+        });
+
+        this.addIpcListener('screensaver-loaded', () => {
+            window.electronAPI.log.info('Screensaver loaded successfully');
+        });
+
+        // Request config if not received within 3 seconds
+        setTimeout(async () => {
+            if (!this.config.urls) {
+                try {
+                    this.config = await window.electronAPI.invoke('get-config');
+                    await this.setupApp();
+                } catch (error) {
+                    window.electronAPI.log.error('Failed to load config:', error);
+                    // Use default config if loading fails
+                    this.config = {
+                        urls: ['https://timechaincalendar.com/en', 'https://bitfeed.live/'],
+                        autoRotate: false,
+                        autoRotateInterval: 30000,
+                        fullscreen: false,
+                        enableDevTools: false
+                    };
+                    await this.setupApp();
+                }
+            }
+        }, 3000);
+    }
+
+    async setupApp() {
+        try {
+            this.createIndicators();
+            this.setupNavigation();
+            this.setupGestures();
+            this.setupErrorHandling();
+            this.setupSettings();
+            this.setupScreensaver();
+            this.updateScreensaverButtonVisibility();
+            this.setupExitButton();
+            this.setupUVClickHandler();
+            
+            await this.setupMoonPhase();
+            this.startMoonPhaseTimer();
+            
+            await this.setupWeatherData();
+            this.startWeatherTimer();
+            
+            await this.setupUVData();
+            this.startUVTimer();
+            
+            this.startAutoRotate();
+            this.hideLoadingScreen();
+            this.updateUI();
+        } catch (error) {
+            window.electronAPI.log.error('Error in setupApp:', error);
+        }
+    }
+
+    createIndicators() {
+        const indicatorsContainer = document.querySelector('.indicators-container');
+        
+        // Clear existing content
+        indicatorsContainer.innerHTML = '';
+
+        const urls = this.getUrls();
+        urls.forEach((url, index) => {
+            // Create indicator
+            const indicator = document.createElement('div');
+            indicator.className = `indicator ${index === 0 ? 'active' : ''}`;
+            this.addEventListenerTracked(indicator, 'click', () => this.goToSlide(index));
+            indicatorsContainer.appendChild(indicator);
+        });
+    }
+
+    getUrls() {
+        // Handle both legacy (string array) and new (object array) formats
+        if (!this.config.urls || this.config.urls.length === 0) {
+            return [];
+        }
+        
+        return this.config.urls.map(url => {
+            if (typeof url === 'string') {
+                return url;
+            }
+            return url.url;
+        });
+    }
+
+    getUrlData(index) {
+        if (!this.config.urls || !this.config.urls[index]) {
+            return null;
+        }
+        
+        const url = this.config.urls[index];
+        if (typeof url === 'string') {
+            return { url, backgroundColor: '#000000' };
+        }
+        return url;
+    }
+
+    updateUI() {
+        // Update indicators
+        const indicators = document.querySelectorAll('.indicator');
+        indicators.forEach((indicator, i) => {
+            indicator.classList.toggle('active', i === this.currentIndex);
+        });
+
+        this.resetAutoRotate();
+    }
+
+    setupNavigation() {
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        if (prevBtn) {
+            this.addEventListenerTracked(prevBtn, 'click', () => this.previousSlide());
+        }
+        if (nextBtn) {
+            this.addEventListenerTracked(nextBtn, 'click', () => this.nextSlide());
+        }
+
+        // Keyboard navigation
+        this.addEventListenerTracked(document, 'keydown', async (e) => {
+            // If screensaver is active, hide it on any key press
+            if (this.isScreensaverActive) {
+                try {
+                    await window.electronAPI.invoke('hide-screensaver');
+                } catch (error) {
+                    window.electronAPI.log.error('Failed to hide screensaver:', error);
+                }
+                return;
+            }
+
+            switch(e.key) {
+                case 'ArrowLeft':
+                    this.previousSlide();
+                    break;
+                case 'ArrowRight':
+                    this.nextSlide();
+                    break;
+                case 'Escape':
+                    // Exit fullscreen or close app
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    }
+                    break;
+                case 'F11':
+                    // Toggle fullscreen
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    } else {
+                        document.documentElement.requestFullscreen();
+                    }
+                    break;
+            }
+        });
+    }
+
+    setupGestures() {
+        const gestureArea = document.getElementById('gesture-area');
+        
+        // Touch events
+        this.addEventListenerTracked(gestureArea, 'touchstart', (e) => {
+            this.touchStartX = e.touches[0].clientX;
+            this.touchStartY = e.touches[0].clientY;
+        });
+
+        this.addEventListenerTracked(gestureArea, 'touchmove', (e) => {
+            if (!this.touchStartX || !this.touchStartY) return;
+
+            const touchCurrentX = e.touches[0].clientX;
+            const touchCurrentY = e.touches[0].clientY;
+            const deltaX = touchCurrentX - this.touchStartX;
+            const deltaY = touchCurrentY - this.touchStartY;
+
+            // If horizontal movement is dominant, prevent default to handle swipe
+            // Otherwise allow vertical scrolling to pass through
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+                e.preventDefault();
+            }
+        });
+
+        this.addEventListenerTracked(gestureArea, 'touchend', async (e) => {
+            if (!this.touchStartX || !this.touchStartY) return;
+
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaX = touchEndX - this.touchStartX;
+            const deltaY = touchEndY - this.touchStartY;
+
+            // If screensaver is active, hide it on any touch
+            if (this.isScreensaverActive) {
+                try {
+                    await window.electronAPI.invoke('hide-screensaver');
+                } catch (error) {
+                    window.electronAPI.log.error('Failed to hide screensaver:', error);
+                }
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                return;
+            }
+
+            // Check if it's a horizontal swipe
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                e.preventDefault();
+                if (deltaX > 0) {
+                    this.previousSlide();
+                } else {
+                    this.nextSlide();
+                }
+            }
+
+            this.touchStartX = 0;
+            this.touchStartY = 0;
+        });
+
+        // Mouse events (for desktop testing)
+        let mouseStartX = 0;
+        this.addEventListenerTracked(gestureArea, 'mousedown', (e) => {
+            mouseStartX = e.clientX;
+        });
+
+        this.addEventListenerTracked(gestureArea, 'mouseup', async (e) => {
+            // If screensaver is active, hide it on any click
+            if (this.isScreensaverActive) {
+                try {
+                    await window.electronAPI.invoke('hide-screensaver');
+                } catch (error) {
+                    window.electronAPI.log.error('Failed to hide screensaver:', error);
+                }
+                return;
+            }
+
+            const deltaX = e.clientX - mouseStartX;
+            if (Math.abs(deltaX) > 50) {
+                if (deltaX > 0) {
+                    this.previousSlide();
+                } else {
+                    this.nextSlide();
+                }
+            }
+        });
+    }
+
+    setupErrorHandling() {
+        const retryBtn = document.getElementById('retry-btn');
+        this.addEventListenerTracked(retryBtn, 'click', () => {
+            this.retryCurrentSlide();
+        });
+    }
+
+    setupSettings() {
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsOverlay = document.getElementById('settings-overlay');
+        const settingsClose = document.getElementById('settings-close');
+        const settingsCancel = document.getElementById('settings-cancel');
+        const settingsForm = document.getElementById('settings-form');
+        const addUrlBtn = document.getElementById('add-url-btn');
+
+        // Open settings
+        this.addEventListenerTracked(settingsBtn, 'click', () => {
+            this.openSettings();
+        });
+
+        // Close settings
+        this.addEventListenerTracked(settingsClose, 'click', () => {
+            this.closeSettings();
+        });
+
+        this.addEventListenerTracked(settingsCancel, 'click', () => {
+            this.closeSettings();
+        });
+
+        // Close on overlay click
+        this.addEventListenerTracked(settingsOverlay, 'click', (e) => {
+            if (e.target === settingsOverlay) {
+                this.closeSettings();
+            }
+        });
+
+        // Handle form submission
+        this.addEventListenerTracked(settingsForm, 'submit', (e) => {
+            e.preventDefault();
+            this.saveSettings();
+        });
+
+        // Add URL button
+        this.addEventListenerTracked(addUrlBtn, 'click', () => {
+            this.addUrlEntry();
+        });
+
+        // Tab switching
+        this.setupTabs();
+
+        // ESC key to close settings
+        this.addEventListenerTracked(document, 'keydown', (e) => {
+            if (e.key === 'Escape' && !settingsOverlay.classList.contains('hidden')) {
+                this.closeSettings();
+                e.stopPropagation(); // Prevent app from closing
+            }
+        });
+    }
+
+    setupScreensaver() {
+        const screensaverBtn = document.getElementById('screensaver-btn');
+        
+        this.addEventListenerTracked(screensaverBtn, 'click', async () => {
+            try {
+                if (this.isScreensaverActive) {
+                    await window.electronAPI.invoke('hide-screensaver');
+                } else {
+                    await window.electronAPI.invoke('show-screensaver');
+                }
+            } catch (error) {
+                window.electronAPI.log.error('Failed to toggle screensaver:', error);
+            }
+        });
+    }
+
+    updateScreensaverButtonVisibility() {
+        const screensaverBtn = document.getElementById('screensaver-btn');
+        const isEnabled = this.config.screensaverEnabled !== false; // Default to true
+        
+        if (screensaverBtn) {
+            screensaverBtn.style.display = isEnabled ? 'flex' : 'none';
+        }
+    }
+
+    setupExitButton() {
+        const exitBtn = document.getElementById('exit-btn');
+        
+        this.addEventListenerTracked(exitBtn, 'click', async () => {
+            // Show confirmation dialog
+            const confirmExit = confirm('Are you sure you want to exit the application?');
+            if (confirmExit) {
+                try {
+                    await window.electronAPI.invoke('exit-app');
+                } catch (error) {
+                    window.electronAPI.log.error('Failed to exit app:', error);
+                }
+            }
+        });
+    }
+
+    setupUVClickHandler() {
+        const uvIcon = document.getElementById('uv-icon');
+        
+        this.addEventListenerTracked(uvIcon, 'click', async () => {
+            window.electronAPI.log.info('UV Index icon clicked - refreshing data');
+            await this.refreshUVData();
+        });
+        
+        // Add cursor pointer style to indicate it's clickable
+        if (uvIcon) {
+            uvIcon.style.cursor = 'pointer';
+        }
+    }
+
+    async setupMoonPhase() {
+        const moonPhaseGroup = document.querySelector('.moon-phase-group');
+        
+        // Check if moon phase should be shown
+        if (this.config.showMoonPhase === false) {
+            if (moonPhaseGroup) {
+                moonPhaseGroup.style.display = 'none';
+            }
+            return;
+        }
+        
+        // Show moon phase group
+        if (moonPhaseGroup) {
+            moonPhaseGroup.style.display = 'flex';
+        }
+        
+        try {
+            const moonPhaseElement = document.getElementById('moon-phase');
+            const moonPhaseNameElement = document.getElementById('moon-phase-name');
+            if (moonPhaseElement) {
+                const moonData = await window.electronAPI.invoke('get-moon-phase');
+                moonPhaseElement.textContent = moonData.emoji;
+                
+                if (moonPhaseNameElement) {
+                    moonPhaseNameElement.textContent = moonData.phase;
+                }
+            }
+        } catch (error) {
+            window.electronAPI.log.error('Moon phase setup failed:', error);
+            // Fallback to a default moon emoji
+            const moonPhaseElement = document.getElementById('moon-phase');
+            const moonPhaseNameElement = document.getElementById('moon-phase-name');
+            if (moonPhaseElement) {
+                moonPhaseElement.textContent = '🌙';
+            }
+            if (moonPhaseNameElement) {
+                moonPhaseNameElement.textContent = 'Unknown';
+            }
+        }
+    }
+
+
+    startMoonPhaseTimer() {
+        // Clear existing timer
+        if (this.moonPhaseTimer) {
+            clearTimeout(this.moonPhaseTimer);
+        }
+
+        // Only start timer if moon phase is enabled
+        if (this.config.showMoonPhase === false) {
+            return;
+        }
+
+        // Calculate milliseconds until next 1 AM
+        const now = new Date();
+        const next1AM = new Date();
+        next1AM.setHours(1, 0, 0, 0); // Set to 1:00:00 AM
+
+        // If it's already past 1 AM today, set for tomorrow
+        if (now >= next1AM) {
+            next1AM.setDate(next1AM.getDate() + 1);
+        }
+
+        const msUntil1AM = next1AM.getTime() - now.getTime();
+        
+        window.electronAPI.log.info(`Moon phase will refresh at: ${next1AM.toLocaleString()}`);
+
+        // Set timer for next 1 AM
+        this.moonPhaseTimer = setTimeout(() => {
+            this.refreshMoonPhase();
+            // Set up daily recurring timer (24 hours = 86400000 ms)
+            this.moonPhaseTimer = setInterval(() => {
+                this.refreshMoonPhase();
+            }, 86400000);
+        }, msUntil1AM);
+    }
+
+    async refreshMoonPhase() {
+        window.electronAPI.log.info('Refreshing moon phase at:', new Date().toLocaleString());
+        if (this.config.showMoonPhase !== false) {
+            await this.setupMoonPhase();
+        }
+    }
+
+    async setupWeatherData() {
+        // Check if weather should be shown
+        if (this.config.showWeather === false) {
+            this.hideWeatherDisplay();
+            return;
+        }
+
+        try {
+            // Use configured coordinates or default to New York
+            const latitude = this.config.latitude || 40.7128;
+            const longitude = this.config.longitude || -74.0060;
+            
+            const response = await fetch(
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=sunrise,sunset,uv_index_max&timezone=auto&forecast_days=1`
+            );
+            
+            if (!response.ok) {
+                throw new Error('Weather API request failed');
+            }
+            
+            const data = await response.json();
+            this.updateWeatherDisplay(data);
+            
+        } catch (error) {
+            window.electronAPI.log.error('Weather data setup failed:', error);
+            // Fallback display
+            const sunriseTimeElement = document.getElementById('sunrise-time');
+            const sunsetTimeElement = document.getElementById('sunset-time');
+            if (sunriseTimeElement) {
+                sunriseTimeElement.textContent = '--:--';
+            }
+            if (sunsetTimeElement) {
+                sunsetTimeElement.textContent = '--:--';
+            }
+        }
+    }
+
+    updateWeatherDisplay(data) {
+        const sunriseTimeElement = document.getElementById('sunrise-time');
+        const sunsetTimeElement = document.getElementById('sunset-time');
+        
+        // Show weather elements
+        this.showWeatherDisplay();
+        
+        // Determine time format
+        const use12Hour = this.config.timeFormat === '12';
+        
+        if (sunriseTimeElement && data.daily && data.daily.sunrise && data.daily.sunrise[0]) {
+            this.sunriseTime = new Date(data.daily.sunrise[0]);
+            const timeString = this.sunriseTime.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: use12Hour 
+            });
+            sunriseTimeElement.textContent = timeString;
+        }
+        
+        if (sunsetTimeElement && data.daily && data.daily.sunset && data.daily.sunset[0]) {
+            this.sunsetTime = new Date(data.daily.sunset[0]);
+            const timeString = this.sunsetTime.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: use12Hour 
+            });
+            sunsetTimeElement.textContent = timeString;
+        }
+    }
+
+    showWeatherDisplay() {
+        const sunriseGroup = document.querySelector('.sunrise-group');
+        const sunsetGroup = document.querySelector('.sunset-group');
+        
+        if (sunriseGroup) {
+            sunriseGroup.style.display = 'flex';
+        }
+        if (sunsetGroup) {
+            sunsetGroup.style.display = 'flex';
+        }
+    }
+
+    hideWeatherDisplay() {
+        const sunriseGroup = document.querySelector('.sunrise-group');
+        const sunsetGroup = document.querySelector('.sunset-group');
+        
+        if (sunriseGroup) {
+            sunriseGroup.style.display = 'none';
+        }
+        if (sunsetGroup) {
+            sunsetGroup.style.display = 'none';
+        }
+    }
+
+    startWeatherTimer() {
+        // Clear existing timer
+        if (this.weatherTimer) {
+            clearTimeout(this.weatherTimer);
+        }
+
+        // Calculate milliseconds until next 3 AM for weather update
+        const now = new Date();
+        const next3AM = new Date();
+        next3AM.setHours(3, 0, 0, 0);
+
+        // If it's already past 3 AM today, set for tomorrow
+        if (now >= next3AM) {
+            next3AM.setDate(next3AM.getDate() + 1);
+        }
+
+        const msUntil3AM = next3AM.getTime() - now.getTime();
+        
+        window.electronAPI.log.info(`Weather data will refresh at: ${next3AM.toLocaleString()}`);
+
+        // Set timer for next 3 AM
+        this.weatherTimer = setTimeout(() => {
+            this.refreshWeatherData();
+            // Set up daily recurring timer (24 hours = 86400000 ms)
+            this.weatherTimer = setInterval(() => {
+                this.refreshWeatherData();
+            }, 86400000);
+        }, msUntil3AM);
+    }
+
+    refreshWeatherData() {
+        window.electronAPI.log.info('Refreshing weather data at:', new Date().toLocaleString());
+        this.setupWeatherData();
+    }
+
+    async setupUVData() {
+        // Check if UV Index should be shown
+        if (this.config.showUV === false) {
+            this.hideUVDisplay();
+            return;
+        }
+
+        // Check if it's currently daylight hours
+        if (!this.isDaylight()) {
+            window.electronAPI.log.info('UV Index not fetched - outside daylight hours');
+            // Show UV display but with nighttime value
+            this.showUVDisplay();
+            const uvValueElement = document.getElementById('uv-value');
+            if (uvValueElement) {
+                uvValueElement.textContent = '0';
+                uvValueElement.style.borderColor = 'rgba(0, 128, 0, 0.7)'; // Green for no UV at night
+            }
+            return;
+        }
+
+        try {
+            // Use configured coordinates or default to New York
+            const latitude = this.config.latitude || 40.7128;
+            const longitude = this.config.longitude || -74.0060;
+            
+            const response = await fetch(
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=uv_index&timezone=auto`
+            );
+            
+            if (!response.ok) {
+                throw new Error('UV Index API request failed');
+            }
+            
+            const data = await response.json();
+            this.updateUVDisplay(data);
+            
+        } catch (error) {
+            window.electronAPI.log.error('UV Index data setup failed:', error);
+            // Fallback display
+            const uvValueElement = document.getElementById('uv-value');
+            if (uvValueElement) {
+                uvValueElement.textContent = '--';
+                uvValueElement.style.borderColor = 'white';
+            }
+        }
+    }
+
+    updateUVDisplay(data) {
+        const uvValueElement = document.getElementById('uv-value');
+        
+        // Show UV element
+        this.showUVDisplay();
+        
+        if (uvValueElement && data.current && typeof data.current.uv_index === 'number') {
+            const uvIndex = Math.round(data.current.uv_index);
+            uvValueElement.textContent = uvIndex.toString();
+            
+            // Color code based on UV Index levels
+            const uvColor = this.getUVColor(uvIndex);
+            uvValueElement.style.borderColor = uvColor;
+        }
+    }
+
+    getUVColor(uvIndex) {
+        // WHO UV Index color scale
+        if (uvIndex <= 2) return 'rgba(0, 128, 0, 0.7)';      // Green (Low)
+        if (uvIndex <= 5) return 'rgba(255, 255, 0, 0.7)';    // Yellow (Moderate)
+        if (uvIndex <= 7) return 'rgba(255, 165, 0, 0.7)';    // Orange (High)
+        if (uvIndex <= 10) return 'rgba(255, 0, 0, 0.7)';     // Red (Very High)
+        return 'rgba(128, 0, 128, 0.7)';                      // Purple (Extreme)
+    }
+
+    isDaylight() {
+        if (!this.sunriseTime || !this.sunsetTime) {
+            return true; // Default to fetching if we don't have sunrise/sunset data yet
+        }
+        
+        const now = new Date();
+        return now >= this.sunriseTime && now <= this.sunsetTime;
+    }
+
+    showUVDisplay() {
+        const uvGroup = document.querySelector('.uv-index-group');
+        if (uvGroup) {
+            uvGroup.style.display = 'flex';
+        }
+    }
+
+    hideUVDisplay() {
+        const uvGroup = document.querySelector('.uv-index-group');
+        if (uvGroup) {
+            uvGroup.style.display = 'none';
+        }
+    }
+
+    startUVTimer() {
+        // Clear existing timer
+        if (this.uvTimer) {
+            clearInterval(this.uvTimer);
+        }
+
+        // Only start timer if UV Index is enabled
+        if (this.config.showUV === false) {
+            return;
+        }
+
+        // Get update frequency in minutes (default 60)
+        const updateFrequency = this.config.uvUpdateFrequency || 60;
+        const intervalMs = updateFrequency * 60 * 1000; // Convert to milliseconds
+        
+        window.electronAPI.log.info(`UV Index will refresh every ${updateFrequency} minutes`);
+
+        // Set up recurring timer
+        this.uvTimer = setInterval(() => {
+            this.refreshUVData();
+        }, intervalMs);
+    }
+
+    refreshUVData() {
+        window.electronAPI.log.info('Refreshing UV Index data at:', new Date().toLocaleString());
+        this.setupUVData();
+    }
+
+    setupTabs() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            this.addEventListenerTracked(button, 'click', () => {
+                const targetTab = button.getAttribute('data-tab');
+                
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                button.classList.add('active');
+                const targetContent = document.getElementById(`${targetTab}-tab`);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
+            });
+        });
+    }
+
+    async openSettings() {
+        const settingsOverlay = document.getElementById('settings-overlay');
+        
+        // Hide BrowserView so it doesn't cover the popup
+        try {
+            await window.electronAPI.invoke('hide-browser-view');
+        } catch (error) {
+            window.electronAPI.log.error('Failed to hide browser view:', error);
+        }
+        
+        // Populate form with current config
+        this.populateSettingsForm();
+        
+        // Show settings popup
+        settingsOverlay.classList.remove('hidden');
+    }
+
+    async closeSettings() {
+        const settingsOverlay = document.getElementById('settings-overlay');
+        settingsOverlay.classList.add('hidden');
+        
+        // Show BrowserView again
+        try {
+            await window.electronAPI.invoke('show-browser-view');
+        } catch (error) {
+            window.electronAPI.log.error('Failed to show browser view:', error);
+        }
+    }
+
+    populateSettingsForm() {
+        const urlsContainer = document.getElementById('urls-container');
+        const autoRotateCheck = document.getElementById('auto-rotate');
+        const fullscreenCheck = document.getElementById('fullscreen');
+        const rotateIntervalInput = document.getElementById('rotate-interval');
+        const devToolsCheck = document.getElementById('dev-tools');
+        const showMoonPhaseCheck = document.getElementById('show-moon-phase');
+        const showWeatherCheck = document.getElementById('show-weather');
+        const showUVCheck = document.getElementById('show-uv');
+        const timeFormatSelect = document.getElementById('time-format');
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
+        const uvUpdateFrequencySelect = document.getElementById('uv-update-frequency');
+        const screensaverUrlInput = document.getElementById('screensaver-url');
+        const screensaverEnabledCheck = document.getElementById('screensaver-enabled');
+
+        // Clear existing URL entries
+        urlsContainer.innerHTML = '';
+
+        // Handle legacy URLs format (backward compatibility)
+        const urls = this.config.urls || [];
+        const urlsData = urls.map(url => {
+            if (typeof url === 'string') {
+                return { url, backgroundColor: '#000000' };
+            }
+            return url;
+        });
+
+        // Create URL entries
+        urlsData.forEach((urlData, index) => {
+            this.createUrlEntry(urlData.url, urlData.backgroundColor, index);
+        });
+
+        // Add at least one empty entry if no URLs exist
+        if (urlsData.length === 0) {
+            this.createUrlEntry('', '#000000', 0);
+        }
+        
+        // Populate checkboxes
+        autoRotateCheck.checked = this.config.autoRotate;
+        fullscreenCheck.checked = this.config.fullscreen;
+        devToolsCheck.checked = this.config.enableDevTools;
+        showMoonPhaseCheck.checked = this.config.showMoonPhase !== false; // Default to true
+        showWeatherCheck.checked = this.config.showWeather !== false; // Default to true
+        showUVCheck.checked = this.config.showUV !== false; // Default to true
+        
+        // Populate time format
+        timeFormatSelect.value = this.config.timeFormat || '24'; // Default to 24-hour
+        
+        // Populate coordinates
+        latitudeInput.value = this.config.latitude || 40.7128; // Default to New York
+        longitudeInput.value = this.config.longitude || -74.0060;
+        
+        // Populate UV update frequency
+        uvUpdateFrequencySelect.value = this.config.uvUpdateFrequency || 60; // Default to 60 minutes
+        
+        // Populate screensaver settings
+        screensaverUrlInput.value = this.config.screensaverUrl || 'https://lodev09.github.io/web-screensavers/jellyfish/';
+        screensaverEnabledCheck.checked = this.config.screensaverEnabled !== false; // Default to true
+        
+        // Populate interval (convert milliseconds to seconds)
+        rotateIntervalInput.value = this.config.autoRotateInterval / 1000;
+    }
+
+    createUrlEntry(url = '', backgroundColor = '#000000', index = 0) {
+        const urlsContainer = document.getElementById('urls-container');
+        
+        const urlEntry = document.createElement('div');
+        urlEntry.className = 'url-entry';
+        urlEntry.innerHTML = `
+            <input type="text" placeholder="https://example.com" value="${url}" class="url-input">
+            <input type="color" value="${backgroundColor}" class="color-input">
+            <button type="button" class="remove-url-btn">×</button>
+        `;
+
+        // Add remove functionality
+        const removeBtn = urlEntry.querySelector('.remove-url-btn');
+        this.addEventListenerTracked(removeBtn, 'click', () => {
+            urlEntry.remove();
+        });
+
+        urlsContainer.appendChild(urlEntry);
+        return urlEntry;
+    }
+
+    addUrlEntry() {
+        const urlsContainer = document.getElementById('urls-container');
+        const entryCount = urlsContainer.children.length;
+        this.createUrlEntry('', '#000000', entryCount);
+    }
+
+    async saveSettings() {
+        const urlsContainer = document.getElementById('urls-container');
+        const autoRotateCheck = document.getElementById('auto-rotate');
+        const fullscreenCheck = document.getElementById('fullscreen');
+        const rotateIntervalInput = document.getElementById('rotate-interval');
+        const devToolsCheck = document.getElementById('dev-tools');
+        const showMoonPhaseCheck = document.getElementById('show-moon-phase');
+        const showWeatherCheck = document.getElementById('show-weather');
+        const showUVCheck = document.getElementById('show-uv');
+        const timeFormatSelect = document.getElementById('time-format');
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
+        const uvUpdateFrequencySelect = document.getElementById('uv-update-frequency');
+        const screensaverUrlInput = document.getElementById('screensaver-url');
+        const screensaverEnabledCheck = document.getElementById('screensaver-enabled');
+
+        // Collect URLs and background colors
+        const urlEntries = urlsContainer.querySelectorAll('.url-entry');
+        const urlsData = [];
+
+        for (const entry of urlEntries) {
+            const urlInput = entry.querySelector('.url-input');
+            const colorInput = entry.querySelector('.color-input');
+            const url = urlInput.value.trim();
+            
+            if (url.length > 0) {
+                // Validate URL format
+                try {
+                    new URL(url);
+                } catch (e) {
+                    alert(`Invalid URL: ${url}`);
+                    return;
+                }
+                
+                urlsData.push({
+                    url: url,
+                    backgroundColor: colorInput.value
+                });
+            }
+        }
+
+        if (urlsData.length === 0) {
+            alert('Please enter at least one URL');
+            return;
+        }
+
+        // Validate coordinates
+        const latitude = parseFloat(latitudeInput.value);
+        const longitude = parseFloat(longitudeInput.value);
+        
+        if (isNaN(latitude) || latitude < -90 || latitude > 90) {
+            alert('Please enter a valid latitude between -90 and 90');
+            return;
+        }
+        
+        if (isNaN(longitude) || longitude < -180 || longitude > 180) {
+            alert('Please enter a valid longitude between -180 and 180');
+            return;
+        }
+
+        // Validate screensaver URL if provided
+        const screensaverUrl = screensaverUrlInput.value.trim();
+        if (screensaverUrl && screensaverUrl.length > 0) {
+            try {
+                new URL(screensaverUrl);
+            } catch (e) {
+                alert(`Invalid Screensaver URL: ${screensaverUrl}`);
+                return;
+            }
+        }
+
+        // Create new config
+        const newConfig = {
+            urls: urlsData,
+            autoRotate: autoRotateCheck.checked,
+            autoRotateInterval: parseInt(rotateIntervalInput.value) * 1000,
+            fullscreen: fullscreenCheck.checked,
+            enableDevTools: devToolsCheck.checked,
+            showMoonPhase: showMoonPhaseCheck.checked,
+            showWeather: showWeatherCheck.checked,
+            showUV: showUVCheck.checked,
+            timeFormat: timeFormatSelect.value,
+            latitude: latitude,
+            longitude: longitude,
+            uvUpdateFrequency: parseInt(uvUpdateFrequencySelect.value),
+            screensaverUrl: screensaverUrl || 'https://lodev09.github.io/web-screensavers/jellyfish/',
+            screensaverEnabled: screensaverEnabledCheck.checked,
+            comments: this.config.comments // Preserve comments
+        };
+
+        try {
+            // Save config via IPC
+            const result = await window.electronAPI.invoke('save-config', newConfig);
+            
+            if (result.success) {
+                // Update local config
+                this.config = newConfig;
+                
+                // Close settings
+                this.closeSettings();
+                
+                // Reload the app with new settings
+                await this.reloadWithNewSettings();
+                
+                // Show success message
+                this.showMessage('Settings saved and applied successfully!');
+                window.electronAPI.log.info('Settings saved to:', result.path);
+            } else {
+                window.electronAPI.log.error('Failed to save settings:', result.error);
+                alert(`Failed to save settings: ${result.details || result.error}`);
+            }
+            
+        } catch (error) {
+            window.electronAPI.log.error('Failed to save settings:', error);
+            alert('Failed to save settings. Please check the logs for details.');
+        }
+    }
+
+    async reloadWithNewSettings() {
+        try {
+            // Clean up timers before reloading
+            this.cleanup();
+            
+            // Tell main process to reload with new config
+            await window.electronAPI.invoke('reload-with-new-config');
+            
+            // Update indicators for new URLs
+            this.createIndicators();
+            
+            // Reset to first slide
+            this.currentIndex = 0;
+            this.updateUI();
+            
+            // Restart auto-rotate if enabled
+            if (this.config.autoRotate) {
+                this.startAutoRotate();
+            }
+            
+            // Update moon phase visibility and restart timer
+            await this.setupMoonPhase();
+            this.startMoonPhaseTimer();
+            
+            // Restart weather timer
+            await this.setupWeatherData();
+            this.startWeatherTimer();
+            
+            // Restart UV timer
+            await this.setupUVData();
+            this.startUVTimer();
+            
+            // Update screensaver button visibility
+            this.updateScreensaverButtonVisibility();
+            
+            // Re-setup all event listeners that were cleaned up
+            this.setupNavigation();
+            this.setupGestures();
+            this.setupErrorHandling();
+            this.setupSettings();
+            this.setupScreensaver();
+            this.setupExitButton();
+            this.setupUVClickHandler();
+            
+        } catch (error) {
+            window.electronAPI.log.error('Failed to reload with new settings:', error);
+        }
+    }
+
+    showMessage(message) {
+        // Create a temporary message overlay
+        const messageDiv = document.createElement('div');
+        messageDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 16px;
+            z-index: 25000;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease-out;
+        `;
+        messageDiv.textContent = message;
+        document.body.appendChild(messageDiv);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            messageDiv.style.animation = 'fadeOut 0.3s ease-out';
+            setTimeout(() => {
+                document.body.removeChild(messageDiv);
+            }, 300);
+        }, 3000);
+    }
+
+    async goToSlide(index) {
+        if (this.isTransitioning || index === this.currentIndex) return;
+        
+        this.isTransitioning = true;
+        
+        try {
+            await window.electronAPI.invoke('go-to-slide', index);
+        } catch (error) {
+            window.electronAPI.log.error('Failed to go to slide:', error);
+        }
+
+        // Reset transition flag
+        setTimeout(() => {
+            this.isTransitioning = false;
+        }, 400);
+    }
+
+    async nextSlide() {
+        if (this.isTransitioning) return;
+        
+        try {
+            await window.electronAPI.invoke('next-slide');
+        } catch (error) {
+            window.electronAPI.log.error('Failed to go to next slide:', error);
+        }
+    }
+
+    async previousSlide() {
+        if (this.isTransitioning) return;
+        
+        try {
+            await window.electronAPI.invoke('previous-slide');
+        } catch (error) {
+            window.electronAPI.log.error('Failed to go to previous slide:', error);
+        }
+    }
+
+
+    startAutoRotate() {
+        if (!this.config.autoRotate || !this.config.autoRotateInterval || this.config.autoRotateInterval <= 0) return;
+
+        this.resetAutoRotate();
+    }
+
+    resetAutoRotate() {
+        // Clear existing timers
+        if (this.autoRotateTimer) {
+            clearTimeout(this.autoRotateTimer);
+        }
+        if (this.autoRotateCountdown) {
+            clearInterval(this.autoRotateCountdown);
+        }
+
+        if (!this.config.autoRotate || !this.config.autoRotateInterval || this.config.autoRotateInterval <= 0) return;
+
+        // Start countdown display
+        let timeLeft = this.config.autoRotateInterval / 1000;
+        
+        this.autoRotateCountdown = setInterval(() => {
+            timeLeft--;
+            
+            if (timeLeft <= 0) {
+                clearInterval(this.autoRotateCountdown);
+            }
+        }, 1000);
+
+        // Set auto-rotate timer
+        this.autoRotateTimer = setTimeout(() => {
+            this.nextSlide();
+        }, this.config.autoRotateInterval);
+    }
+
+
+    showError(message) {
+        const errorOverlay = document.getElementById('error-overlay');
+        const errorMessage = document.getElementById('error-message');
+        
+        errorMessage.textContent = message;
+        errorOverlay.classList.remove('hidden');
+    }
+
+    hideError() {
+        const errorOverlay = document.getElementById('error-overlay');
+        errorOverlay.classList.add('hidden');
+    }
+
+    async retryCurrentSlide() {
+        try {
+            await window.electronAPI.invoke('reload-current-slide');
+        } catch (error) {
+            window.electronAPI.log.error('Failed to reload current slide:', error);
+        }
+        this.hideError();
+    }
+
+    hideLoadingScreen() {
+        const loadingScreen = document.getElementById('loading-screen');
+        const mainContent = document.getElementById('main-content');
+        
+        setTimeout(() => {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                mainContent.classList.remove('hidden');
+                mainContent.classList.add('fade-in');
+            }, 500);
+        }, 1000);
+    }
+
+    // Show/hide UI elements on mouse movement
+    setupUIVisibility() {
+        let hideTimer;
+        const uiElements = [
+            document.querySelector('.nav-indicators')
+        ];
+
+        const showUI = () => {
+            uiElements.forEach(el => {
+                if (el) el.classList.add('show');
+            });
+            
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(() => {
+                uiElements.forEach(el => {
+                    if (el) el.classList.remove('show');
+                });
+            }, 3000);
+        };
+
+        this.addEventListenerTracked(document, 'mousemove', showUI);
+        this.addEventListenerTracked(document, 'touchstart', showUI);
+    }
+
+    applyBackgroundColor(backgroundColor) {
+        // Apply background color to the content container
+        const contentContainer = document.querySelector('.content-container');
+        if (contentContainer) {
+            contentContainer.style.backgroundColor = backgroundColor;
+        }
+    }
+}
+
+// Global instance for cleanup
+let digitalSignageInstance = null;
+
+// Initialize the app when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    digitalSignageInstance = new DigitalSignage();
+});
+
+// Clean up before page unload
+window.addEventListener('beforeunload', () => {
+    if (digitalSignageInstance) {
+        digitalSignageInstance.cleanup();
+    }
+});
+
+// Handle app-specific IPC events
+window.electronAPI.on('reload-config', async () => {
+    try {
+        // Clean up before reload
+        if (digitalSignageInstance) {
+            digitalSignageInstance.cleanup();
+        }
+        
+        const newConfig = await window.electronAPI.invoke('reload-config');
+        location.reload(); // Reload the renderer to apply new config
+    } catch (error) {
+        window.electronAPI.log.error('Failed to reload config:', error);
+    }
+});

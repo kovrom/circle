@@ -1,0 +1,32 @@
+{
+  "urls": [
+    {
+      "url": "https://timechaincalendar.com/en",
+      "backgroundColor": "#000000"
+    },
+    {
+      "url": "https://bitfeed.live/",
+      "backgroundColor": "#102226"
+    }
+  ],
+  "autoRotate": false,
+  "autoRotateInterval": 60000,
+  "fullscreen": true,
+  "enableDevTools": false,
+  "showMoonPhase": true,
+  "showWeather": true,
+  "showUV": true,
+  "timeFormat": "12",
+  "latitude": 40.7128,
+  "longitude": -74.006,
+  "uvUpdateFrequency": 30,
+  "screensaverUrl": "https://lodev09.github.io/web-screensavers/jellyfish/",
+  "screensaverEnabled": true,
+  "comments": {
+    "urls": "List of URLs to display. Add your own calendar, notes, dashboard URLs here.",
+    "autoRotate": "Enable or disable automatic rotation between displays",
+    "autoRotateInterval": "Auto-rotation interval in milliseconds when autoRotate is enabled",
+    "fullscreen": "Start in fullscreen mode for kiosk display",
+    "enableDevTools": "Enable developer tools menu (useful for debugging)"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "name": "Circle",
+  "version": "0.1.0",
+  "description": "BTC Digital signage app",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "dist": "electron-builder --publish=never"
+  },
+  "keywords": [
+    "electron",
+    "digital-signage",
+    "kiosk"
+  ],
+  "author": "Rom Kov",
+  "license": "GPLv3",
+  "devDependencies": {
+    "electron": "^37.2.2",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.yourcompany.circle",
+    "productName": "Circle",
+    "directories": {
+      "output": "dist"
+    },
+    "icon": "icons/icon.png",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "index.html",
+      "style.css",
+      "config.json",
+      "*.svg"
+    ],
+    "mac": {
+      "icon": "icons/icon.icns",
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "icon": "icons/icon.ico",
+      "target": "nsis"
+    },
+    "linux": {
+      "icon": "icons/icon.png",
+      "target": "AppImage"
+    }
+  },
+  "dependencies": {
+    "electron-log": "^5.4.1",
+    "lunarphase-js": "^2.0.3"
+  }
+}
