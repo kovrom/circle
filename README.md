@@ -105,6 +105,15 @@ systemctl --user enable circle.service
 systemctl --user start circle.service
 
 ```
+## Moon Phase Color Emoji
+
+If you want some color and texture for the moon phase icon, make sure you have Noto Color Emoji font installed
+
+```bash
+sudo apt install fonts-noto-color-emoji
+
+```
+
 ## Global keyboard bindings
 
 - Esc - Exit
