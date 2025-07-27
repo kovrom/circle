@@ -38,6 +38,19 @@ function getDefaultConfigPath() {
   return path.join(__dirname, 'config.json');
 }
 
+// Resolve screensaver URL, handling @Quotes special path
+function resolveScreensaverUrl(url) {
+  if (url && url.startsWith('@Quotes/')) {
+    const quotesPath = path.join(__dirname, 'Quotes');
+    const relativePath = url.substring(8); // Remove '@Quotes/' prefix
+    const fullPath = path.join(quotesPath, relativePath);
+    
+    // Convert to file:// URL for loading in BrowserView
+    return `file://${fullPath}`;
+  }
+  return url;
+}
+
 // Load configuration
 function loadConfig() {
   try {
@@ -267,7 +280,8 @@ function showScreensaver() {
   });
 
   // Load the screensaver URL from config or use default
-  const screensaverUrl = config.screensaverUrl || 'https://lodev09.github.io/web-screensavers/jellyfish/';
+  const configUrl = config.screensaverUrl || 'https://lodev09.github.io/web-screensavers/jellyfish/';
+  const screensaverUrl = resolveScreensaverUrl(configUrl);
   log.info('Loading screensaver URL:', screensaverUrl);
   screensaverView.webContents.loadURL(screensaverUrl);
 

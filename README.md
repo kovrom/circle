@@ -49,6 +49,11 @@ The app uses a `config.json` file for configuration. On first run, it will copy 
 
 For sunrise/sunset and UV Index you will need to provide long/lat for your location. You can easily look it up here: https://www.latlong.net/
 
+## Screensaver
+
+'Use "The Quotable Satoshi" screensaver' option will display quotes compiled by Satoshi Nakamoto Institute. Quotes are loaded from the device and the screensaver will work without the Internet. 
+
+
 Some websites where you can find urls for the Screensaver:
 - https://www.bryanbraun.com/after-dark-css/#
 - https://lodev09.github.io/web-screensavers/
