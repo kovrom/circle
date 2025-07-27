@@ -34,7 +34,8 @@
       "index.html",
       "style.css",
       "config.json",
-      "*.svg"
+      "*.svg",
+      "Quotes/**/*"
     ],
     "mac": {
       "icon": "icons/icon.icns",

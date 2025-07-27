@@ -885,6 +885,7 @@ class DigitalSignage {
         const uvUpdateFrequencySelect = document.getElementById('uv-update-frequency');
         const screensaverUrlInput = document.getElementById('screensaver-url');
         const screensaverEnabledCheck = document.getElementById('screensaver-enabled');
+        const useQuotesScreensaverCheck = document.getElementById('use-quotes-screensaver');
 
         // Clear existing URL entries
         urlsContainer.innerHTML = '';
@@ -927,8 +928,22 @@ class DigitalSignage {
         uvUpdateFrequencySelect.value = this.config.uvUpdateFrequency || 60; // Default to 60 minutes
         
         // Populate screensaver settings
-        screensaverUrlInput.value = this.config.screensaverUrl || 'https://lodev09.github.io/web-screensavers/jellyfish/';
+        const isUsingQuotes = this.config.screensaverUrl === '@Quotes/index.html';
+        useQuotesScreensaverCheck.checked = isUsingQuotes;
+        screensaverUrlInput.value = isUsingQuotes ? '' : (this.config.screensaverUrl || 'https://lodev09.github.io/web-screensavers/jellyfish/');
+        screensaverUrlInput.disabled = isUsingQuotes;
         screensaverEnabledCheck.checked = this.config.screensaverEnabled !== false; // Default to true
+        
+        // Add event listener for the quotes checkbox
+        useQuotesScreensaverCheck.addEventListener('change', () => {
+            if (useQuotesScreensaverCheck.checked) {
+                screensaverUrlInput.disabled = true;
+                screensaverUrlInput.value = '';
+            } else {
+                screensaverUrlInput.disabled = false;
+                screensaverUrlInput.value = 'https://lodev09.github.io/web-screensavers/jellyfish/';
+            }
+        });
         
         // Populate interval (convert milliseconds to seconds)
         rotateIntervalInput.value = this.config.autoRotateInterval / 1000;
@@ -976,6 +991,7 @@ class DigitalSignage {
         const uvUpdateFrequencySelect = document.getElementById('uv-update-frequency');
         const screensaverUrlInput = document.getElementById('screensaver-url');
         const screensaverEnabledCheck = document.getElementById('screensaver-enabled');
+        const useQuotesScreensaverCheck = document.getElementById('use-quotes-screensaver');
 
         // Collect URLs and background colors
         const urlEntries = urlsContainer.querySelectorAll('.url-entry');
@@ -1021,14 +1037,20 @@ class DigitalSignage {
             return;
         }
 
-        // Validate screensaver URL if provided
-        const screensaverUrl = screensaverUrlInput.value.trim();
-        if (screensaverUrl && screensaverUrl.length > 0) {
-            try {
-                new URL(screensaverUrl);
-            } catch (e) {
-                alert(`Invalid Screensaver URL: ${screensaverUrl}`);
-                return;
+        // Determine screensaver URL
+        let screensaverUrl;
+        if (useQuotesScreensaverCheck.checked) {
+            screensaverUrl = '@Quotes/index.html';
+        } else {
+            screensaverUrl = screensaverUrlInput.value.trim();
+            // Validate screensaver URL if provided
+            if (screensaverUrl && screensaverUrl.length > 0) {
+                try {
+                    new URL(screensaverUrl);
+                } catch (e) {
+                    alert(`Invalid Screensaver URL: ${screensaverUrl}`);
+                    return;
+                }
             }
         }
 
