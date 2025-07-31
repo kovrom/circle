@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const log = require('electron-log');
 const { Moon } = require('lunarphase-js');
+const sqlite3 = require('sqlite3').verbose();
 
 // Configure electron-log
 log.transports.file.level = 'info';
@@ -26,6 +27,7 @@ let browserViews = [];
 let currentViewIndex = 0;
 let screensaverView = null;
 let isScreensaverActive = false;
+let bitcoinFactsDb = null;
 
 // Get user data directory for config storage
 function getConfigPath() {
@@ -93,6 +95,229 @@ function loadConfig() {
       };
     }
   }
+}
+
+// Bitcoin Facts Database Functions
+function getBitcoinFactsDbPath() {
+  const userDataPath = app.getPath('userData');
+  return path.join(userDataPath, 'bitcoin_facts.db');
+}
+
+function initBitcoinFactsDatabase() {
+  const dbPath = getBitcoinFactsDbPath();
+  bitcoinFactsDb = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+      log.error('Error opening Bitcoin facts database:', err);
+      return;
+    }
+    log.info('Bitcoin facts database connected at:', dbPath);
+  });
+
+  bitcoinFactsDb.serialize(() => {
+    // Create table if not exists
+    bitcoinFactsDb.run(`
+      CREATE TABLE IF NOT EXISTS bitcoin_facts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        month INTEGER,
+        day INTEGER,
+        year INTEGER,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        category TEXT,
+        importance INTEGER DEFAULT 1,
+        source_url TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create indexes
+    bitcoinFactsDb.run(`CREATE INDEX IF NOT EXISTS idx_date ON bitcoin_facts(date)`);
+    bitcoinFactsDb.run(`CREATE INDEX IF NOT EXISTS idx_month_day ON bitcoin_facts(month, day)`);
+    bitcoinFactsDb.run(`CREATE INDEX IF NOT EXISTS idx_importance ON bitcoin_facts(importance DESC)`);
+
+    // Check if database is empty and seed with initial data
+    bitcoinFactsDb.get("SELECT COUNT(*) as count FROM bitcoin_facts", (err, row) => {
+      if (err) {
+        log.error('Error checking Bitcoin facts count:', err);
+        return;
+      }
+      
+      if (row.count === 0) {
+        log.info('Seeding Bitcoin facts database with initial data...');
+        seedBitcoinFacts();
+      } else {
+        log.info(`Bitcoin facts database loaded with ${row.count} facts`);
+      }
+    });
+  });
+}
+
+function seedBitcoinFacts() {
+  const initialFacts = [
+    {
+      date: '2010-07-31',
+      month: 7,
+      day: 31,
+      year: 2010,
+      title: 'First Bitcoin Exchange Rate',
+      description: 'On this day in 2010, the first recorded Bitcoin exchange rate was established at approximately $0.0008 per Bitcoin.',
+      category: 'economics',
+      importance: 4
+    },
+    {
+      date: '2017-07-31', 
+      month: 7,
+      day: 31,
+      year: 2017,
+      title: 'Bitcoin Scaling Debate Intensifies',
+      description: 'The Bitcoin community was deeply engaged in discussions about scaling solutions, with various proposals being evaluated.',
+      category: 'technology',
+      importance: 3
+    },
+    {
+      date: '2021-07-31',
+      month: 7,
+      day: 31,
+      year: 2021,
+      title: 'Bitcoin Mining Difficulty Adjustment',
+      description: 'A significant mining difficulty adjustment occurred, demonstrating Bitcoin\'s self-regulating mechanism.',
+      category: 'technology',
+      importance: 2
+    },
+    {
+      date: '2008-08-18',
+      month: 8,
+      day: 18,
+      year: 2008,
+      title: 'Bitcoin.org Domain Registered',
+      description: 'The domain bitcoin.org is registered, marking the first online presence of Bitcoin.',
+      category: 'launch',
+      importance: 4
+    },
+    {
+      date: '2008-10-31',
+      month: 10,
+      day: 31,
+      year: 2008,
+      title: 'Bitcoin Whitepaper Published',
+      description: 'Satoshi Nakamoto publishes the Bitcoin whitepaper "Bitcoin: A Peer-to-Peer Electronic Cash System".',
+      category: 'launch',
+      importance: 5
+    },
+    {
+      date: '2009-01-03',
+      month: 1,
+      day: 3,
+      year: 2009,
+      title: 'Genesis Block Mined',
+      description: 'The first Bitcoin block (Genesis Block) is mined by Satoshi Nakamoto with the message "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks".',
+      category: 'launch',
+      importance: 5
+    },
+    {
+      date: '2009-01-12',
+      month: 1,
+      day: 12,
+      year: 2009,
+      title: 'First Bitcoin Transaction',
+      description: 'The first Bitcoin transaction takes place between Satoshi Nakamoto and Hal Finney.',
+      category: 'technology',
+      importance: 4
+    },
+    {
+      date: '2010-05-22',
+      month: 5,
+      day: 22,
+      year: 2010,
+      title: 'Bitcoin Pizza Day',
+      description: 'Laszlo Hanyecz makes the first real-world Bitcoin transaction, buying two pizzas for 10,000 BTC, establishing the first economic value for Bitcoin.',
+      category: 'adoption',
+      importance: 5
+    },
+    {
+      date: '2010-07-17',
+      month: 7,
+      day: 17,
+      year: 2010,
+      title: 'First Bitcoin Exchange Opens',
+      description: 'Mt. Gox, originally a Magic: The Gathering trading card exchange, begins trading Bitcoin.',
+      category: 'adoption',
+      importance: 4
+    },
+    {
+      date: '2012-11-28',
+      month: 11,
+      day: 28,
+      year: 2012,
+      title: 'First Bitcoin Halving',
+      description: 'The first Bitcoin halving occurs, reducing the block reward from 50 to 25 BTC.',
+      category: 'technology',
+      importance: 4
+    },
+    {
+      date: '2017-08-01',
+      month: 8,
+      day: 1,
+      year: 2017,
+      title: 'Bitcoin Cash Fork',
+      description: 'Bitcoin Cash (BCH) forks from Bitcoin, creating a separate cryptocurrency with larger block sizes.',
+      category: 'technology',
+      importance: 3
+    },
+    {
+      date: '2017-12-17',
+      month: 12,
+      day: 17,
+      year: 2017,
+      title: 'Bitcoin Hits $20,000',
+      description: 'Bitcoin reaches its then all-time high of nearly $20,000, marking peak mainstream attention during the 2017 bull run.',
+      category: 'price',
+      importance: 4
+    }
+  ];
+
+  const stmt = bitcoinFactsDb.prepare(`
+    INSERT INTO bitcoin_facts (date, month, day, year, title, description, category, importance)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  initialFacts.forEach(fact => {
+    stmt.run(fact.date, fact.month, fact.day, fact.year, fact.title, fact.description, fact.category, fact.importance);
+  });
+
+  stmt.finalize((err) => {
+    if (err) {
+      log.error('Error seeding Bitcoin facts:', err);
+    } else {
+      log.info(`Successfully seeded ${initialFacts.length} Bitcoin facts`);
+    }
+  });
+}
+
+function getTodaysBitcoinFacts(callback) {
+  const today = new Date();
+  const month = today.getMonth() + 1;
+  const day = today.getDate();
+  const todayString = today.toISOString().split('T')[0];
+
+  if (!bitcoinFactsDb) {
+    callback(null, []);
+    return;
+  }
+
+  bitcoinFactsDb.all(`
+    SELECT * FROM bitcoin_facts 
+    WHERE (month = ? AND day = ?) OR date = ?
+    ORDER BY importance DESC, year ASC
+  `, [month, day, todayString], (err, rows) => {
+    if (err) {
+      log.error('Error fetching today\'s Bitcoin facts:', err);
+      callback(err, null);
+    } else {
+      callback(null, rows || []);
+    }
+  });
 }
 
 // Create BrowserViews for each URL
@@ -364,6 +589,7 @@ function createWindow() {
   }
 
   loadConfig();
+  initBitcoinFactsDatabase();
 
   mainWindow = new BrowserWindow({
     width: 1080,
@@ -475,6 +701,18 @@ app.whenReady().then(createWindow);
 app.on('window-all-closed', () => {
   // Cleanup shortcuts when all windows are closed
   globalShortcut.unregisterAll();
+  
+  // Close database connection
+  if (bitcoinFactsDb) {
+    bitcoinFactsDb.close((err) => {
+      if (err) {
+        log.error('Error closing Bitcoin facts database:', err);
+      } else {
+        log.info('Bitcoin facts database connection closed');
+      }
+    });
+  }
+  
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -622,6 +860,19 @@ ipcMain.handle('get-moon-phase', () => {
     log.error('Moon phase calculation failed:', error);
     return { phase: 'Unknown', emoji: '🌙' };
   }
+});
+
+// Bitcoin fact handler
+ipcMain.handle('get-todays-bitcoin-fact', () => {
+  return new Promise((resolve, reject) => {
+    getTodaysBitcoinFacts((err, facts) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(facts);
+      }
+    });
+  });
 });
 
 // Logging handlers for renderer process

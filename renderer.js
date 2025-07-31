@@ -43,6 +43,11 @@ class DigitalSignage {
             clearInterval(this.uvTimer);
             this.uvTimer = null;
         }
+        if (this.bitcoinHistoryTimer) {
+            clearTimeout(this.bitcoinHistoryTimer);
+            clearInterval(this.bitcoinHistoryTimer);
+            this.bitcoinHistoryTimer = null;
+        }
         if (this.autoRotateTimer) {
             clearTimeout(this.autoRotateTimer);
             this.autoRotateTimer = null;
@@ -168,6 +173,7 @@ class DigitalSignage {
             this.updateScreensaverButtonVisibility();
             this.setupExitButton();
             this.setupUVClickHandler();
+            this.setupBitcoinHistoryClickHandler();
             
             await this.setupMoonPhase();
             this.startMoonPhaseTimer();
@@ -177,6 +183,9 @@ class DigitalSignage {
             
             await this.setupUVData();
             this.startUVTimer();
+            
+            await this.setupBitcoinHistory();
+            this.startBitcoinHistoryTimer();
             
             this.startAutoRotate();
             this.hideLoadingScreen();
@@ -424,9 +433,19 @@ class DigitalSignage {
 
         // ESC key to close settings
         this.addEventListenerTracked(document, 'keydown', (e) => {
-            if (e.key === 'Escape' && !settingsOverlay.classList.contains('hidden')) {
-                this.closeSettings();
-                e.stopPropagation(); // Prevent app from closing
+            if (e.key === 'Escape') {
+                const bitcoinHistoryOverlay = document.getElementById('bitcoin-history-overlay');
+                
+                // Check if Bitcoin history modal is open first
+                if (bitcoinHistoryOverlay && !bitcoinHistoryOverlay.classList.contains('hidden')) {
+                    this.closeBitcoinHistoryModal();
+                    e.stopPropagation();
+                }
+                // Then check if settings is open
+                else if (!settingsOverlay.classList.contains('hidden')) {
+                    this.closeSettings();
+                    e.stopPropagation(); // Prevent app from closing
+                }
             }
         });
     }
@@ -483,6 +502,22 @@ class DigitalSignage {
         // Add cursor pointer style to indicate it's clickable
         if (uvIcon) {
             uvIcon.style.cursor = 'pointer';
+        }
+    }
+
+    setupBitcoinHistoryClickHandler() {
+        const historyIcon = document.getElementById('bitcoin-history-icon');
+        
+        this.addEventListenerTracked(historyIcon, 'click', () => {
+            window.electronAPI.log.info('Bitcoin history icon clicked');
+            if (this.bitcoinFacts && this.bitcoinFacts.length > 0) {
+                this.showBitcoinHistoryModal(this.bitcoinFacts);
+            }
+        });
+        
+        // Add cursor pointer style to indicate it's clickable
+        if (historyIcon) {
+            historyIcon.style.cursor = 'pointer';
         }
     }
 
@@ -568,6 +603,36 @@ class DigitalSignage {
         if (this.config.showMoonPhase !== false) {
             await this.setupMoonPhase();
         }
+    }
+
+    startBitcoinHistoryTimer() {
+        // Clear existing timer
+        if (this.bitcoinHistoryTimer) {
+            clearTimeout(this.bitcoinHistoryTimer);
+        }
+
+        // Calculate milliseconds until next midnight (00:00)
+        const now = new Date();
+        const nextMidnight = new Date();
+        nextMidnight.setHours(24, 0, 0, 0); // Set to next midnight
+        
+        const msUntilMidnight = nextMidnight.getTime() - now.getTime();
+        
+        window.electronAPI.log.info(`Bitcoin history will refresh at: ${nextMidnight.toLocaleString()}`);
+
+        // Set timer for next midnight
+        this.bitcoinHistoryTimer = setTimeout(() => {
+            this.refreshBitcoinHistory();
+            // Set up daily recurring timer (24 hours = 86400000 ms)
+            this.bitcoinHistoryTimer = setInterval(() => {
+                this.refreshBitcoinHistory();
+            }, 86400000);
+        }, msUntilMidnight);
+    }
+
+    async refreshBitcoinHistory() {
+        window.electronAPI.log.info('Refreshing Bitcoin history at:', new Date().toLocaleString());
+        await this.setupBitcoinHistory();
     }
 
     async setupWeatherData() {
@@ -818,6 +883,178 @@ class DigitalSignage {
     refreshUVData() {
         window.electronAPI.log.info('Refreshing UV Index data at:', new Date().toLocaleString());
         this.setupUVData();
+    }
+
+    async setupBitcoinHistory() {
+        try {
+            const facts = await window.electronAPI.invoke('get-todays-bitcoin-fact');
+            
+            if (facts && facts.length > 0) {
+                // Store facts for modal display
+                this.bitcoinFacts = facts;
+                this.currentFactIndex = 0;
+                // Show the Bitcoin history icon
+                this.showBitcoinHistoryIcon();
+            } else {
+                // Hide the Bitcoin history icon if no facts for today
+                this.bitcoinFacts = [];
+                this.hideBitcoinHistoryIcon();
+            }
+        } catch (error) {
+            window.electronAPI.log.error('Bitcoin history setup failed:', error);
+            this.bitcoinFacts = [];
+            this.hideBitcoinHistoryIcon();
+        }
+    }
+
+    showBitcoinHistoryIcon() {
+        const historyGroup = document.getElementById('bitcoin-history-group');
+        if (historyGroup) {
+            historyGroup.style.display = 'flex';
+        }
+    }
+
+    hideBitcoinHistoryIcon() {
+        const historyGroup = document.getElementById('bitcoin-history-group');
+        if (historyGroup) {
+            historyGroup.style.display = 'none';
+        }
+    }
+
+    async showBitcoinHistoryModal(facts) {
+        if (!facts || facts.length === 0) return;
+        
+        this.bitcoinFacts = facts;
+        this.currentFactIndex = 0;
+        
+        const overlay = document.getElementById('bitcoin-history-overlay');
+        const dateElement = document.getElementById('bitcoin-history-date');
+        const titleElement = document.getElementById('bitcoin-history-title');
+        const descriptionElement = document.getElementById('bitcoin-history-description');
+        const counterElement = document.getElementById('bitcoin-history-counter');
+        const prevButton = document.getElementById('bitcoin-history-prev');
+        const nextButton = document.getElementById('bitcoin-history-next');
+
+        if (overlay && dateElement && titleElement && descriptionElement && counterElement) {
+            // Hide BrowserView so it doesn't cover the modal
+            try {
+                await window.electronAPI.invoke('hide-browser-view');
+            } catch (error) {
+                window.electronAPI.log.error('Failed to hide browser view:', error);
+            }
+
+            // Show the modal
+            overlay.classList.remove('hidden');
+            
+            // Display the current fact
+            this.updateBitcoinFactDisplay();
+            
+            // Set up navigation handlers
+            if (prevButton) {
+                prevButton.onclick = () => this.showPreviousFact();
+            }
+            if (nextButton) {
+                nextButton.onclick = () => this.showNextFact();
+            }
+            
+            // Set up close handlers
+            const closeButton = document.getElementById('bitcoin-history-close');
+            if (closeButton) {
+                closeButton.onclick = () => this.closeBitcoinHistoryModal();
+            }
+            
+            // Close on overlay click
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    this.closeBitcoinHistoryModal();
+                }
+            };
+            
+            // Add keyboard navigation
+            this.bitcoinModalKeyHandler = (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    this.showPreviousFact();
+                } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    this.showNextFact();
+                }
+            };
+            document.addEventListener('keydown', this.bitcoinModalKeyHandler);
+        }
+    }
+
+    updateBitcoinFactDisplay() {
+        if (!this.bitcoinFacts || this.bitcoinFacts.length === 0) return;
+        
+        const fact = this.bitcoinFacts[this.currentFactIndex];
+        const dateElement = document.getElementById('bitcoin-history-date');
+        const titleElement = document.getElementById('bitcoin-history-title');
+        const descriptionElement = document.getElementById('bitcoin-history-description');
+        const counterElement = document.getElementById('bitcoin-history-counter');
+        const prevButton = document.getElementById('bitcoin-history-prev');
+        const nextButton = document.getElementById('bitcoin-history-next');
+        
+        // Format the date nicely (avoid timezone issues with manual parsing)
+        const formattedDate = new Date(fact.year, fact.month - 1, fact.day).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        
+        // Update content
+        if (dateElement) dateElement.textContent = formattedDate;
+        if (titleElement) titleElement.textContent = fact.title;
+        if (descriptionElement) descriptionElement.textContent = fact.description;
+        if (counterElement) counterElement.textContent = `${this.currentFactIndex + 1} / ${this.bitcoinFacts.length}`;
+        
+        // Update navigation buttons
+        if (prevButton) {
+            prevButton.disabled = this.currentFactIndex === 0;
+        }
+        if (nextButton) {
+            nextButton.disabled = this.currentFactIndex === this.bitcoinFacts.length - 1;
+        }
+        
+        // Hide navigation if only one fact
+        const navigation = document.querySelector('.bitcoin-history-navigation');
+        if (navigation) {
+            navigation.style.display = this.bitcoinFacts.length > 1 ? 'flex' : 'none';
+        }
+    }
+
+    showPreviousFact() {
+        if (this.currentFactIndex > 0) {
+            this.currentFactIndex--;
+            this.updateBitcoinFactDisplay();
+        }
+    }
+
+    showNextFact() {
+        if (this.currentFactIndex < this.bitcoinFacts.length - 1) {
+            this.currentFactIndex++;
+            this.updateBitcoinFactDisplay();
+        }
+    }
+
+    async closeBitcoinHistoryModal() {
+        const overlay = document.getElementById('bitcoin-history-overlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+        }
+        
+        // Remove keyboard handler
+        if (this.bitcoinModalKeyHandler) {
+            document.removeEventListener('keydown', this.bitcoinModalKeyHandler);
+            this.bitcoinModalKeyHandler = null;
+        }
+        
+        // Show BrowserView again
+        try {
+            await window.electronAPI.invoke('show-browser-view');
+        } catch (error) {
+            window.electronAPI.log.error('Failed to show browser view:', error);
+        }
     }
 
     setupTabs() {
@@ -1142,6 +1379,10 @@ class DigitalSignage {
             await this.setupUVData();
             this.startUVTimer();
             
+            // Re-setup Bitcoin history
+            await this.setupBitcoinHistory();
+            this.startBitcoinHistoryTimer();
+            
             // Update screensaver button visibility
             this.updateScreensaverButtonVisibility();
             
@@ -1153,6 +1394,7 @@ class DigitalSignage {
             this.setupScreensaver();
             this.setupExitButton();
             this.setupUVClickHandler();
+            this.setupBitcoinHistoryClickHandler();
             
         } catch (error) {
             window.electronAPI.log.error('Failed to reload with new settings:', error);

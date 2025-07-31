@@ -52,6 +52,10 @@
                     <span id="sunset-time" class="sunset-time">--:--</span>
                 </div>
                 
+                <!-- Bitcoin History -->
+                <div class="bitcoin-history-group" id="bitcoin-history-group" style="display: none;">
+                    <img id="bitcoin-history-icon" src="cal-btc.svg" alt="Bitcoin History" class="weather-icon history-icon">
+                </div>
 
                 <!-- Screensaver button -->
                 <button id="screensaver-btn" class="screensaver-button">
@@ -205,6 +209,26 @@
                             <button type="submit" id="settings-save" class="save-button">Save & Apply</button>
                         </div>
                     </form>
+                </div>
+            </div>
+            
+            <!-- Bitcoin History popup -->
+            <div id="bitcoin-history-overlay" class="bitcoin-history-overlay hidden">
+                <div class="bitcoin-history-content">
+                    <div class="bitcoin-history-header">
+                        <h3>₿ Bitcoin History</h3>
+                        <div class="bitcoin-history-counter" id="bitcoin-history-counter">1 / 1</div>
+                        <button id="bitcoin-history-close" class="close-button">✕</button>
+                    </div>
+                    <div class="bitcoin-history-body">
+                        <div class="bitcoin-history-date" id="bitcoin-history-date"></div>
+                        <div class="bitcoin-history-title" id="bitcoin-history-title"></div>
+                        <div class="bitcoin-history-description" id="bitcoin-history-description"></div>
+                    </div>
+                    <div class="bitcoin-history-navigation">
+                        <button id="bitcoin-history-prev" class="bitcoin-nav-button">‹ Previous</button>
+                        <button id="bitcoin-history-next" class="bitcoin-nav-button">Next ›</button>
+                    </div>
                 </div>
             </div>
         </div>

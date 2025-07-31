@@ -819,3 +819,150 @@ body {
 .add-url-button:hover {
     background: #218838;
 }
+
+/* Bitcoin History */
+.bitcoin-history-group {
+    position: absolute;
+    right: 20px;
+    bottom: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    z-index: 10001;
+}
+
+.bitcoin-history-group .history-icon {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.bitcoin-history-group:hover {
+    transform: scale(1.1);
+}
+
+.history-icon {
+    width: 64px;
+    height: 64px;
+    opacity: 0.8;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)) brightness(0) invert(1);
+    transition: opacity 0.2s ease;
+}
+
+.history-icon:hover {
+    opacity: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)) brightness(0) invert(1) drop-shadow(0 0 10px rgba(255, 165, 0, 0.5));
+}
+
+/* Bitcoin History Modal */
+.bitcoin-history-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20000;
+    animation: fadeIn 0.3s ease-out;
+    cursor: default;
+}
+
+.bitcoin-history-overlay.hidden {
+    display: none;
+}
+
+.bitcoin-history-content {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 165, 0, 0.2);
+}
+
+.bitcoin-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 165, 0, 0.3);
+    padding-bottom: 15px;
+}
+
+.bitcoin-history-counter {
+    color: rgba(247, 147, 26, 0.8);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.bitcoin-history-header h3 {
+    color: #f7931a;
+    font-size: 24px;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.bitcoin-history-date {
+    color: #f7931a;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.bitcoin-history-title {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.bitcoin-history-description {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    line-height: 1.6;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.bitcoin-history-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 165, 0, 0.2);
+}
+
+.bitcoin-nav-button {
+    background: linear-gradient(135deg, #f7931a 0%, #ff8c00 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(247, 147, 26, 0.3);
+}
+
+.bitcoin-nav-button:hover {
+    background: linear-gradient(135deg, #ff8c00 0%, #f7931a 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(247, 147, 26, 0.4);
+}
+
+.bitcoin-nav-button:disabled {
+    background: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}

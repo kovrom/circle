@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "electron-log": "^5.4.1",
-    "lunarphase-js": "^2.0.3"
+    "lunarphase-js": "^2.0.3",
+    "sqlite3": "^5.1.7"
   }
 }

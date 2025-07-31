@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
       'hide-screensaver',
       'is-screensaver-active',
       'get-moon-phase',
+      'get-todays-bitcoin-fact',
       'log-info',
       'log-error',
       'log-warn'
