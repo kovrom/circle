@@ -91,6 +91,7 @@ class DigitalSignage {
         });
 
         this.addIpcListener('view-changed', ({ index, url, backgroundColor }) => {
+            window.electronAPI.log.info(`Renderer received view-changed: index=${index}, backgroundColor=${backgroundColor}`);
             this.currentIndex = index;
             this.updateUI();
             if (backgroundColor) {
@@ -1106,15 +1107,23 @@ class DigitalSignage {
             // Clean up timers before reloading
             this.cleanup();
             
+            // Re-establish essential IPC listeners that were removed by cleanup
+            this.addIpcListener('view-changed', ({ index, url, backgroundColor }) => {
+                this.currentIndex = index;
+                this.updateUI();
+                if (backgroundColor) {
+                    this.applyBackgroundColor(backgroundColor);
+                }
+            });
+            
             // Tell main process to reload with new config
             await window.electronAPI.invoke('reload-with-new-config');
             
             // Update indicators for new URLs
             this.createIndicators();
             
-            // Reset to first slide
-            this.currentIndex = 0;
-            this.updateUI();
+            // Note: currentIndex will be updated by the view-changed event from main process
+            // Don't reset currentIndex here - let main process maintain it
             
             // Restart auto-rotate if enabled
             if (this.config.autoRotate) {
@@ -1313,10 +1322,23 @@ class DigitalSignage {
     }
 
     applyBackgroundColor(backgroundColor) {
-        // Apply background color to the content container
+        // Apply background color to multiple elements to ensure it shows
+        document.body.style.backgroundColor = backgroundColor;
+        document.documentElement.style.backgroundColor = backgroundColor;
+        
         const contentContainer = document.querySelector('.content-container');
         if (contentContainer) {
             contentContainer.style.backgroundColor = backgroundColor;
+        }
+        
+        const appContainer = document.querySelector('.app-container');
+        if (appContainer) {
+            appContainer.style.backgroundColor = backgroundColor;
+        }
+        
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.style.backgroundColor = backgroundColor;
         }
     }
 }

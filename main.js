@@ -137,6 +137,8 @@ function createBrowserViews() {
     view.webContents.on('did-finish-load', () => {
       log.info(`BrowserView ${index} loaded:`, url);
       mainWindow.webContents.send('webview-loaded', { index, url });
+      
+      // Note: Window background color will be set when this view is shown
     });
 
     // Load the URL
@@ -144,8 +146,9 @@ function createBrowserViews() {
     browserViews.push(view);
   });
 
-  // Show the first view
-  showBrowserView(0);
+  // Show the current view (or first view if invalid)
+  const targetIndex = (currentViewIndex >= 0 && currentViewIndex < browserViews.length) ? currentViewIndex : 0;
+  showBrowserView(targetIndex);
 }
 
 // Show a specific BrowserView
@@ -576,7 +579,7 @@ ipcMain.handle('show-browser-view', () => {
 ipcMain.handle('reload-with-new-config', () => {
   try {
     // Reload config (it's already updated by save-config)
-    log.info('Reloading with new config:', config);
+    log.info('Reloading with new config');
     
     // Recreate BrowserViews with new URLs
     createBrowserViews();
