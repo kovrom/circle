@@ -943,6 +943,9 @@ class DigitalSignage {
                 window.electronAPI.log.error('Failed to hide browser view:', error);
             }
 
+            // Pause auto-rotate while modal is open
+            this.pauseAutoRotate();
+
             // Show the modal
             overlay.classList.remove('hidden');
             
@@ -1049,6 +1052,9 @@ class DigitalSignage {
             this.bitcoinModalKeyHandler = null;
         }
         
+        // Resume auto-rotate when modal is closed
+        this.resumeAutoRotate();
+        
         // Show BrowserView again
         try {
             await window.electronAPI.invoke('show-browser-view');
@@ -1089,6 +1095,9 @@ class DigitalSignage {
             window.electronAPI.log.error('Failed to hide browser view:', error);
         }
         
+        // Pause auto-rotate while settings modal is open
+        this.pauseAutoRotate();
+        
         // Populate form with current config
         this.populateSettingsForm();
         
@@ -1099,6 +1108,9 @@ class DigitalSignage {
     async closeSettings() {
         const settingsOverlay = document.getElementById('settings-overlay');
         settingsOverlay.classList.add('hidden');
+        
+        // Resume auto-rotate when settings modal is closed
+        this.resumeAutoRotate();
         
         // Show BrowserView again
         try {
@@ -1472,6 +1484,28 @@ class DigitalSignage {
         if (!this.config.autoRotate || !this.config.autoRotateInterval || this.config.autoRotateInterval <= 0) return;
 
         this.resetAutoRotate();
+    }
+
+    pauseAutoRotate() {
+        // Store the current state to resume later
+        this.autoRotatePaused = true;
+        
+        // Clear existing timers
+        if (this.autoRotateTimer) {
+            clearTimeout(this.autoRotateTimer);
+            this.autoRotateTimer = null;
+        }
+        if (this.autoRotateCountdown) {
+            clearInterval(this.autoRotateCountdown);
+            this.autoRotateCountdown = null;
+        }
+    }
+
+    resumeAutoRotate() {
+        if (this.autoRotatePaused && this.config.autoRotate) {
+            this.autoRotatePaused = false;
+            this.resetAutoRotate();
+        }
     }
 
     resetAutoRotate() {
