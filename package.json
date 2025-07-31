@@ -35,7 +35,8 @@
       "style.css",
       "config.json",
       "*.svg",
-      "Quotes/**/*"
+      "Quotes/**/*",
+      "bitcoin_facts.db"
     ],
     "mac": {
       "icon": "icons/icon.icns",
