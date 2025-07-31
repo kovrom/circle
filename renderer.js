@@ -270,12 +270,22 @@ class DigitalSignage {
                 return;
             }
 
+            // Check if any modals are open - if so, don't handle slide navigation
+            const settingsOverlay = document.getElementById('settings-overlay');
+            const bitcoinHistoryOverlay = document.getElementById('bitcoin-history-overlay');
+            const isModalOpen = (settingsOverlay && !settingsOverlay.classList.contains('hidden')) ||
+                               (bitcoinHistoryOverlay && !bitcoinHistoryOverlay.classList.contains('hidden'));
+
             switch(e.key) {
                 case 'ArrowLeft':
-                    this.previousSlide();
+                    if (!isModalOpen) {
+                        this.previousSlide();
+                    }
                     break;
                 case 'ArrowRight':
-                    this.nextSlide();
+                    if (!isModalOpen) {
+                        this.nextSlide();
+                    }
                     break;
                 case 'Escape':
                     // Exit fullscreen or close app
