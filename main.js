@@ -104,7 +104,19 @@ function getBitcoinFactsDbPath() {
   return path.join(userDataPath, 'bitcoin_facts.db');
 }
 
+function ensureBitcoinFactsDatabase() {
+  const userDbPath = getBitcoinFactsDbPath();
+  const bundledDbPath = path.join(__dirname, 'bitcoin_facts.db');
+  
+  // Copy bundled DB to user data if it doesn't exist
+  if (!fs.existsSync(userDbPath) && fs.existsSync(bundledDbPath)) {
+    fs.copyFileSync(bundledDbPath, userDbPath);
+    log.info('Copied bundled bitcoin_facts.db to user data folder');
+  }
+}
+
 function initBitcoinFactsDatabase() {
+  ensureBitcoinFactsDatabase();
   const dbPath = getBitcoinFactsDbPath();
   bitcoinFactsDb = new sqlite3.Database(dbPath, (err) => {
     if (err) {
@@ -137,134 +149,18 @@ function initBitcoinFactsDatabase() {
     bitcoinFactsDb.run(`CREATE INDEX IF NOT EXISTS idx_month_day ON bitcoin_facts(month, day)`);
     bitcoinFactsDb.run(`CREATE INDEX IF NOT EXISTS idx_importance ON bitcoin_facts(importance DESC)`);
 
-    // Check if database is empty and seed with initial data
+    // Log database connection success
     bitcoinFactsDb.get("SELECT COUNT(*) as count FROM bitcoin_facts", (err, row) => {
       if (err) {
         log.error('Error checking Bitcoin facts count:', err);
         return;
       }
       
-      if (row.count === 0) {
-        log.info('Seeding Bitcoin facts database with initial data...');
-        seedBitcoinFacts();
-      } else {
-        log.info(`Bitcoin facts database loaded with ${row.count} facts`);
-      }
+      log.info(`Bitcoin facts database loaded with ${row.count} facts`);
     });
   });
 }
 
-function seedBitcoinFacts() {
-  const initialFacts = [    
-    {
-      date: '2008-08-18',
-      month: 8,
-      day: 18,
-      year: 2008,
-      title: 'Bitcoin.org Domain Registered',
-      description: 'The domain bitcoin.org is registered, marking the first online presence of Bitcoin.',
-      category: 'launch',
-      importance: 4
-    },
-    {
-      date: '2008-10-31',
-      month: 10,
-      day: 31,
-      year: 2008,
-      title: 'Bitcoin Whitepaper Published',
-      description: 'Satoshi Nakamoto publishes the Bitcoin whitepaper "Bitcoin: A Peer-to-Peer Electronic Cash System".',
-      category: 'launch',
-      importance: 5
-    },
-    {
-      date: '2009-01-03',
-      month: 1,
-      day: 3,
-      year: 2009,
-      title: 'Genesis Block Mined',
-      description: 'The first Bitcoin block (Genesis Block) is mined by Satoshi Nakamoto with the message "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks".',
-      category: 'launch',
-      importance: 5
-    },
-    {
-      date: '2009-01-12',
-      month: 1,
-      day: 12,
-      year: 2009,
-      title: 'First Bitcoin Transaction',
-      description: 'The first Bitcoin transaction takes place between Satoshi Nakamoto and Hal Finney.',
-      category: 'technology',
-      importance: 4
-    },
-    {
-      date: '2010-05-22',
-      month: 5,
-      day: 22,
-      year: 2010,
-      title: 'Bitcoin Pizza Day',
-      description: 'Laszlo Hanyecz makes the first real-world Bitcoin transaction, buying two pizzas for 10,000 BTC, establishing the first economic value for Bitcoin.',
-      category: 'adoption',
-      importance: 5
-    },
-    {
-      date: '2010-07-17',
-      month: 7,
-      day: 17,
-      year: 2010,
-      title: 'First Bitcoin Exchange Opens',
-      description: 'Mt. Gox, originally a Magic: The Gathering trading card exchange, begins trading Bitcoin.',
-      category: 'adoption',
-      importance: 4
-    },
-    {
-      date: '2012-11-28',
-      month: 11,
-      day: 28,
-      year: 2012,
-      title: 'First Bitcoin Halving',
-      description: 'The first Bitcoin halving occurs, reducing the block reward from 50 to 25 BTC.',
-      category: 'technology',
-      importance: 4
-    },
-    {
-      date: '2017-08-01',
-      month: 8,
-      day: 1,
-      year: 2017,
-      title: 'Bitcoin Cash Fork',
-      description: 'Bitcoin Cash (BCH) forks from Bitcoin, creating a separate cryptocurrency with larger block sizes.',
-      category: 'technology',
-      importance: 3
-    },
-    {
-      date: '2017-12-17',
-      month: 12,
-      day: 17,
-      year: 2017,
-      title: 'Bitcoin Hits $20,000',
-      description: 'Bitcoin reaches its then all-time high of nearly $20,000, marking peak mainstream attention during the 2017 bull run.',
-      category: 'price',
-      importance: 4
-    }
-  ];
-
-  const stmt = bitcoinFactsDb.prepare(`
-    INSERT INTO bitcoin_facts (date, month, day, year, title, description, category, importance)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  initialFacts.forEach(fact => {
-    stmt.run(fact.date, fact.month, fact.day, fact.year, fact.title, fact.description, fact.category, fact.importance);
-  });
-
-  stmt.finalize((err) => {
-    if (err) {
-      log.error('Error seeding Bitcoin facts:', err);
-    } else {
-      log.info(`Successfully seeded ${initialFacts.length} Bitcoin facts`);
-    }
-  });
-}
 
 function getTodaysBitcoinFacts(callback) {
   const today = new Date();
