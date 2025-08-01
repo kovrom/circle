@@ -823,8 +823,8 @@ body {
 /* Bitcoin History */
 .bitcoin-history-group {
     position: absolute;
-    right: 20px;
-    bottom: 180px;
+    right: 65px;
+    top: calc(50% + 220px);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -909,7 +909,7 @@ body {
 
 .bitcoin-history-date {
     color: #f7931a;
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 600;
     margin-bottom: 10px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -917,7 +917,7 @@ body {
 
 .bitcoin-history-title {
     color: #ffffff;
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
     margin-bottom: 15px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -925,7 +925,7 @@ body {
 
 .bitcoin-history-description {
     color: rgba(255, 255, 255, 0.9);
-    font-size: 16px;
+    font-size: 22px;
     line-height: 1.6;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
