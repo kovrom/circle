@@ -126,6 +126,12 @@ sudo apt install fonts-noto-color-emoji
 - Left/Right Arrow - previous/next screen
 - F11 - Toggle fullscreen on/off
 
+## I don't want/need round display, will it look ok on a regular monitor?
+
+Yes, it will look just fine
+
+![Bookshelf Example](readme/ui.gif)
+
 
 
 ## Supported Platforms
