@@ -152,7 +152,7 @@ class DigitalSignage {
                     this.config = {
                         urls: ['https://timechaincalendar.com/en', 'https://bitfeed.live/'],
                         autoRotate: false,
-                        autoRotateInterval: 30000,
+                        autoRotateInterval: 60000,
                         fullscreen: false,
                         enableDevTools: false
                     };
@@ -946,6 +946,13 @@ class DigitalSignage {
         const nextButton = document.getElementById('bitcoin-history-next');
 
         if (overlay && dateElement && titleElement && descriptionElement && counterElement) {
+            // Notify main process that modal is opening
+            try {
+                await window.electronAPI.invoke('set-modal-state', true);
+            } catch (error) {
+                window.electronAPI.log.error('Failed to set modal state:', error);
+            }
+            
             // Hide BrowserView so it doesn't cover the modal
             try {
                 await window.electronAPI.invoke('hide-browser-view');
@@ -1056,6 +1063,13 @@ class DigitalSignage {
             overlay.classList.add('hidden');
         }
         
+        // Notify main process that modal is closed
+        try {
+            await window.electronAPI.invoke('set-modal-state', false);
+        } catch (error) {
+            window.electronAPI.log.error('Failed to set modal state:', error);
+        }
+        
         // Remove keyboard handler
         if (this.bitcoinModalKeyHandler) {
             document.removeEventListener('keydown', this.bitcoinModalKeyHandler);
@@ -1098,6 +1112,13 @@ class DigitalSignage {
     async openSettings() {
         const settingsOverlay = document.getElementById('settings-overlay');
         
+        // Notify main process that modal is opening
+        try {
+            await window.electronAPI.invoke('set-modal-state', true);
+        } catch (error) {
+            window.electronAPI.log.error('Failed to set modal state:', error);
+        }
+        
         // Hide BrowserView so it doesn't cover the popup
         try {
             await window.electronAPI.invoke('hide-browser-view');
@@ -1118,6 +1139,13 @@ class DigitalSignage {
     async closeSettings() {
         const settingsOverlay = document.getElementById('settings-overlay');
         settingsOverlay.classList.add('hidden');
+        
+        // Notify main process that modal is closed
+        try {
+            await window.electronAPI.invoke('set-modal-state', false);
+        } catch (error) {
+            window.electronAPI.log.error('Failed to set modal state:', error);
+        }
         
         // Resume auto-rotate when settings modal is closed
         this.resumeAutoRotate();
@@ -1205,8 +1233,8 @@ class DigitalSignage {
             }
         });
         
-        // Populate interval (convert milliseconds to seconds)
-        rotateIntervalInput.value = this.config.autoRotateInterval / 1000;
+        // Populate interval (convert milliseconds to minutes)
+        rotateIntervalInput.value = this.config.autoRotateInterval / 60000;
     }
 
     createUrlEntry(url = '', backgroundColor = '#000000', index = 0) {
@@ -1318,7 +1346,7 @@ class DigitalSignage {
         const newConfig = {
             urls: urlsData,
             autoRotate: autoRotateCheck.checked,
-            autoRotateInterval: parseInt(rotateIntervalInput.value) * 1000,
+            autoRotateInterval: parseInt(rotateIntervalInput.value) * 60000,
             fullscreen: fullscreenCheck.checked,
             enableDevTools: devToolsCheck.checked,
             showMoonPhase: showMoonPhaseCheck.checked,

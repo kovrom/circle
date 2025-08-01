@@ -18,6 +18,7 @@ Short video demo: https://www.youtube.com/watch?v=7DtQNCBLffI
 - **Settings Management**: Easy configuration through JSON file or Settings Menu
 - **Cross-platform**: Works on Windows, macOS, and Linux
 - **Weather**: Includes lunar phase tracking, sunrise/sunset, UV Index. Weather data provided by open-meteo.com
+- **This Day in Bitcoin History**: Highlights interesting and significant events that occurred on this day in Bitcoin's past. A clickable icon appears if there's a historical event for the current date. The database currently includes around 105 entries - feel free to contribute more and submit a pull request! :)
 
 ## Requirements
 
@@ -119,7 +120,7 @@ sudo apt install fonts-noto-color-emoji
 
 ```
 
-## Global keyboard bindings
+## Keyboard bindings
 
 - Esc - Exit
 - Left/Right Arrow - previous/next screen

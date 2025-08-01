@@ -291,7 +291,7 @@ function startQuoteRotation() {
 }
 
 el.addEventListener('click', function(){
-  console.log('click!');
+  // Handle click interaction
   if (quotes.length > 1) {
     animateToNextQuote();
   } else if (tl) {

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, BrowserView, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, BrowserView, ipcMain, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const log = require('electron-log');
@@ -27,6 +27,7 @@ let browserViews = [];
 let currentViewIndex = 0;
 let screensaverView = null;
 let isScreensaverActive = false;
+let isModalOpen = false;
 let bitcoinFactsDb = null;
 
 // Get user data directory for config storage
@@ -89,7 +90,7 @@ function loadConfig() {
           'https://bitfeed.live/'          
         ],
         autoRotate: false,
-        autoRotateInterval: 30000, // 30 seconds
+        autoRotateInterval: 60000, // 1 minute
         fullscreen: true,
         enableDevTools: false
       };
@@ -154,37 +155,7 @@ function initBitcoinFactsDatabase() {
 }
 
 function seedBitcoinFacts() {
-  const initialFacts = [
-    {
-      date: '2010-07-31',
-      month: 7,
-      day: 31,
-      year: 2010,
-      title: 'First Bitcoin Exchange Rate',
-      description: 'On this day in 2010, the first recorded Bitcoin exchange rate was established at approximately $0.0008 per Bitcoin.',
-      category: 'economics',
-      importance: 4
-    },
-    {
-      date: '2017-07-31', 
-      month: 7,
-      day: 31,
-      year: 2017,
-      title: 'Bitcoin Scaling Debate Intensifies',
-      description: 'The Bitcoin community was deeply engaged in discussions about scaling solutions, with various proposals being evaluated.',
-      category: 'technology',
-      importance: 3
-    },
-    {
-      date: '2021-07-31',
-      month: 7,
-      day: 31,
-      year: 2021,
-      title: 'Bitcoin Mining Difficulty Adjustment',
-      description: 'A significant mining difficulty adjustment occurred, demonstrating Bitcoin\'s self-regulating mechanism.',
-      category: 'technology',
-      importance: 2
-    },
+  const initialFacts = [    
     {
       date: '2008-08-18',
       month: 8,
@@ -455,27 +426,56 @@ function createScreensaverView() {
     log.info('Screensaver loaded successfully');
     mainWindow.webContents.send('screensaver-loaded');
     
-    // Inject JavaScript to handle clicks and touches to dismiss screensaver
+    // Inject JavaScript to detect clicks and send them via console message
     screensaverView.webContents.executeJavaScript(`
-      document.addEventListener('click', () => {
-        console.log('Screensaver clicked');
-      });
-      
-      document.addEventListener('touchstart', () => {
-        console.log('Screensaver touched');
-      });
-      
-      document.addEventListener('keydown', () => {
-        console.log('Key pressed in screensaver');
-      });
+      (function() {
+        const sendHideMessage = () => {
+          console.log('SCREENSAVER_HIDE_INTERACTION');
+        };
+        
+        document.addEventListener('click', sendHideMessage, true);
+        document.addEventListener('touchstart', sendHideMessage, true);
+        document.addEventListener('mousedown', sendHideMessage, true);
+        
+        // Also add to window and body to catch any missed events
+        window.addEventListener('click', sendHideMessage, true);
+        if (document.body) {
+          document.body.addEventListener('click', sendHideMessage, true);
+        }
+      })();
     `);
   });
 
-  // Listen for console messages from screensaver to detect user interaction
+  // Listen for console messages from screensaver
   screensaverView.webContents.on('console-message', (event) => {
-    const { message } = event;
-    if (message === 'Screensaver clicked' || message === 'Screensaver touched' || message === 'Key pressed in screensaver') {
-      log.info('User interaction detected in screensaver, hiding...');
+    if (event.message === 'SCREENSAVER_HIDE_INTERACTION' && isScreensaverActive) {
+      log.info('Mouse/touch interaction detected in screensaver, hiding...');
+      hideScreensaver();
+    }
+  });
+
+  // Add click/touch listeners to screensaver BrowserView
+  screensaverView.webContents.on('before-input-event', (event, input) => {
+    if (isScreensaverActive) {
+      // Any key press hides screensaver
+      log.info('Key pressed in screensaver, hiding...');
+      hideScreensaver();
+    }
+  });
+
+  // Listen for mouse events on screensaver
+  screensaverView.webContents.on('context-menu', () => {
+    if (isScreensaverActive) {
+      log.info('Right click in screensaver, hiding...');
+      hideScreensaver();
+    }
+  });
+
+  // Listen for navigation events (clicks) in screensaver
+  screensaverView.webContents.on('will-navigate', (event) => {
+    if (isScreensaverActive) {
+      event.preventDefault();
+      log.info('Click interaction in screensaver, hiding...');
       hideScreensaver();
     }
   });
@@ -563,9 +563,18 @@ function handleKeyPress(event, input) {
   // Only handle shortcuts when main window is focused
   if (!mainWindow.isFocused()) return;
   
+  // When modal is open, prevent Escape from closing the app but allow other keys
+  if (isModalOpen) {
+    if (input.key === 'Escape') {
+      event.preventDefault();
+    }
+    return;
+  }
+  
   switch (input.key) {
     case 'ArrowLeft':
       if (!input.meta && !input.control && !input.alt) {
+        event.preventDefault();
         const prevIndex = (currentViewIndex - 1 + browserViews.length) % browserViews.length;
         showBrowserView(prevIndex);
       }
@@ -573,17 +582,20 @@ function handleKeyPress(event, input) {
       
     case 'ArrowRight':
       if (!input.meta && !input.control && !input.alt) {
+        event.preventDefault();
         const nextIndex = (currentViewIndex + 1) % browserViews.length;
         showBrowserView(nextIndex);
       }
       break;
       
     case 'F11':
+      event.preventDefault();
       const isFullscreen = mainWindow.isFullScreen();
       mainWindow.setFullScreen(!isFullscreen);
       break;
       
     case 'Escape':
+      event.preventDefault();
       app.quit();
       break;
   }
@@ -608,6 +620,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
+      spellcheck: true,
       preload: path.join(__dirname, 'preload.js')
     },
     show: true, // Show window immediately
@@ -700,6 +713,30 @@ function createWindow() {
 
   // Register keyboard event handler for window-focused shortcuts
   mainWindow.webContents.on('before-input-event', handleKeyPress);
+
+  // Listen for clicks on main window to hide screensaver
+  mainWindow.on('focus', () => {
+    if (isScreensaverActive) {
+      log.info('Window focus detected while screensaver active, hiding...');
+      hideScreensaver();
+    }
+  });
+
+  // Add context menu support for text inputs
+  mainWindow.webContents.on('context-menu', (event, params) => {
+    // Only show context menu for editable content (text inputs, textareas)
+    if (params.isEditable) {
+      const contextMenu = Menu.buildFromTemplate([
+        { label: 'Cut', role: 'cut', enabled: params.editFlags.canCut },
+        { label: 'Copy', role: 'copy', enabled: params.editFlags.canCopy },
+        { label: 'Paste', role: 'paste', enabled: params.editFlags.canPaste },
+        { type: 'separator' },
+        { label: 'Select All', role: 'selectAll', enabled: params.editFlags.canSelectAll }
+      ]);
+      
+      contextMenu.popup({ window: mainWindow });
+    }
+  });
 }
 
 // App event handlers
@@ -890,6 +927,12 @@ ipcMain.handle('log-error', (event, { message, args }) => {
 
 ipcMain.handle('log-warn', (event, { message, args }) => {
   log.warn(message, ...args);
+});
+
+// Modal state handlers
+ipcMain.handle('set-modal-state', (event, modalOpen) => {
+  isModalOpen = modalOpen;
+  log.info('Modal state changed:', modalOpen ? 'open' : 'closed');
 });
 
 // Helper function for moon phase emojis
