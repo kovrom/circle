@@ -1,4 +1,4 @@
-const { app, BrowserWindow, BrowserView, ipcMain, Menu, globalShortcut } = require('electron');
+const { app, BrowserWindow, BrowserView, ipcMain, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const log = require('electron-log');
@@ -556,29 +556,37 @@ function hideScreensaver() {
   mainWindow.webContents.send('screensaver-hidden');
 }
 
-// Register global keyboard shortcuts
-function registerKeyboardShortcuts() {
-  // Navigation shortcuts
-  globalShortcut.register('Left', () => {
-    const prevIndex = (currentViewIndex - 1 + browserViews.length) % browserViews.length;
-    showBrowserView(prevIndex);
-  });
-
-  globalShortcut.register('Right', () => {
-    const nextIndex = (currentViewIndex + 1) % browserViews.length;
-    showBrowserView(nextIndex);
-  });
-
-  // Fullscreen toggle
-  globalShortcut.register('F11', () => {
-    const isFullscreen = mainWindow.isFullScreen();
-    mainWindow.setFullScreen(!isFullscreen);
-  });
-
-  // Escape to close application
-  globalShortcut.register('Escape', () => {
-    app.quit();
-  });
+// Handle keyboard shortcuts when window is focused
+function handleKeyPress(event, input) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  
+  // Only handle shortcuts when main window is focused
+  if (!mainWindow.isFocused()) return;
+  
+  switch (input.key) {
+    case 'ArrowLeft':
+      if (!input.meta && !input.control && !input.alt) {
+        const prevIndex = (currentViewIndex - 1 + browserViews.length) % browserViews.length;
+        showBrowserView(prevIndex);
+      }
+      break;
+      
+    case 'ArrowRight':
+      if (!input.meta && !input.control && !input.alt) {
+        const nextIndex = (currentViewIndex + 1) % browserViews.length;
+        showBrowserView(nextIndex);
+      }
+      break;
+      
+    case 'F11':
+      const isFullscreen = mainWindow.isFullScreen();
+      mainWindow.setFullScreen(!isFullscreen);
+      break;
+      
+    case 'Escape':
+      app.quit();
+      break;
+  }
 }
 
 function createWindow() {
@@ -618,8 +626,6 @@ function createWindow() {
     mainWindow.webContents.send('config-loaded', config);
     // Create BrowserViews after main window is ready
     createBrowserViews();
-    // Register keyboard shortcuts
-    registerKeyboardShortcuts();
   });
 
   // Handle window resizing
@@ -670,8 +676,6 @@ function createWindow() {
       screensaverView = null;
     }
     
-    // Unregister all shortcuts
-    globalShortcut.unregisterAll();
     mainWindow = null;
   });
 
@@ -693,15 +697,15 @@ function createWindow() {
   } else {
     Menu.setApplicationMenu(null);
   }
+
+  // Register keyboard event handler for window-focused shortcuts
+  mainWindow.webContents.on('before-input-event', handleKeyPress);
 }
 
 // App event handlers
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
-  // Cleanup shortcuts when all windows are closed
-  globalShortcut.unregisterAll();
-  
   // Close database connection
   if (bitcoinFactsDb) {
     bitcoinFactsDb.close((err) => {
