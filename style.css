@@ -823,7 +823,7 @@ body {
 /* Temperature */
 .temperature-group {
     position: absolute;
-    left: 65px;
+    left: 95px;
     top: calc(50% + 220px);
     display: flex;
     flex-direction: column;
