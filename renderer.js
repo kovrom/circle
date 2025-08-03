@@ -174,6 +174,7 @@ class DigitalSignage {
             this.setupExitButton();
             this.setupUVClickHandler();
             this.setupBitcoinHistoryClickHandler();
+            this.setupTemperatureClickHandler();
             
             await this.setupMoonPhase();
             this.startMoonPhaseTimer();
@@ -531,6 +532,20 @@ class DigitalSignage {
         }
     }
 
+    setupTemperatureClickHandler() {
+        const temperatureIcon = document.getElementById('temperature-icon');
+        
+        this.addEventListenerTracked(temperatureIcon, 'click', async () => {
+            window.electronAPI.log.info('Temperature icon clicked - refreshing data');
+            await this.refreshUVData(); // This will refresh both UV and temperature
+        });
+        
+        // Add cursor pointer style to indicate it's clickable
+        if (temperatureIcon) {
+            temperatureIcon.style.cursor = 'pointer';
+        }
+    }
+
     async setupMoonPhase() {
         const moonPhaseGroup = document.querySelector('.moon-phase-group');
         
@@ -774,20 +789,59 @@ class DigitalSignage {
 
     async setupUVData() {
         // Check if UV Index should be shown
-        if (this.config.showUV === false) {
+        const shouldShowUV = this.config.showUV !== false; // Default to true
+        const shouldShowTemperature = this.config.showTemperature !== false; // Default to true
+        
+        if (!shouldShowUV) {
             this.hideUVDisplay();
+        }
+        
+        if (!shouldShowTemperature) {
+            this.hideTemperatureDisplay();
+        }
+        
+        // If both are disabled, return early
+        if (!shouldShowUV && !shouldShowTemperature) {
             return;
         }
 
         // Check if it's currently daylight hours
         if (!this.isDaylight()) {
             window.electronAPI.log.info('UV Index not fetched - outside daylight hours');
-            // Show UV display but with nighttime value
-            this.showUVDisplay();
-            const uvValueElement = document.getElementById('uv-value');
-            if (uvValueElement) {
-                uvValueElement.textContent = '0';
-                uvValueElement.style.borderColor = 'rgba(0, 128, 0, 0.7)'; // Green for no UV at night
+            
+            // Show UV display but with nighttime value (only if enabled)
+            if (shouldShowUV) {
+                this.showUVDisplay();
+                const uvValueElement = document.getElementById('uv-value');
+                if (uvValueElement) {
+                    uvValueElement.textContent = '0';
+                    uvValueElement.style.borderColor = 'rgba(0, 128, 0, 0.7)'; // Green for no UV at night
+                }
+            }
+            
+            // Still try to get current temperature even at night (only if enabled)
+            if (shouldShowTemperature) {
+                this.showTemperatureDisplay();
+                try {
+                    const latitude = this.config.latitude || 40.7128;
+                    const longitude = this.config.longitude || -74.0060;
+                    
+                    const response = await fetch(
+                        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&timezone=auto`
+                    );
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        const temperatureValueElement = document.getElementById('temperature-value');
+                        if (temperatureValueElement && data.current && typeof data.current.temperature_2m === 'number') {
+                            const temperature = this.convertTemperature(data.current.temperature_2m);
+                            const unit = this.getTemperatureUnit();
+                            temperatureValueElement.textContent = `${temperature}°${unit}`;
+                        }
+                    }
+                } catch (error) {
+                    window.electronAPI.log.error('Failed to fetch nighttime temperature:', error);
+                }
             }
             return;
         }
@@ -797,41 +851,71 @@ class DigitalSignage {
             const latitude = this.config.latitude || 40.7128;
             const longitude = this.config.longitude || -74.0060;
             
+            // Build API request based on what's enabled
+            let currentParams = [];
+            if (shouldShowUV) {
+                currentParams.push('uv_index');
+            }
+            if (shouldShowTemperature) {
+                currentParams.push('temperature_2m');
+            }
+            
             const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=uv_index&timezone=auto`
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=${currentParams.join(',')}&timezone=auto`
             );
             
             if (!response.ok) {
-                throw new Error('UV Index API request failed');
+                throw new Error('Weather API request failed');
             }
             
             const data = await response.json();
-            this.updateUVDisplay(data);
+            this.updateUVDisplay(data, shouldShowUV, shouldShowTemperature);
             
         } catch (error) {
-            window.electronAPI.log.error('UV Index data setup failed:', error);
+            window.electronAPI.log.error('Weather data setup failed:', error);
             // Fallback display
-            const uvValueElement = document.getElementById('uv-value');
-            if (uvValueElement) {
-                uvValueElement.textContent = '--';
-                uvValueElement.style.borderColor = 'white';
+            if (shouldShowUV) {
+                const uvValueElement = document.getElementById('uv-value');
+                if (uvValueElement) {
+                    uvValueElement.textContent = '--';
+                    uvValueElement.style.borderColor = 'white';
+                }
+            }
+            if (shouldShowTemperature) {
+                const temperatureValueElement = document.getElementById('temperature-value');
+                if (temperatureValueElement) {
+                    const unit = this.getTemperatureUnit();
+                    temperatureValueElement.textContent = `--°${unit}`;
+                }
             }
         }
     }
 
-    updateUVDisplay(data) {
+    updateUVDisplay(data, shouldShowUV = true, shouldShowTemperature = true) {
         const uvValueElement = document.getElementById('uv-value');
+        const temperatureValueElement = document.getElementById('temperature-value');
         
-        // Show UV element
-        this.showUVDisplay();
+        // Show UV element only if enabled
+        if (shouldShowUV) {
+            this.showUVDisplay();
+            if (uvValueElement && data.current && typeof data.current.uv_index === 'number') {
+                const uvIndex = Math.round(data.current.uv_index);
+                uvValueElement.textContent = uvIndex.toString();
+                
+                // Color code based on UV Index levels
+                const uvColor = this.getUVColor(uvIndex);
+                uvValueElement.style.borderColor = uvColor;
+            }
+        }
         
-        if (uvValueElement && data.current && typeof data.current.uv_index === 'number') {
-            const uvIndex = Math.round(data.current.uv_index);
-            uvValueElement.textContent = uvIndex.toString();
-            
-            // Color code based on UV Index levels
-            const uvColor = this.getUVColor(uvIndex);
-            uvValueElement.style.borderColor = uvColor;
+        // Show temperature element only if enabled
+        if (shouldShowTemperature) {
+            this.showTemperatureDisplay();
+            if (temperatureValueElement && data.current && typeof data.current.temperature_2m === 'number') {
+                const temperature = this.convertTemperature(data.current.temperature_2m);
+                const unit = this.getTemperatureUnit();
+                temperatureValueElement.textContent = `${temperature}°${unit}`;
+            }
         }
     }
 
@@ -842,6 +926,21 @@ class DigitalSignage {
         if (uvIndex <= 7) return 'rgba(255, 165, 0, 0.7)';    // Orange (High)
         if (uvIndex <= 10) return 'rgba(255, 0, 0, 0.7)';     // Red (Very High)
         return 'rgba(128, 0, 128, 0.7)';                      // Purple (Extreme)
+    }
+
+    convertTemperature(celsius) {
+        // Convert temperature based on config setting
+        const unit = this.config.temperatureUnit || 'C';
+        if (unit === 'F') {
+            const fahrenheit = (celsius * 9/5) + 32;
+            return Math.round(fahrenheit);
+        }
+        return Math.round(celsius);
+    }
+
+    getTemperatureUnit() {
+        const unit = this.config.temperatureUnit || 'C';
+        return unit === 'F' ? 'F' : 'C';
     }
 
     isDaylight() {
@@ -864,6 +963,20 @@ class DigitalSignage {
         const uvGroup = document.querySelector('.uv-index-group');
         if (uvGroup) {
             uvGroup.style.display = 'none';
+        }
+    }
+
+    showTemperatureDisplay() {
+        const temperatureGroup = document.querySelector('.temperature-group');
+        if (temperatureGroup) {
+            temperatureGroup.style.display = 'flex';
+        }
+    }
+
+    hideTemperatureDisplay() {
+        const temperatureGroup = document.querySelector('.temperature-group');
+        if (temperatureGroup) {
+            temperatureGroup.style.display = 'none';
         }
     }
 
@@ -1167,7 +1280,9 @@ class DigitalSignage {
         const showMoonPhaseCheck = document.getElementById('show-moon-phase');
         const showWeatherCheck = document.getElementById('show-weather');
         const showUVCheck = document.getElementById('show-uv');
+        const showTemperatureCheck = document.getElementById('show-temperature');
         const timeFormatSelect = document.getElementById('time-format');
+        const temperatureUnitSelect = document.getElementById('temperature-unit');
         const latitudeInput = document.getElementById('latitude');
         const longitudeInput = document.getElementById('longitude');
         const uvUpdateFrequencySelect = document.getElementById('uv-update-frequency');
@@ -1204,9 +1319,13 @@ class DigitalSignage {
         showMoonPhaseCheck.checked = this.config.showMoonPhase !== false; // Default to true
         showWeatherCheck.checked = this.config.showWeather !== false; // Default to true
         showUVCheck.checked = this.config.showUV !== false; // Default to true
+        showTemperatureCheck.checked = this.config.showTemperature !== false; // Default to true
         
         // Populate time format
         timeFormatSelect.value = this.config.timeFormat || '24'; // Default to 24-hour
+        
+        // Populate temperature unit
+        temperatureUnitSelect.value = this.config.temperatureUnit || 'C'; // Default to Celsius
         
         // Populate coordinates
         latitudeInput.value = this.config.latitude || 40.7128; // Default to New York
@@ -1273,7 +1392,9 @@ class DigitalSignage {
         const showMoonPhaseCheck = document.getElementById('show-moon-phase');
         const showWeatherCheck = document.getElementById('show-weather');
         const showUVCheck = document.getElementById('show-uv');
+        const showTemperatureCheck = document.getElementById('show-temperature');
         const timeFormatSelect = document.getElementById('time-format');
+        const temperatureUnitSelect = document.getElementById('temperature-unit');
         const latitudeInput = document.getElementById('latitude');
         const longitudeInput = document.getElementById('longitude');
         const uvUpdateFrequencySelect = document.getElementById('uv-update-frequency');
@@ -1352,7 +1473,9 @@ class DigitalSignage {
             showMoonPhase: showMoonPhaseCheck.checked,
             showWeather: showWeatherCheck.checked,
             showUV: showUVCheck.checked,
+            showTemperature: showTemperatureCheck.checked,
             timeFormat: timeFormatSelect.value,
+            temperatureUnit: temperatureUnitSelect.value,
             latitude: latitude,
             longitude: longitude,
             uvUpdateFrequency: parseInt(uvUpdateFrequencySelect.value),
@@ -1445,6 +1568,7 @@ class DigitalSignage {
             this.setupExitButton();
             this.setupUVClickHandler();
             this.setupBitcoinHistoryClickHandler();
+            this.setupTemperatureClickHandler();
             
         } catch (error) {
             window.electronAPI.log.error('Failed to reload with new settings:', error);

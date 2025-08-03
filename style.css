@@ -820,6 +820,49 @@ body {
     background: #218838;
 }
 
+/* Temperature */
+.temperature-group {
+    position: absolute;
+    left: 65px;
+    top: calc(50% + 220px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    z-index: 10001;
+}
+
+.temperature-group .temperature-icon {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.temperature-group:hover {
+    transform: scale(1.1);
+}
+
+.temperature-icon {
+    width: 64px;
+    height: 64px;
+    opacity: 0.8;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)) brightness(0) invert(1);
+    transition: opacity 0.2s ease;
+}
+
+.temperature-icon:hover {
+    opacity: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)) brightness(0) invert(1) drop-shadow(0 0 10px rgba(255, 165, 0, 0.5));
+}
+
+.temperature-value {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 5px;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    font-weight: 300;
+}
+
 /* Bitcoin History */
 .bitcoin-history-group {
     position: absolute;

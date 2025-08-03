@@ -52,6 +52,12 @@
                     <span id="sunset-time" class="sunset-time">--:--</span>
                 </div>
                 
+                <!-- Temperature -->
+                <div class="temperature-group" id="temperature-group" style="display: flex;">
+                    <img id="temperature-icon" src="device_thermostat_24dp.svg" alt="Temperature" class="weather-icon temperature-icon">
+                    <span id="temperature-value" class="temperature-value">--°C</span>
+                </div>
+                
                 <!-- Bitcoin History -->
                 <div class="bitcoin-history-group" id="bitcoin-history-group" style="display: none;">
                     <img id="bitcoin-history-icon" src="cal-btc.svg" alt="Bitcoin History" class="weather-icon history-icon">
@@ -174,10 +180,25 @@
                                     </label>
                                 </div>
                                 <div class="form-group">
+                                    <label for="show-temperature">
+                                        <input type="checkbox" id="show-temperature"> Show temperature
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
                                     <label for="time-format">Time format:</label>
                                     <select id="time-format">
                                         <option value="24">24-hour (15:30)</option>
                                         <option value="12">12-hour (3:30 PM)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="temperature-unit">Temperature unit:</label>
+                                    <select id="temperature-unit">
+                                        <option value="C">Celsius (°C)</option>
+                                        <option value="F">Fahrenheit (°F)</option>
                                     </select>
                                 </div>
                             </div>
@@ -194,7 +215,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="uv-update-frequency">UV Index update frequency:</label>
+                                <label for="uv-update-frequency">Weather update frequency:</label>
                                 <select id="uv-update-frequency">
                                     <option value="15">Every 15 minutes</option>
                                     <option value="30">Every 30 minutes</option>
