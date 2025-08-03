@@ -17,7 +17,7 @@
   "author": "Rom Kov",
   "license": "GPLv3",
   "devDependencies": {
-    "electron": "^37.2.2",
+    "electron": "^37.2.5",
     "electron-builder": "^26.0.12"
   },
   "build": {
@@ -52,7 +52,7 @@
     }
   },
   "dependencies": {
-    "electron-log": "^5.4.1",
+    "electron-log": "^5.4.2",
     "lunarphase-js": "^2.0.3",
     "sqlite3": "^5.1.7"
   }
