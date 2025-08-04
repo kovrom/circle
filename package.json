@@ -1,6 +1,6 @@
 {
   "name": "Circle",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "BTC Digital signage app",
   "main": "main.js",
   "scripts": {
