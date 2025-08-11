@@ -169,6 +169,7 @@ class DigitalSignage {
             this.setupGestures();
             this.setupErrorHandling();
             this.setupSettings();
+            this.setupVirtualKeyboard();
             this.setupScreensaver();
             this.updateScreensaverButtonVisibility();
             this.setupExitButton();
@@ -459,6 +460,426 @@ class DigitalSignage {
                 }
             }
         });
+    }
+
+    setupVirtualKeyboard() {
+        const keyboardToggle = document.getElementById('virtual-keyboard-toggle');
+        const virtualKeyboard = document.getElementById('virtual-keyboard');
+        const keyButtons = virtualKeyboard.querySelectorAll('.key-btn');
+        
+        let isKeyboardVisible = false;
+        let isCapsLock = false;
+        let isShiftActive = false;
+        let activeInput = null;
+        let lastActiveInput = null;
+        
+        // Prevent toggle button from stealing focus
+        this.addEventListenerTracked(keyboardToggle, 'mousedown', (e) => {
+            e.preventDefault();
+        });
+        
+        // Toggle keyboard visibility
+        this.addEventListenerTracked(keyboardToggle, 'click', () => {
+            isKeyboardVisible = !isKeyboardVisible;
+            if (isKeyboardVisible) {
+                virtualKeyboard.classList.remove('hidden');
+                keyboardToggle.classList.add('active');
+                // Position keyboard under active input if there is one
+                if (activeInput) {
+                    this.positionKeyboardUnderInput(activeInput, virtualKeyboard);
+                } else {
+                    // Default position at bottom center if no active input
+                    this.positionKeyboardDefault(virtualKeyboard);
+                }
+            } else {
+                virtualKeyboard.classList.add('hidden');
+                keyboardToggle.classList.remove('active');
+            }
+        });
+        
+        // Track active input for focusing (using delegation for dynamic inputs)
+        this.addEventListenerTracked(document, 'focusin', (e) => {
+            if (e.target.matches('#settings-form input[type="text"], #settings-form input[type="url"]')) {
+                activeInput = e.target;
+                lastActiveInput = e.target; // Keep a backup reference
+                // Position keyboard under the focused input if visible
+                if (isKeyboardVisible) {
+                    this.positionKeyboardUnderInput(activeInput, virtualKeyboard);
+                }
+            }
+        });
+        
+        this.addEventListenerTracked(document, 'focusout', (e) => {
+            if (e.target.matches('#settings-form input[type="text"], #settings-form input[type="url"]')) {
+                // Only clear activeInput if we're not clicking on the virtual keyboard
+                setTimeout(() => {
+                    const focusedElement = document.activeElement;
+                    const isKeyboardElement = virtualKeyboard.contains(focusedElement) || 
+                                            focusedElement === virtualKeyboard ||
+                                            focusedElement.closest('.virtual-keyboard');
+                    
+                    if (!isKeyboardElement && activeInput === e.target) {
+                        // Check if focus moved to another input
+                        if (!focusedElement || !focusedElement.matches('#settings-form input[type="text"], #settings-form input[type="url"]')) {
+                            activeInput = null;
+                        }
+                    }
+                }, 10);
+            }
+        });
+        
+        // Handle key button clicks
+        keyButtons.forEach(button => {
+            // Prevent buttons from stealing focus on mousedown
+            this.addEventListenerTracked(button, 'mousedown', (e) => {
+                e.preventDefault(); // Prevents focus from changing
+            });
+            
+            this.addEventListenerTracked(button, 'click', (e) => {
+                e.preventDefault();
+                const key = button.dataset.key;
+                
+                // Ensure we have an active input - use fallback if needed
+                if (!activeInput) {
+                    const inputs = document.querySelectorAll('#settings-form input[type="text"], #settings-form input[type="url"]');
+                    activeInput = Array.from(inputs).find(input => input === document.activeElement) || lastActiveInput;
+                }
+                
+                if (!activeInput) return;
+                
+                // Handle special keys
+                switch (key) {
+                    case 'Backspace':
+                        this.handleBackspace(activeInput);
+                        break;
+                    case 'Enter':
+                        this.handleEnter(activeInput);
+                        break;
+                    case 'CapsLock':
+                        isCapsLock = !isCapsLock;
+                        this.updateCapsLockState(virtualKeyboard, isCapsLock);
+                        break;
+                    case 'Shift':
+                        isShiftActive = !isShiftActive;
+                        this.updateShiftState(virtualKeyboard, isShiftActive);
+                        break;
+                    default:
+                        this.insertCharacter(activeInput, key, isCapsLock, isShiftActive);
+                        // Reset shift after typing (but not caps lock)
+                        if (isShiftActive) {
+                            isShiftActive = false;
+                            this.updateShiftState(virtualKeyboard, isShiftActive);
+                        }
+                        break;
+                }
+                
+                // Ensure focus remains on input after key press
+                if (activeInput) {
+                    activeInput.focus();
+                }
+                
+                // Also set a backup focus in case the immediate focus doesn't work
+                setTimeout(() => {
+                    if (activeInput && document.activeElement !== activeInput) {
+                        activeInput.focus();
+                    }
+                }, 10);
+            });
+        });
+        
+        // Close keyboard when clicking outside settings form or virtual keyboard
+        this.addEventListenerTracked(document, 'click', (e) => {
+            const settingsContent = document.querySelector('.settings-content');
+            const clickedOnKeyboard = virtualKeyboard.contains(e.target);
+            const clickedOnSettings = settingsContent && settingsContent.contains(e.target);
+            
+            if (isKeyboardVisible && !clickedOnKeyboard && !clickedOnSettings) {
+                virtualKeyboard.classList.add('hidden');
+                keyboardToggle.classList.remove('active');
+                isKeyboardVisible = false;
+            }
+        });
+        
+        // Handle window resize to reposition keyboard
+        this.addEventListenerTracked(window, 'resize', () => {
+            if (isKeyboardVisible) {
+                if (activeInput) {
+                    // Small delay to let the layout settle
+                    setTimeout(() => {
+                        this.positionKeyboardUnderInput(activeInput, virtualKeyboard);
+                    }, 100);
+                } else {
+                    this.positionKeyboardDefault(virtualKeyboard);
+                }
+            }
+        });
+        
+        // Handle scrolling in settings content to reposition keyboard
+        const settingsContent = document.querySelector('.settings-content');
+        if (settingsContent) {
+            this.addEventListenerTracked(settingsContent, 'scroll', () => {
+                if (isKeyboardVisible && activeInput) {
+                    this.positionKeyboardUnderInput(activeInput, virtualKeyboard);
+                }
+            });
+        }
+    }
+    
+    handleBackspace(input) {
+        // First try using execCommand if available
+        try {
+            if (document.execCommand) {
+                input.focus();
+                const deleted = document.execCommand('delete', false, null);
+                if (deleted) {
+                    return;
+                }
+            }
+        } catch (e) {
+            // execCommand might not work, fall back to manual method
+        }
+        
+        // Try simulating a real backspace key event
+        try {
+            const backspaceEvent = new KeyboardEvent('keydown', {
+                key: 'Backspace',
+                code: 'Backspace',
+                keyCode: 8,
+                which: 8,
+                bubbles: true,
+                cancelable: true
+            });
+            
+            input.focus();
+            const handled = input.dispatchEvent(backspaceEvent);
+            
+            if (handled && backspaceEvent.defaultPrevented) {
+                return; // Browser handled it
+            }
+        } catch (e) {
+            // KeyboardEvent simulation failed
+        }
+        
+        // Fallback to manual value manipulation
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        const value = input.value;
+        
+        if (start !== end) {
+            // Delete selected text
+            input.setSelectionRange(start, end);
+            input.setRangeText('', start, end, 'end');
+        } else if (start > 0) {
+            // Delete character before cursor
+            input.setSelectionRange(start - 1, start);
+            input.setRangeText('', start - 1, start, 'end');
+        }
+        
+        // Trigger events
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    
+    
+    handleEnter(input) {
+        // Try to focus next input
+        const inputs = Array.from(document.querySelectorAll('#settings-form input[type="text"], #settings-form input[type="url"]'));
+        const currentIndex = inputs.indexOf(input);
+        if (currentIndex >= 0 && currentIndex < inputs.length - 1) {
+            inputs[currentIndex + 1].focus();
+        } else {
+            // If this is the last input, just keep focus on current input
+            input.focus();
+        }
+    }
+    
+    insertCharacter(input, key, isCapsLock, isShiftActive) {
+        // Handle shift/caps logic for letters
+        let charToInsert = key;
+        if (key.length === 1 && key.match(/[a-zA-Z]/)) {
+            if (isCapsLock || isShiftActive) {
+                charToInsert = key.toUpperCase();
+            } else {
+                charToInsert = key.toLowerCase();
+            }
+        }
+        
+        // Handle shifted symbols
+        if (isShiftActive && !key.match(/[a-zA-Z]/)) {
+            const shiftMap = {
+                '1': '!', '2': '@', '3': '#', '4': '$', '5': '%',
+                '6': '^', '7': '&', '8': '*', '9': '(', '0': ')',
+                '-': '_', '=': '+', '[': '{', ']': '}', '\\': '|',
+                ';': ':', "'": '"', ',': '<', '.': '>', '/': '?'
+            };
+            charToInsert = shiftMap[key] || key;
+        }
+        
+        
+        input.focus();
+        
+        // Special validation for numeric text fields (converted from number inputs)
+        if (this.isNumericTextField(input)) {
+            const validNumberChars = /^[0-9.\-]$/;
+            if (!validNumberChars.test(charToInsert)) {
+                return; // Don't insert invalid characters in numeric text fields
+            }
+        }
+        
+        // Standard text insertion logic for all inputs
+        const start = input.selectionStart || 0;
+        const end = input.selectionEnd || 0;
+        const value = input.value || '';
+        
+        // Calculate new value and cursor position
+        const newValue = value.substring(0, start) + charToInsert + value.substring(end);
+        const newCursorPos = start + charToInsert.length;
+        
+        // Try using setRangeText for better compatibility
+        try {
+            input.setRangeText(charToInsert, start, end, 'end');
+            
+            // Trigger events
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            return;
+        } catch (e) {
+            // setRangeText not supported, fall back
+        }
+        
+        // Fallback to direct value manipulation
+        input.value = newValue;
+        input.setSelectionRange(newCursorPos, newCursorPos);
+        
+        // Trigger events
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    
+    updateCapsLockState(keyboard, isActive) {
+        const capsButtons = keyboard.querySelectorAll('.key-caps');
+        capsButtons.forEach(button => {
+            if (isActive) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+    }
+    
+    updateShiftState(keyboard, isActive) {
+        const shiftButtons = keyboard.querySelectorAll('.key-shift');
+        shiftButtons.forEach(button => {
+            if (isActive) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+        
+        // Update visual highlighting of secondary symbols
+        if (isActive) {
+            keyboard.classList.add('shift-active');
+        } else {
+            keyboard.classList.remove('shift-active');
+        }
+    }
+    
+    isNumericTextField(input) {
+        // Check if this is one of our numeric text fields (converted from number inputs)
+        const numericFieldIds = ['rotate-interval', 'latitude', 'longitude'];
+        return numericFieldIds.includes(input.id) || 
+               input.hasAttribute('data-min') || 
+               input.hasAttribute('data-max') ||
+               input.pattern && input.pattern.includes('[0-9]');
+    }
+    
+    positionKeyboardUnderInput(input, keyboard) {
+        if (!input || !keyboard) return;
+        
+        // Make sure keyboard is visible to get accurate measurements
+        const wasHidden = keyboard.classList.contains('hidden');
+        if (wasHidden) {
+            keyboard.style.visibility = 'hidden';
+            keyboard.classList.remove('hidden');
+        }
+        
+        const inputRect = input.getBoundingClientRect();
+        const keyboardRect = keyboard.getBoundingClientRect();
+        const keyboardHeight = keyboardRect.height || 240;
+        const keyboardWidth = keyboardRect.width || 600;
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // Calculate position below the input with some margin
+        let top = inputRect.bottom + 15;
+        
+        // Check if keyboard would go off the bottom of the screen
+        if (top + keyboardHeight > viewportHeight - 30) {
+            // Position above the input instead
+            top = inputRect.top - keyboardHeight - 15;
+            
+            // If still off screen, position at best available spot
+            if (top < 30) {
+                // Find the best vertical position
+                const spaceBelow = viewportHeight - inputRect.bottom;
+                const spaceAbove = inputRect.top;
+                
+                if (spaceBelow >= spaceAbove) {
+                    // Use space below, even if it means going off screen
+                    top = Math.min(inputRect.bottom + 15, viewportHeight - keyboardHeight - 20);
+                } else {
+                    // Use space above
+                    top = Math.max(30, inputRect.top - keyboardHeight - 15);
+                }
+            }
+        }
+        
+        // Calculate horizontal position (try to center under input, but keep on screen)
+        let left = inputRect.left + (inputRect.width / 2) - (keyboardWidth / 2);
+        left = Math.max(20, Math.min(left, viewportWidth - keyboardWidth - 20));
+        
+        // Restore hidden state if it was hidden
+        if (wasHidden) {
+            keyboard.classList.add('hidden');
+            keyboard.style.visibility = '';
+        }
+        
+        // Apply positioning
+        keyboard.style.top = `${Math.max(20, top)}px`;
+        keyboard.style.left = `${left}px`;
+        keyboard.style.transform = 'none';
+    }
+    
+    positionKeyboardDefault(keyboard) {
+        if (!keyboard) return;
+        
+        // Make sure keyboard is visible to get accurate measurements
+        const wasHidden = keyboard.classList.contains('hidden');
+        if (wasHidden) {
+            keyboard.style.visibility = 'hidden';
+            keyboard.classList.remove('hidden');
+        }
+        
+        const keyboardRect = keyboard.getBoundingClientRect();
+        const keyboardHeight = keyboardRect.height || 240;
+        const keyboardWidth = keyboardRect.width || 600;
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // Restore hidden state if it was hidden
+        if (wasHidden) {
+            keyboard.classList.add('hidden');
+            keyboard.style.visibility = '';
+        }
+        
+        // Position at bottom center of viewport
+        const top = viewportHeight - keyboardHeight - 40;
+        const left = (viewportWidth / 2) - (keyboardWidth / 2);
+        
+        keyboard.style.top = `${Math.max(20, top)}px`;
+        keyboard.style.left = `${Math.max(20, left)}px`;
+        keyboard.style.transform = 'none';
     }
 
     setupScreensaver() {
@@ -1253,6 +1674,14 @@ class DigitalSignage {
         const settingsOverlay = document.getElementById('settings-overlay');
         settingsOverlay.classList.add('hidden');
         
+        // Hide virtual keyboard when settings close
+        const virtualKeyboard = document.getElementById('virtual-keyboard');
+        const keyboardToggle = document.getElementById('virtual-keyboard-toggle');
+        if (virtualKeyboard && keyboardToggle) {
+            virtualKeyboard.classList.add('hidden');
+            keyboardToggle.classList.remove('active');
+        }
+        
         // Notify main process that modal is closed
         try {
             await window.electronAPI.invoke('set-modal-state', false);
@@ -1433,8 +1862,26 @@ class DigitalSignage {
         }
 
         // Validate coordinates
-        const latitude = parseFloat(latitudeInput.value);
-        const longitude = parseFloat(longitudeInput.value);
+        // Handle empty fields with defaults
+        const latitudeValue = latitudeInput.value.trim();
+        const longitudeValue = longitudeInput.value.trim();
+        const rotateIntervalValue = rotateIntervalInput.value.trim();
+        
+        // Set defaults for empty fields and update input display
+        const latitude = latitudeValue === '' ? 40.7128 : parseFloat(latitudeValue);
+        const longitude = longitudeValue === '' ? -74.0060 : parseFloat(longitudeValue);
+        const rotateInterval = rotateIntervalValue === '' ? 1 : parseInt(rotateIntervalValue);
+        
+        // Update the input fields to show the default values if they were empty
+        if (latitudeValue === '') {
+            latitudeInput.value = latitude.toString();
+        }
+        if (longitudeValue === '') {
+            longitudeInput.value = longitude.toString();
+        }
+        if (rotateIntervalValue === '') {
+            rotateIntervalInput.value = rotateInterval.toString();
+        }
         
         if (isNaN(latitude) || latitude < -90 || latitude > 90) {
             alert('Please enter a valid latitude between -90 and 90');
@@ -1467,7 +1914,7 @@ class DigitalSignage {
         const newConfig = {
             urls: urlsData,
             autoRotate: autoRotateCheck.checked,
-            autoRotateInterval: parseInt(rotateIntervalInput.value) * 60000,
+            autoRotateInterval: Math.max(1, Math.min(60, rotateInterval)) * 60000, // Clamp between 1-60 minutes
             fullscreen: fullscreenCheck.checked,
             enableDevTools: devToolsCheck.checked,
             showMoonPhase: showMoonPhaseCheck.checked,
@@ -1564,6 +2011,7 @@ class DigitalSignage {
             this.setupGestures();
             this.setupErrorHandling();
             this.setupSettings();
+            this.setupVirtualKeyboard();
             this.setupScreensaver();
             this.setupExitButton();
             this.setupUVClickHandler();

@@ -93,7 +93,10 @@
                 <div class="settings-content">
                     <div class="settings-header">
                         <h3>⚙️ Settings</h3>
-                        <button id="settings-close" class="close-button">✕</button>
+                        <div class="settings-header-buttons">
+                            <button id="virtual-keyboard-toggle" class="keyboard-toggle-button" title="Toggle Virtual Keyboard">⌨️</button>
+                            <button id="settings-close" class="close-button">✕</button>
+                        </div>
                     </div>
                     
                     <form id="settings-form" class="settings-form">
@@ -134,7 +137,7 @@
 
                             <div class="form-group">
                                 <label for="rotate-interval">Auto-rotate interval (minutes):</label>
-                                <input type="number" id="rotate-interval" min="1" max="60" value="1">
+                                <input type="text" id="rotate-interval" pattern="[0-9]+" title="Please enter a number between 1 and 60" placeholder="1" data-min="1" data-max="60">
                             </div>
 
                             <div class="form-group">
@@ -206,11 +209,11 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="latitude">Latitude:</label>
-                                    <input type="number" id="latitude" step="0.000001" min="-90" max="90" placeholder="40.7128">
+                                    <input type="text" id="latitude" pattern="^-?[0-9]*\.?[0-9]+$" title="Please enter a valid latitude (-90 to 90)" placeholder="40.7128" data-min="-90" data-max="90">
                                 </div>
                                 <div class="form-group">
                                     <label for="longitude">Longitude:</label>
-                                    <input type="number" id="longitude" step="0.000001" min="-180" max="180" placeholder="-74.0060">
+                                    <input type="text" id="longitude" pattern="^-?[0-9]*\.?[0-9]+$" title="Please enter a valid longitude (-180 to 180)" placeholder="-74.0060" data-min="-180" data-max="180">
                                 </div>
                             </div>
 
@@ -252,6 +255,72 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Virtual Keyboard (positioned absolutely) -->
+    <div id="virtual-keyboard" class="virtual-keyboard hidden" tabindex="-1">
+        <div class="keyboard-row">
+            <button class="key-btn dual-key" tabindex="-1" data-key="1"><span class="key-secondary">!</span><span class="key-primary">1</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="2"><span class="key-secondary">@</span><span class="key-primary">2</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="3"><span class="key-secondary">#</span><span class="key-primary">3</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="4"><span class="key-secondary">$</span><span class="key-primary">4</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="5"><span class="key-secondary">%</span><span class="key-primary">5</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="6"><span class="key-secondary">^</span><span class="key-primary">6</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="7"><span class="key-secondary">&</span><span class="key-primary">7</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="8"><span class="key-secondary">*</span><span class="key-primary">8</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="9"><span class="key-secondary">(</span><span class="key-primary">9</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="0"><span class="key-secondary">)</span><span class="key-primary">0</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="-"><span class="key-secondary">_</span><span class="key-primary">-</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="="><span class="key-secondary">+</span><span class="key-primary">=</span></button>
+            <button class="key-btn key-backspace" tabindex="-1" data-key="Backspace">⌫</button>
+        </div>
+        <div class="keyboard-row">
+            <button class="key-btn" tabindex="-1" data-key="q">Q</button>
+            <button class="key-btn" tabindex="-1" data-key="w">W</button>
+            <button class="key-btn" tabindex="-1" data-key="e">E</button>
+            <button class="key-btn" tabindex="-1" data-key="r">R</button>
+            <button class="key-btn" tabindex="-1" data-key="t">T</button>
+            <button class="key-btn" tabindex="-1" data-key="y">Y</button>
+            <button class="key-btn" tabindex="-1" data-key="u">U</button>
+            <button class="key-btn" tabindex="-1" data-key="i">I</button>
+            <button class="key-btn" tabindex="-1" data-key="o">O</button>
+            <button class="key-btn" tabindex="-1" data-key="p">P</button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="["><span class="key-secondary">{</span><span class="key-primary">[</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="]"><span class="key-secondary">}</span><span class="key-primary">]</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="\"><span class="key-secondary">|</span><span class="key-primary">\</span></button>
+        </div>
+        <div class="keyboard-row">
+            <button class="key-btn key-caps" tabindex="-1" data-key="CapsLock">Caps</button>
+            <button class="key-btn" tabindex="-1" data-key="a">A</button>
+            <button class="key-btn" tabindex="-1" data-key="s">S</button>
+            <button class="key-btn" tabindex="-1" data-key="d">D</button>
+            <button class="key-btn" tabindex="-1" data-key="f">F</button>
+            <button class="key-btn" tabindex="-1" data-key="g">G</button>
+            <button class="key-btn" tabindex="-1" data-key="h">H</button>
+            <button class="key-btn" tabindex="-1" data-key="j">J</button>
+            <button class="key-btn" tabindex="-1" data-key="k">K</button>
+            <button class="key-btn" tabindex="-1" data-key="l">L</button>
+            <button class="key-btn dual-key" tabindex="-1" data-key=";"><span class="key-secondary">:</span><span class="key-primary">;</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="'"><span class="key-secondary">"</span><span class="key-primary">'</span></button>
+            <button class="key-btn key-enter" tabindex="-1" data-key="Enter">Enter</button>
+        </div>
+        <div class="keyboard-row">
+            <button class="key-btn key-shift" tabindex="-1" data-key="Shift">Shift</button>
+            <button class="key-btn" tabindex="-1" data-key="z">Z</button>
+            <button class="key-btn" tabindex="-1" data-key="x">X</button>
+            <button class="key-btn" tabindex="-1" data-key="c">C</button>
+            <button class="key-btn" tabindex="-1" data-key="v">V</button>
+            <button class="key-btn" tabindex="-1" data-key="b">B</button>
+            <button class="key-btn" tabindex="-1" data-key="n">N</button>
+            <button class="key-btn" tabindex="-1" data-key="m">M</button>
+            <button class="key-btn dual-key" tabindex="-1" data-key=","><span class="key-secondary">&lt;</span><span class="key-primary">,</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="."><span class="key-secondary">&gt;</span><span class="key-primary">.</span></button>
+            <button class="key-btn dual-key" tabindex="-1" data-key="/"><span class="key-secondary">?</span><span class="key-primary">/</span></button>
+            <button class="key-btn key-shift" tabindex="-1" data-key="Shift">Shift</button>
+        </div>
+        <div class="keyboard-row">
+            <button class="key-btn key-space" tabindex="-1" data-key=" ">Space</button>
         </div>
     </div>
 
