@@ -572,6 +572,15 @@ body {
     margin: 0;
     font-size: 24px;
     font-weight: 300;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-icon {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1);
 }
 
 .close-button {

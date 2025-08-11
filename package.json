@@ -1,6 +1,6 @@
 {
   "name": "Circle",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "BTC Digital signage app",
   "main": "main.js",
   "scripts": {
@@ -17,7 +17,7 @@
   "author": "Rom Kov",
   "license": "GPLv3",
   "devDependencies": {
-    "electron": "^37.2.5",
+    "electron": "^37.2.6",
     "electron-builder": "^26.0.12"
   },
   "build": {
