@@ -833,7 +833,7 @@ body {
 .humidity-group {
     position: absolute;
     left: 95px;
-    top: calc(50% - 320px);
+    top: calc(50% - 340px);
     display: flex;
     flex-direction: column;
     align-items: center;
