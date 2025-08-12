@@ -33,6 +33,12 @@
 
             <!-- Controls overlay -->
             <div class="controls-overlay">
+                <!-- Humidity -->
+                <div class="humidity-group" id="humidity-group">
+                    <img id="humidity-icon" src="humidity_percentage_24dp.svg" alt="Humidity" class="weather-icon humidity-icon">
+                    <span id="humidity-value" class="humidity-value">--%</span>
+                </div>
+                
                 <div class="moon-phase-group">
                     <span id="moon-phase" class="nav-button prev-button"></span>
                     <span id="moon-phase-name" class="moon-phase-name"></span>
@@ -187,9 +193,17 @@
                                         <input type="checkbox" id="show-uv"> Show UV Index
                                     </label>
                                 </div>
+                            </div>
+
+                            <div class="form-row">
                                 <div class="form-group">
                                     <label for="show-temperature">
                                         <input type="checkbox" id="show-temperature"> Show temperature
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label for="show-humidity">
+                                        <input type="checkbox" id="show-humidity"> Show humidity
                                     </label>
                                 </div>
                             </div>

@@ -1209,9 +1209,10 @@ class DigitalSignage {
     }
 
     async setupUVData() {
-        // Check if UV Index should be shown
+        // Check if weather elements should be shown
         const shouldShowUV = this.config.showUV !== false; // Default to true
         const shouldShowTemperature = this.config.showTemperature !== false; // Default to true
+        const shouldShowHumidity = this.config.showHumidity !== false; // Default to true
         
         if (!shouldShowUV) {
             this.hideUVDisplay();
@@ -1221,8 +1222,12 @@ class DigitalSignage {
             this.hideTemperatureDisplay();
         }
         
-        // If both are disabled, return early
-        if (!shouldShowUV && !shouldShowTemperature) {
+        if (!shouldShowHumidity) {
+            this.hideHumidityDisplay();
+        }
+        
+        // If all are disabled, return early
+        if (!shouldShowUV && !shouldShowTemperature && !shouldShowHumidity) {
             return;
         }
 
@@ -1240,24 +1245,45 @@ class DigitalSignage {
                 }
             }
             
-            // Still try to get current temperature even at night (only if enabled)
-            if (shouldShowTemperature) {
-                this.showTemperatureDisplay();
+            // Still try to get current temperature and humidity even at night (only if enabled)
+            if (shouldShowTemperature || shouldShowHumidity) {
+                if (shouldShowTemperature) {
+                    this.showTemperatureDisplay();
+                }
+                if (shouldShowHumidity) {
+                    this.showHumidityDisplay();
+                }
+                
                 try {
                     const latitude = this.config.latitude || 40.7128;
                     const longitude = this.config.longitude || -74.0060;
                     
+                    let nightParams = [];
+                    if (shouldShowTemperature) {
+                        nightParams.push('temperature_2m');
+                    }
+                    if (shouldShowHumidity) {
+                        nightParams.push('relative_humidity_2m');
+                    }
+                    
                     const response = await fetch(
-                        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&timezone=auto`
+                        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=${nightParams.join(',')}&timezone=auto`
                     );
                     
                     if (response.ok) {
                         const data = await response.json();
                         const temperatureValueElement = document.getElementById('temperature-value');
-                        if (temperatureValueElement && data.current && typeof data.current.temperature_2m === 'number') {
+                        const humidityValueElement = document.getElementById('humidity-value');
+                        
+                        if (shouldShowTemperature && temperatureValueElement && data.current && typeof data.current.temperature_2m === 'number') {
                             const temperature = this.convertTemperature(data.current.temperature_2m);
                             const unit = this.getTemperatureUnit();
                             temperatureValueElement.textContent = `${temperature}°${unit}`;
+                        }
+                        
+                        if (shouldShowHumidity && humidityValueElement && data.current && typeof data.current.relative_humidity_2m === 'number') {
+                            const humidity = Math.round(data.current.relative_humidity_2m);
+                            humidityValueElement.textContent = `${humidity}%`;
                         }
                     }
                 } catch (error) {
@@ -1280,6 +1306,9 @@ class DigitalSignage {
             if (shouldShowTemperature) {
                 currentParams.push('temperature_2m');
             }
+            if (shouldShowHumidity) {
+                currentParams.push('relative_humidity_2m');
+            }
             
             const response = await fetch(
                 `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=${currentParams.join(',')}&timezone=auto`
@@ -1290,7 +1319,7 @@ class DigitalSignage {
             }
             
             const data = await response.json();
-            this.updateUVDisplay(data, shouldShowUV, shouldShowTemperature);
+            this.updateUVDisplay(data, shouldShowUV, shouldShowTemperature, shouldShowHumidity);
             
         } catch (error) {
             window.electronAPI.log.error('Weather data setup failed:', error);
@@ -1309,12 +1338,21 @@ class DigitalSignage {
                     temperatureValueElement.textContent = `--°${unit}`;
                 }
             }
+            // Show humidity fallback only if enabled
+            if (shouldShowHumidity) {
+                this.showHumidityDisplay();
+                const humidityValueElement = document.getElementById('humidity-value');
+                if (humidityValueElement) {
+                    humidityValueElement.textContent = '--%';
+                }
+            }
         }
     }
 
-    updateUVDisplay(data, shouldShowUV = true, shouldShowTemperature = true) {
+    updateUVDisplay(data, shouldShowUV = true, shouldShowTemperature = true, shouldShowHumidity = true) {
         const uvValueElement = document.getElementById('uv-value');
         const temperatureValueElement = document.getElementById('temperature-value');
+        const humidityValueElement = document.getElementById('humidity-value');
         
         // Show UV element only if enabled
         if (shouldShowUV) {
@@ -1336,6 +1374,15 @@ class DigitalSignage {
                 const temperature = this.convertTemperature(data.current.temperature_2m);
                 const unit = this.getTemperatureUnit();
                 temperatureValueElement.textContent = `${temperature}°${unit}`;
+            }
+        }
+        
+        // Show humidity only if enabled
+        if (shouldShowHumidity) {
+            this.showHumidityDisplay();
+            if (humidityValueElement && data.current && typeof data.current.relative_humidity_2m === 'number') {
+                const humidity = Math.round(data.current.relative_humidity_2m);
+                humidityValueElement.textContent = `${humidity}%`;
             }
         }
     }
@@ -1398,6 +1445,20 @@ class DigitalSignage {
         const temperatureGroup = document.querySelector('.temperature-group');
         if (temperatureGroup) {
             temperatureGroup.style.display = 'none';
+        }
+    }
+
+    showHumidityDisplay() {
+        const humidityGroup = document.querySelector('.humidity-group');
+        if (humidityGroup) {
+            humidityGroup.style.display = 'flex';
+        }
+    }
+
+    hideHumidityDisplay() {
+        const humidityGroup = document.querySelector('.humidity-group');
+        if (humidityGroup) {
+            humidityGroup.style.display = 'none';
         }
     }
 
@@ -1710,6 +1771,7 @@ class DigitalSignage {
         const showWeatherCheck = document.getElementById('show-weather');
         const showUVCheck = document.getElementById('show-uv');
         const showTemperatureCheck = document.getElementById('show-temperature');
+        const showHumidityCheck = document.getElementById('show-humidity');
         const timeFormatSelect = document.getElementById('time-format');
         const temperatureUnitSelect = document.getElementById('temperature-unit');
         const latitudeInput = document.getElementById('latitude');
@@ -1749,6 +1811,7 @@ class DigitalSignage {
         showWeatherCheck.checked = this.config.showWeather !== false; // Default to true
         showUVCheck.checked = this.config.showUV !== false; // Default to true
         showTemperatureCheck.checked = this.config.showTemperature !== false; // Default to true
+        showHumidityCheck.checked = this.config.showHumidity !== false; // Default to true
         
         // Populate time format
         timeFormatSelect.value = this.config.timeFormat || '24'; // Default to 24-hour
@@ -1822,6 +1885,7 @@ class DigitalSignage {
         const showWeatherCheck = document.getElementById('show-weather');
         const showUVCheck = document.getElementById('show-uv');
         const showTemperatureCheck = document.getElementById('show-temperature');
+        const showHumidityCheck = document.getElementById('show-humidity');
         const timeFormatSelect = document.getElementById('time-format');
         const temperatureUnitSelect = document.getElementById('temperature-unit');
         const latitudeInput = document.getElementById('latitude');
@@ -1921,6 +1985,7 @@ class DigitalSignage {
             showWeather: showWeatherCheck.checked,
             showUV: showUVCheck.checked,
             showTemperature: showTemperatureCheck.checked,
+            showHumidity: showHumidityCheck.checked,
             timeFormat: timeFormatSelect.value,
             temperatureUnit: temperatureUnitSelect.value,
             latitude: latitude,
