@@ -1780,6 +1780,7 @@ class DigitalSignage {
         const screensaverUrlInput = document.getElementById('screensaver-url');
         const screensaverEnabledCheck = document.getElementById('screensaver-enabled');
         const useQuotesScreensaverCheck = document.getElementById('use-quotes-screensaver');
+        const autostartEnabledCheck = document.getElementById('autostart-enabled');
 
         // Clear existing URL entries
         urlsContainer.innerHTML = '';
@@ -1846,6 +1847,60 @@ class DigitalSignage {
         
         // Populate interval (convert milliseconds to minutes)
         rotateIntervalInput.value = this.config.autoRotateInterval / 60000;
+        
+        // Populate autostart settings (Linux only)
+        this.updateAutostartSettings();
+    }
+
+    async updateAutostartSettings() {
+        const autostartEnabledCheck = document.getElementById('autostart-enabled');
+        const autostartStatusText = document.getElementById('autostart-status-text');
+        const linuxTabButton = document.getElementById('linux-tab-button');
+        
+        try {
+            // Check if we're on Linux and get autostart status
+            const autostartStatus = await window.electronAPI.invoke('get-autostart-status');
+            
+            if (autostartStatus.isLinux) {
+                // Show Linux tab
+                if (linuxTabButton) {
+                    linuxTabButton.style.display = 'block';
+                }
+                
+                // Update checkbox based on current status
+                if (autostartEnabledCheck) {
+                    autostartEnabledCheck.checked = autostartStatus.enabled;
+                }
+                
+                // Update status text
+                if (autostartStatusText) {
+                    if (autostartStatus.enabled) {
+                        autostartStatusText.textContent = '✓ Autostart is enabled';
+                        autostartStatusText.style.color = '#4CAF50';
+                    } else {
+                        autostartStatusText.textContent = '✗ Autostart is disabled';
+                        autostartStatusText.style.color = '#f44336';
+                    }
+                }
+            } else {
+                // Hide Linux tab on non-Linux systems
+                if (linuxTabButton) {
+                    linuxTabButton.style.display = 'none';
+                }
+            }
+        } catch (error) {
+            window.electronAPI.log.error('Failed to get autostart status:', error);
+            
+            // Hide Linux tab on error
+            if (linuxTabButton) {
+                linuxTabButton.style.display = 'none';
+            }
+            
+            if (autostartStatusText) {
+                autostartStatusText.textContent = 'Error checking status';
+                autostartStatusText.style.color = '#f44336';
+            }
+        }
     }
 
     createUrlEntry(url = '', backgroundColor = '#000000', index = 0) {
@@ -1894,6 +1949,7 @@ class DigitalSignage {
         const screensaverUrlInput = document.getElementById('screensaver-url');
         const screensaverEnabledCheck = document.getElementById('screensaver-enabled');
         const useQuotesScreensaverCheck = document.getElementById('use-quotes-screensaver');
+        const autostartEnabledCheck = document.getElementById('autostart-enabled');
 
         // Collect URLs and background colors
         const urlEntries = urlsContainer.querySelectorAll('.url-entry');
@@ -2001,6 +2057,17 @@ class DigitalSignage {
             const result = await window.electronAPI.invoke('save-config', newConfig);
             
             if (result.success) {
+                // Handle autostart toggle (Linux only)
+                if (autostartEnabledCheck) {
+                    try {
+                        await window.electronAPI.invoke('set-autostart', autostartEnabledCheck.checked);
+                        window.electronAPI.log.info('Autostart setting updated:', autostartEnabledCheck.checked);
+                    } catch (autostartError) {
+                        window.electronAPI.log.error('Failed to update autostart:', autostartError);
+                        // Don't fail the entire save operation for autostart errors
+                    }
+                }
+                
                 // Update local config
                 this.config = newConfig;
                 

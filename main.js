@@ -1,6 +1,8 @@
 const { app, BrowserWindow, BrowserView, ipcMain, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
+const { exec, spawn } = require('child_process');
 const log = require('electron-log');
 const { Moon } = require('lunarphase-js');
 const sqlite3 = require('sqlite3').verbose();
@@ -830,6 +832,154 @@ ipcMain.handle('set-modal-state', (event, modalOpen) => {
   isModalOpen = modalOpen;
   log.info('Modal state changed:', modalOpen ? 'open' : 'closed');
 });
+
+// Autostart functionality (Linux only)
+ipcMain.handle('get-autostart-status', async () => {
+  const isLinux = os.platform() === 'linux';
+  
+  if (!isLinux) {
+    return { isLinux: false, enabled: false };
+  }
+  
+  try {
+    const homeDir = os.homedir();
+    const serviceFile = path.join(homeDir, '.config', 'systemd', 'user', 'circle.service');
+    
+    // Check if service file exists
+    const serviceExists = fs.existsSync(serviceFile);
+    
+    if (!serviceExists) {
+      return { isLinux: true, enabled: false };
+    }
+    
+    // Check if service is enabled
+    const { stdout } = await execPromise('systemctl --user is-enabled circle.service');
+    const isEnabled = stdout.trim() === 'enabled';
+    
+    return { isLinux: true, enabled: isEnabled };
+  } catch (error) {
+    log.error('Error checking autostart status:', error);
+    return { isLinux: true, enabled: false };
+  }
+});
+
+ipcMain.handle('set-autostart', async (event, enable) => {
+  const isLinux = os.platform() === 'linux';
+  
+  if (!isLinux) {
+    throw new Error('Autostart is only supported on Linux');
+  }
+  
+  try {
+    if (enable) {
+      await enableAutostart();
+    } else {
+      await disableAutostart();
+    }
+    
+    log.info(`Autostart ${enable ? 'enabled' : 'disabled'} successfully`);
+    return { success: true };
+  } catch (error) {
+    log.error(`Error ${enable ? 'enabling' : 'disabling'} autostart:`, error);
+    throw error;
+  }
+});
+
+// Helper function to promisify exec
+function execPromise(command) {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve({ stdout, stderr });
+      }
+    });
+  });
+}
+
+// Enable autostart by creating systemd service file and enabling it
+async function enableAutostart() {
+  const homeDir = os.homedir();
+  const configDir = path.join(homeDir, '.config', 'systemd', 'user');
+  const serviceFile = path.join(configDir, 'circle.service');
+  
+  // Get the current executable path
+  const execPath = process.execPath;
+  
+  // Create .config/systemd/user directory if it doesn't exist
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+  }
+  
+  // Create service file content
+  const serviceContent = `[Unit]
+Description=Circle
+After=graphical.target
+After=network.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+ExecStart=${execPath}
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
+`;
+  
+  // Write service file
+  fs.writeFileSync(serviceFile, serviceContent, 'utf8');
+  log.info('Service file created at:', serviceFile);
+  
+  // Reload systemd daemon
+  await execPromise('systemctl --user daemon-reload');
+  
+  // Enable the service
+  await execPromise('systemctl --user enable circle.service');
+  
+  // Start the service (optional - just enable for now)
+  // await execPromise('systemctl --user start circle.service');
+}
+
+// Disable autostart by disabling and removing systemd service
+async function disableAutostart() {
+  try {
+    // Stop the service if running
+    await execPromise('systemctl --user stop circle.service').catch(() => {
+      // Ignore errors if service is not running
+    });
+    
+    // Disable the service
+    await execPromise('systemctl --user disable circle.service').catch(() => {
+      // Ignore errors if service is not enabled
+    });
+    
+    log.info('Autostart disabled successfully');
+  } catch (error) {
+    // If the commands fail, it's likely the service wasn't properly set up
+    log.warn('Error during disable (service may not exist):', error.message);
+  }
+  
+  // Remove service file if it exists
+  const homeDir = os.homedir();
+  const serviceFile = path.join(homeDir, '.config', 'systemd', 'user', 'circle.service');
+  
+  if (fs.existsSync(serviceFile)) {
+    fs.unlinkSync(serviceFile);
+    log.info('Service file removed:', serviceFile);
+  }
+  
+  // Reload systemd daemon
+  try {
+    await execPromise('systemctl --user daemon-reload');
+  } catch (error) {
+    log.warn('Error reloading systemd daemon:', error.message);
+  }
+}
 
 // Helper function for moon phase emojis
 function getMoonPhaseEmoji(phase) {

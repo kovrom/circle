@@ -24,6 +24,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       'get-moon-phase',
       'get-todays-bitcoin-fact',
       'set-modal-state',
+      'get-autostart-status',
+      'set-autostart',
       'log-info',
       'log-error',
       'log-warn'
