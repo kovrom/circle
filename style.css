@@ -1219,3 +1219,110 @@ body {
         font-size: 10px;
     }
 }
+
+/* WiFi Management Styles */
+.wifi-password {
+    width: 100%;
+    padding: 8px 20px !important;
+    border: 1px solid #e1e5e9;
+    border-radius: 10px;
+    font-size: 15px !important;
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+    line-height: 1.4;
+    min-height: 40px;
+}
+
+.wifi-password:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.wifi-networks-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+    background: white;
+    color: #333;
+    min-height: 120px;
+}
+
+.wifi-networks-select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.wifi-refresh-btn,
+.wifi-connect-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-image: linear-gradient(-60deg, #ff5858 0%, #f09819 100%);
+    color: white;
+    display: inline-block;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.wifi-refresh-btn:hover,
+.wifi-connect-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 88, 88, 0.4);
+}
+
+.wifi-refresh-btn:active,
+.wifi-connect-btn:active {
+    transform: translateY(0);
+}
+
+.wifi-disconnect-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+}
+
+.wifi-disconnect-btn:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.wifi-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.spinner-small {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(102, 126, 234, 0.3);
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.section-divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e1e5e9, transparent);
+    margin: 10px 0;
+}

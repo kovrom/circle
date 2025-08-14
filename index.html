@@ -263,6 +263,38 @@
                                     <span id="autostart-status-text">Checking...</span>
                                 </div>
                             </div>
+                            
+                            <hr class="section-divider">
+                            
+                            <div class="form-group">
+                                <label>WiFi Management:</label>
+                                <div id="wifi-status" class="wifi-status">
+                                    <span id="wifi-status-text">Checking...</span>
+                                    <button type="button" id="wifi-disconnect-btn" class="wifi-disconnect-btn" style="display: none;">Disconnect</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Available Networks:</label>
+                                <button type="button" id="wifi-refresh-btn" class="wifi-refresh-btn">🔄 Refresh Networks</button>
+                                <div id="wifi-loading" class="wifi-loading" style="display: none;">
+                                    <div class="spinner-small"></div>
+                                    <span>Scanning for networks...</span>
+                                </div>
+                                <select id="wifi-networks-select" class="wifi-networks-select" size="5">
+                                    <option disabled>Click "Refresh Networks" to scan</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="wifi-password">Network Password (if required):</label>
+                                <input type="password" id="wifi-password" class="wifi-password" placeholder="Enter password for secured networks">
+                                <small class="form-help">Leave empty for open networks.</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="button" id="wifi-connect-btn" class="wifi-connect-btn">Connect to Selected Network</button>
+                            </div>
                         </div>
 
                         <div class="form-actions">

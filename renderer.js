@@ -499,7 +499,7 @@ class DigitalSignage {
         
         // Track active input for focusing (using delegation for dynamic inputs)
         this.addEventListenerTracked(document, 'focusin', (e) => {
-            if (e.target.matches('#settings-form input[type="text"], #settings-form input[type="url"]')) {
+            if (e.target.matches('#settings-form input[type="text"], #settings-form input[type="url"], #settings-form input[type="password"]')) {
                 activeInput = e.target;
                 lastActiveInput = e.target; // Keep a backup reference
                 // Position keyboard under the focused input if visible
@@ -510,7 +510,7 @@ class DigitalSignage {
         });
         
         this.addEventListenerTracked(document, 'focusout', (e) => {
-            if (e.target.matches('#settings-form input[type="text"], #settings-form input[type="url"]')) {
+            if (e.target.matches('#settings-form input[type="text"], #settings-form input[type="url"], #settings-form input[type="password"]')) {
                 // Only clear activeInput if we're not clicking on the virtual keyboard
                 setTimeout(() => {
                     const focusedElement = document.activeElement;
@@ -520,7 +520,7 @@ class DigitalSignage {
                     
                     if (!isKeyboardElement && activeInput === e.target) {
                         // Check if focus moved to another input
-                        if (!focusedElement || !focusedElement.matches('#settings-form input[type="text"], #settings-form input[type="url"]')) {
+                        if (!focusedElement || !focusedElement.matches('#settings-form input[type="text"], #settings-form input[type="url"], #settings-form input[type="password"]')) {
                             activeInput = null;
                         }
                     }
@@ -541,7 +541,7 @@ class DigitalSignage {
                 
                 // Ensure we have an active input - use fallback if needed
                 if (!activeInput) {
-                    const inputs = document.querySelectorAll('#settings-form input[type="text"], #settings-form input[type="url"]');
+                    const inputs = document.querySelectorAll('#settings-form input[type="text"], #settings-form input[type="url"], #settings-form input[type="password"]');
                     activeInput = Array.from(inputs).find(input => input === document.activeElement) || lastActiveInput;
                 }
                 
@@ -683,7 +683,7 @@ class DigitalSignage {
     
     handleEnter(input) {
         // Try to focus next input
-        const inputs = Array.from(document.querySelectorAll('#settings-form input[type="text"], #settings-form input[type="url"]'));
+        const inputs = Array.from(document.querySelectorAll('#settings-form input[type="text"], #settings-form input[type="url"], #settings-form input[type="password"]'));
         const currentIndex = inputs.indexOf(input);
         if (currentIndex >= 0 && currentIndex < inputs.length - 1) {
             inputs[currentIndex + 1].focus();
@@ -1848,13 +1848,14 @@ class DigitalSignage {
         // Populate interval (convert milliseconds to minutes)
         rotateIntervalInput.value = this.config.autoRotateInterval / 60000;
         
-        // Populate autostart settings (Linux only)
-        this.updateAutostartSettings();
+        // Populate autostart and WiFi settings (Linux only)
+        this.updateLinuxSettings();
     }
 
-    async updateAutostartSettings() {
+    async updateLinuxSettings() {
         const autostartEnabledCheck = document.getElementById('autostart-enabled');
         const autostartStatusText = document.getElementById('autostart-status-text');
+        const wifiStatusText = document.getElementById('wifi-status-text');
         const linuxTabButton = document.getElementById('linux-tab-button');
         
         try {
@@ -1867,12 +1868,12 @@ class DigitalSignage {
                     linuxTabButton.style.display = 'block';
                 }
                 
-                // Update checkbox based on current status
+                // Update autostart checkbox based on current status
                 if (autostartEnabledCheck) {
                     autostartEnabledCheck.checked = autostartStatus.enabled;
                 }
                 
-                // Update status text
+                // Update autostart status text
                 if (autostartStatusText) {
                     if (autostartStatus.enabled) {
                         autostartStatusText.textContent = '✓ Autostart is enabled';
@@ -1882,6 +1883,13 @@ class DigitalSignage {
                         autostartStatusText.style.color = '#f44336';
                     }
                 }
+                
+                // Update WiFi status
+                await this.updateWifiStatus();
+                
+                // Set up WiFi management controls
+                this.setupWifiControls();
+                
             } else {
                 // Hide Linux tab on non-Linux systems
                 if (linuxTabButton) {
@@ -1889,7 +1897,7 @@ class DigitalSignage {
                 }
             }
         } catch (error) {
-            window.electronAPI.log.error('Failed to get autostart status:', error);
+            window.electronAPI.log.error('Failed to get Linux settings status:', error);
             
             // Hide Linux tab on error
             if (linuxTabButton) {
@@ -1900,6 +1908,202 @@ class DigitalSignage {
                 autostartStatusText.textContent = 'Error checking status';
                 autostartStatusText.style.color = '#f44336';
             }
+            
+            if (wifiStatusText) {
+                wifiStatusText.textContent = 'Error checking WiFi';
+                wifiStatusText.style.color = '#f44336';
+            }
+        }
+    }
+    
+    async updateWifiStatus() {
+        const wifiStatusText = document.getElementById('wifi-status-text');
+        const wifiDisconnectBtn = document.getElementById('wifi-disconnect-btn');
+        
+        try {
+            const wifiStatus = await window.electronAPI.invoke('get-wifi-status');
+            
+            if (wifiStatusText && wifiDisconnectBtn) {
+                if (wifiStatus.connected) {
+                    wifiStatusText.textContent = `✓ Connected to: ${wifiStatus.networkName}`;
+                    wifiStatusText.style.color = '#4CAF50';
+                    wifiDisconnectBtn.style.display = 'inline-block';
+                } else {
+                    wifiStatusText.textContent = '✗ Not connected';
+                    wifiStatusText.style.color = '#f44336';
+                    wifiDisconnectBtn.style.display = 'none';
+                }
+            }
+        } catch (error) {
+            window.electronAPI.log.error('Failed to get WiFi status:', error);
+            if (wifiStatusText) {
+                wifiStatusText.textContent = 'Error checking WiFi';
+                wifiStatusText.style.color = '#f44336';
+            }
+            if (wifiDisconnectBtn) {
+                wifiDisconnectBtn.style.display = 'none';
+            }
+        }
+    }
+    
+    setupWifiControls() {
+        const wifiRefreshBtn = document.getElementById('wifi-refresh-btn');
+        const wifiDisconnectBtn = document.getElementById('wifi-disconnect-btn');
+        const wifiConnectBtn = document.getElementById('wifi-connect-btn');
+        
+        // Refresh networks
+        if (wifiRefreshBtn) {
+            this.addEventListenerTracked(wifiRefreshBtn, 'click', () => {
+                this.refreshWifiNetworks();
+            });
+        }
+        
+        // Disconnect from current network
+        if (wifiDisconnectBtn) {
+            this.addEventListenerTracked(wifiDisconnectBtn, 'click', () => {
+                this.disconnectWifi();
+            });
+        }
+        
+        // Connect to selected network
+        if (wifiConnectBtn) {
+            this.addEventListenerTracked(wifiConnectBtn, 'click', () => {
+                this.connectToSelectedNetwork();
+            });
+        }
+    }
+    
+    async refreshWifiNetworks() {
+        const wifiLoading = document.getElementById('wifi-loading');
+        const wifiNetworksSelect = document.getElementById('wifi-networks-select');
+        
+        if (wifiLoading) {
+            wifiLoading.style.display = 'flex';
+        }
+        
+        if (wifiNetworksSelect) {
+            wifiNetworksSelect.innerHTML = '<option disabled>Scanning...</option>';
+        }
+        
+        try {
+            const networks = await window.electronAPI.invoke('scan-wifi');
+            
+            if (wifiLoading) {
+                wifiLoading.style.display = 'none';
+            }
+            
+            if (wifiNetworksSelect) {
+                this.displayWifiNetworks(networks);
+            }
+        } catch (error) {
+            window.electronAPI.log.error('Failed to scan WiFi networks:', error);
+            
+            if (wifiLoading) {
+                wifiLoading.style.display = 'none';
+            }
+            
+            if (wifiNetworksSelect) {
+                wifiNetworksSelect.innerHTML = '<option disabled>Error scanning networks</option>';
+            }
+        }
+    }
+    
+    displayWifiNetworks(networks) {
+        const wifiNetworksSelect = document.getElementById('wifi-networks-select');
+        
+        if (!wifiNetworksSelect) return;
+        
+        wifiNetworksSelect.innerHTML = '';
+        
+        if (!networks || networks.length === 0) {
+            wifiNetworksSelect.innerHTML = '<option disabled>No networks found</option>';
+            return;
+        }
+        
+        networks.forEach(network => {
+            const option = document.createElement('option');
+            const securityIcon = network.security === 'open' ? '🔓' : '🔒';
+            option.value = JSON.stringify({
+                ssid: network.ssid,
+                security: network.security
+            });
+            option.textContent = `${securityIcon} ${network.ssid} ${network.signal}%`;
+            
+            if (network.connected) {
+                option.textContent += ' (Connected)';
+                option.style.fontWeight = 'bold';
+                option.style.color = '#4CAF50';
+            }
+            
+            wifiNetworksSelect.appendChild(option);
+        });
+    }
+    
+    
+    async connectToSelectedNetwork() {
+        const wifiNetworksSelect = document.getElementById('wifi-networks-select');
+        const wifiPassword = document.getElementById('wifi-password');
+        
+        if (!wifiNetworksSelect || !wifiNetworksSelect.value) {
+            alert('Please select a network to connect to');
+            return;
+        }
+        
+        try {
+            const networkData = JSON.parse(wifiNetworksSelect.value);
+            const password = wifiPassword ? wifiPassword.value.trim() : '';
+            
+            // For secured networks, require password unless user explicitly left it empty
+            if (networkData.security === 'secured' && !password) {
+                const confirmConnect = confirm(`Connect to secured network "${networkData.ssid}" without password? This will only work if the network doesn't require authentication.`);
+                if (!confirmConnect) {
+                    return;
+                }
+            }
+            
+            await this.performWifiConnection(networkData.ssid, password);
+            
+            // Clear password field after connection
+            if (wifiPassword) {
+                wifiPassword.value = '';
+            }
+        } catch (error) {
+            alert('Invalid network selection');
+            window.electronAPI.log.error('Failed to parse network data:', error);
+        }
+    }
+    
+    async performWifiConnection(ssid, password) {
+        try {
+            await window.electronAPI.invoke('connect-wifi', { ssid, password });
+            
+            // Update status after connection
+            await this.updateWifiStatus();
+            
+            // Refresh the networks list to show current connection
+            await this.refreshWifiNetworks();
+            
+            this.showMessage(`Connected to ${ssid} successfully!`);
+        } catch (error) {
+            window.electronAPI.log.error('Failed to connect to WiFi:', error);
+            this.showMessage(`Failed to connect to ${ssid}: ${error.message}`);
+        }
+    }
+    
+    async disconnectWifi() {
+        try {
+            await window.electronAPI.invoke('disconnect-wifi');
+            
+            // Update status after disconnection
+            await this.updateWifiStatus();
+            
+            // Refresh the networks list to update connection status
+            await this.refreshWifiNetworks();
+            
+            this.showMessage('Disconnected from WiFi successfully!');
+        } catch (error) {
+            window.electronAPI.log.error('Failed to disconnect from WiFi:', error);
+            this.showMessage(`Failed to disconnect: ${error.message}`);
         }
     }
 

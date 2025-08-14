@@ -981,6 +981,207 @@ async function disableAutostart() {
   }
 }
 
+// WiFi functionality (Linux only)
+ipcMain.handle('get-wifi-status', async () => {
+  const isLinux = os.platform() === 'linux';
+  
+  if (!isLinux) {
+    return { connected: false, networkName: null };
+  }
+  
+  try {
+    const { stdout } = await execPromise('nmcli connection show --active');
+    const lines = stdout.trim().split('\n');
+    
+    // Skip header line and find WiFi connections
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      const parts = line.split(/\s+/);
+      
+      // Check if it's a wifi connection type
+      if (parts.length >= 3 && (parts[2] === 'wifi' || parts[2] === '802-11-wireless')) {
+        const networkName = parts[0];
+        return { connected: true, networkName };
+      }
+    }
+    
+    return { connected: false, networkName: null };
+  } catch (error) {
+    log.error('Error getting WiFi status:', error);
+    return { connected: false, networkName: null };
+  }
+});
+
+ipcMain.handle('scan-wifi', async () => {
+  const isLinux = os.platform() === 'linux';
+  
+  if (!isLinux) {
+    throw new Error('WiFi scanning is only supported on Linux');
+  }
+  
+  try {
+    const { stdout } = await execPromise('nmcli dev wifi list');
+    const lines = stdout.trim().split('\n');
+    const networks = [];
+    
+    // Skip header line
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      // Parse nmcli wifi list output using split approach
+      // Skip BSSID column and extract SSID properly
+      const parts = line.split(/\s+/);
+      if (parts.length < 8) continue;
+      
+      const isConnected = parts[0] === '*';
+      let ssidIndex = isConnected ? 1 : 0;
+      
+      // Skip BSSID (MAC address format) to find actual SSID
+      if (parts[ssidIndex] && parts[ssidIndex].match(/^[0-9A-Fa-f:]{17}$/)) {
+        ssidIndex++; // Skip BSSID
+      }
+      
+      const ssid = parts[ssidIndex];
+      
+      // Find signal strength (number before "Mbit/s")
+      let signal = 0;
+      for (let j = 0; j < parts.length - 1; j++) {
+        if (parts[j + 1] === 'Mbit/s' && !isNaN(parts[j])) {
+          // Look for signal strength (should be after Mbit/s)
+          if (j + 2 < parts.length && !isNaN(parts[j + 2])) {
+            signal = parseInt(parts[j + 2], 10);
+          }
+          break;
+        }
+      }
+      
+      // Security is typically the last part
+      const security = parts.slice(-1)[0] || '';
+      
+      if (ssid) {
+        
+        // Skip if SSID is empty or contains only dashes
+        if (!ssid || ssid.trim() === '--') continue;
+        
+        const cleanSSID = ssid.trim();
+        const signalStrength = signal;
+        
+        // Determine security type (simplified)
+        const isSecured = security && security.includes('WPA');
+        const securityType = isSecured ? 'secured' : 'open';
+        
+        // Skip duplicates
+        const exists = networks.some(n => n.ssid === cleanSSID);
+        if (!exists) {
+          networks.push({
+            ssid: cleanSSID,
+            signal: signalStrength,
+            security: securityType,
+            connected: isConnected === '*'
+          });
+        }
+      }
+    }
+    
+    // Sort by signal strength (highest first)
+    networks.sort((a, b) => b.signal - a.signal);
+    
+    return networks;
+  } catch (error) {
+    log.error('Error scanning WiFi networks:', error);
+    throw new Error('Failed to scan WiFi networks: ' + error.message);
+  }
+});
+
+ipcMain.handle('connect-wifi', async (event, { ssid, password }) => {
+  const isLinux = os.platform() === 'linux';
+  
+  if (!isLinux) {
+    throw new Error('WiFi connection is only supported on Linux');
+  }
+  
+  try {
+    let command;
+    
+    if (password && password.length > 0) {
+      // Escape password for shell safety
+      const escapedPassword = password.replace(/'/g, "'\"'\"'");
+      const escapedSSID = ssid.replace(/'/g, "'\"'\"'");
+      command = `nmcli dev wifi connect '${escapedSSID}' password '${escapedPassword}'`;
+    } else {
+      // Open network
+      const escapedSSID = ssid.replace(/'/g, "'\"'\"'");
+      command = `nmcli dev wifi connect '${escapedSSID}'`;
+    }
+    
+    const { stdout, stderr } = await execPromise(command);
+    
+    // Check if connection was successful
+    if (stderr && stderr.toLowerCase().includes('error')) {
+      throw new Error(stderr);
+    }
+    
+    log.info(`Successfully connected to WiFi: ${ssid}`);
+    return { success: true, message: `Connected to ${ssid}` };
+  } catch (error) {
+    log.error('Error connecting to WiFi:', error);
+    
+    // Parse common error messages
+    let errorMessage = error.message;
+    if (errorMessage.includes('Secrets were required')) {
+      errorMessage = 'Invalid password or authentication failed';
+    } else if (errorMessage.includes('No network with SSID')) {
+      errorMessage = 'Network not found';
+    } else if (errorMessage.includes('Connection activation failed')) {
+      errorMessage = 'Failed to connect - network may be out of range';
+    }
+    
+    throw new Error(errorMessage);
+  }
+});
+
+ipcMain.handle('disconnect-wifi', async () => {
+  const isLinux = os.platform() === 'linux';
+  
+  if (!isLinux) {
+    throw new Error('WiFi disconnection is only supported on Linux');
+  }
+  
+  try {
+    // Get current active WiFi connection
+    const { stdout } = await execPromise('nmcli connection show --active');
+    const lines = stdout.trim().split('\n');
+    
+    let wifiConnectionName = null;
+    
+    // Find active WiFi connection
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      const parts = line.split(/\s+/);
+      
+      if (parts.length >= 3 && (parts[2] === 'wifi' || parts[2] === '802-11-wireless')) {
+        wifiConnectionName = parts[0];
+        break;
+      }
+    }
+    
+    if (!wifiConnectionName) {
+      throw new Error('No active WiFi connection found');
+    }
+    
+    // Disconnect the WiFi connection
+    const escapedConnectionName = wifiConnectionName.replace(/'/g, "'\"'\"'");
+    await execPromise(`nmcli connection down '${escapedConnectionName}'`);
+    
+    log.info(`Successfully disconnected from WiFi: ${wifiConnectionName}`);
+    return { success: true, message: `Disconnected from ${wifiConnectionName}` };
+  } catch (error) {
+    log.error('Error disconnecting from WiFi:', error);
+    throw new Error('Failed to disconnect: ' + error.message);
+  }
+});
+
 // Helper function for moon phase emojis
 function getMoonPhaseEmoji(phase) {
   const phaseNames = {

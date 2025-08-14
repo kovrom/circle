@@ -26,6 +26,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
       'set-modal-state',
       'get-autostart-status',
       'set-autostart',
+      'get-wifi-status',
+      'scan-wifi',
+      'connect-wifi',
+      'disconnect-wifi',
       'log-info',
       'log-error',
       'log-warn'
