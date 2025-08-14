@@ -926,7 +926,8 @@ async function enableAutostart() {
   const serviceFile = path.join(configDir, 'circle.service');
   
   // Get the current executable path
-  const execPath = process.execPath;
+  // For AppImage, use APPIMAGE environment variable, otherwise fallback to execPath
+  const execPath = process.env.APPIMAGE || process.execPath;
   
   // Create .config/systemd/user directory if it doesn't exist
   if (!fs.existsSync(configDir)) {
