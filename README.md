@@ -40,7 +40,8 @@ Short video demo: https://www.youtube.com/watch?v=7DtQNCBLffI
    npm install
    ```
 
-Alternatively you can download prebuilt AppImage for Raspberry Pi Arm64 or Linux x64 in Releases and run it.
+### Alternatively you can download prebuilt AppImage for Raspberry Pi Arm64 or Linux x64 in Releases and run it.
+On the first run tap the gear icon to adjust settings, connect to wifi, setup autostart.
 
 ## Configuration
 
@@ -81,6 +82,8 @@ npm run dist
 The built applications will be available in the `dist/` directory.
 
 ## To auto start it on system boot in linux
+You can either use Autostart option in the Settings or do it manually:
+
 Create a file in
 ````
 ~/.config/systemd/user/circle.service
