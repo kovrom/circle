@@ -110,8 +110,29 @@ function ensureBitcoinFactsDatabase() {
   const userDbPath = getBitcoinFactsDbPath();
   const bundledDbPath = path.join(__dirname, 'bitcoin_facts.db');
   
-  // Copy bundled DB to user data if it doesn't exist
-  if (!fs.existsSync(userDbPath) && fs.existsSync(bundledDbPath)) {
+  if (!fs.existsSync(bundledDbPath)) {
+    log.warn('Bundled bitcoin_facts.db not found');
+    return;
+  }
+  
+  let shouldCopy = false;
+  
+  if (!fs.existsSync(userDbPath)) {
+    // Copy bundled DB to user data if it doesn't exist
+    shouldCopy = true;
+    log.info('User database not found, will copy bundled version');
+  } else {
+    // Check if bundled DB is newer than user DB
+    const bundledStats = fs.statSync(bundledDbPath);
+    const userStats = fs.statSync(userDbPath);
+    
+    if (bundledStats.mtime > userStats.mtime) {
+      shouldCopy = true;
+      log.info('Bundled database is newer than user database, will update');
+    }
+  }
+  
+  if (shouldCopy) {
     fs.copyFileSync(bundledDbPath, userDbPath);
     log.info('Copied bundled bitcoin_facts.db to user data folder');
   }

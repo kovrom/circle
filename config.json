@@ -21,7 +21,7 @@
   "latitude": 40.7128,
   "longitude": -74.006,
   "uvUpdateFrequency": 30,
-  "screensaverUrl": "https://lodev09.github.io/web-screensavers/jellyfish/",
+  "screensaverUrl": "@Quotes/index.html",
   "screensaverEnabled": true,
   "comments": {
     "urls": "List of URLs to display. Add your own calendar, notes, dashboard URLs here.",
