@@ -1850,12 +1850,14 @@ class DigitalSignage {
         
         // Populate autostart and WiFi settings (Linux only)
         this.updateLinuxSettings();
+        
+        // Populate WiFi settings
+        this.updateWifiSettings();
     }
 
     async updateLinuxSettings() {
         const autostartEnabledCheck = document.getElementById('autostart-enabled');
         const autostartStatusText = document.getElementById('autostart-status-text');
-        const wifiStatusText = document.getElementById('wifi-status-text');
         const linuxTabButton = document.getElementById('linux-tab-button');
         
         try {
@@ -1884,12 +1886,6 @@ class DigitalSignage {
                     }
                 }
                 
-                // Update WiFi status
-                await this.updateWifiStatus();
-                
-                // Set up WiFi management controls
-                this.setupWifiControls();
-                
             } else {
                 // Hide Linux tab on non-Linux systems
                 if (linuxTabButton) {
@@ -1907,6 +1903,42 @@ class DigitalSignage {
             if (autostartStatusText) {
                 autostartStatusText.textContent = 'Error checking status';
                 autostartStatusText.style.color = '#f44336';
+            }
+        }
+    }
+
+    async updateWifiSettings() {
+        const wifiStatusText = document.getElementById('wifi-status-text');
+        const wifiTabButton = document.getElementById('wifi-tab-button');
+        
+        try {
+            // Check if we're on Linux (WiFi management only available on Linux)
+            const autostartStatus = await window.electronAPI.invoke('get-autostart-status');
+            
+            if (autostartStatus.isLinux) {
+                // Show WiFi tab
+                if (wifiTabButton) {
+                    wifiTabButton.style.display = 'block';
+                }
+                
+                // Update WiFi status
+                await this.updateWifiStatus();
+                
+                // Set up WiFi management controls
+                this.setupWifiControls();
+                
+            } else {
+                // Hide WiFi tab on non-Linux systems
+                if (wifiTabButton) {
+                    wifiTabButton.style.display = 'none';
+                }
+            }
+        } catch (error) {
+            window.electronAPI.log.error('Failed to get WiFi settings status:', error);
+            
+            // Hide WiFi tab on error
+            if (wifiTabButton) {
+                wifiTabButton.style.display = 'none';
             }
             
             if (wifiStatusText) {

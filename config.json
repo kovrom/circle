@@ -17,6 +17,7 @@
   "showWeather": true,
   "showUV": true,
   "timeFormat": "12",
+  "temperatureUnit": "F",
   "latitude": 40.7128,
   "longitude": -74.006,
   "uvUpdateFrequency": 30,

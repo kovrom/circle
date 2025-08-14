@@ -116,7 +116,8 @@
                             <button type="button" class="tab-button active" data-tab="general">General</button>
                             <button type="button" class="tab-button" data-tab="screensaver">Screensaver</button>
                             <button type="button" class="tab-button" data-tab="weather">Weather</button>
-                            <button type="button" class="tab-button" data-tab="linux" id="linux-tab-button">Linux Options</button>
+                            <button type="button" class="tab-button" data-tab="wifi" id="wifi-tab-button">WiFi</button>
+                            <button type="button" class="tab-button" data-tab="linux" id="linux-tab-button">Autostart</button>
                         </div>
 
                         <!-- General Tab Content -->
@@ -248,24 +249,8 @@
                             </div>
                         </div>
 
-                        <!-- Linux Options Tab Content -->
-                        <div class="tab-content" id="linux-tab">
-                            <div class="form-group">
-                                <label for="autostart-enabled">
-                                    <input type="checkbox" id="autostart-enabled"> Enable autostart on boot
-                                </label>
-                                <small class="form-help">Automatically start Circle when you log in to your Linux session using systemd user service.</small>
-                            </div>
-                            
-                            <div class="form-group" id="autostart-status-group">
-                                <label>Autostart Status:</label>
-                                <div id="autostart-status" class="autostart-status">
-                                    <span id="autostart-status-text">Checking...</span>
-                                </div>
-                            </div>
-                            
-                            <hr class="section-divider">
-                            
+                        <!-- WiFi Tab Content -->
+                        <div class="tab-content" id="wifi-tab">
                             <div class="form-group">
                                 <label>WiFi Management:</label>
                                 <div id="wifi-status" class="wifi-status">
@@ -295,6 +280,24 @@
                             <div class="form-group">
                                 <button type="button" id="wifi-connect-btn" class="wifi-connect-btn">Connect to Selected Network</button>
                             </div>
+                        </div>
+
+                        <!-- Autostart Tab Content -->
+                        <div class="tab-content" id="linux-tab">
+                            <div class="form-group">
+                                <label for="autostart-enabled">
+                                    <input type="checkbox" id="autostart-enabled"> Enable autostart on boot
+                                </label>
+                                <small class="form-help">Automatically start Circle when you log in to your Linux session using systemd user service.</small>
+                            </div>
+                            
+                            <div class="form-group" id="autostart-status-group">
+                                <label>Autostart Status:</label>
+                                <div id="autostart-status" class="autostart-status">
+                                    <span id="autostart-status-text">Checking...</span>
+                                </div>
+                            </div>
+                            
                         </div>
 
                         <div class="form-actions">
