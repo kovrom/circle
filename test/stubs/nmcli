@@ -1,0 +1,16 @@
+#!/bin/bash
+echo "nmcli $*" >> "$CIRCLE_STUB_LOG"
+a="$*"
+case "$a" in
+  *"connection show --active"*)
+    if [[ "$a" == *-t* ]]; then printf 'My Home WiFi:802-11-wireless\nWired:802-3-ethernet\n'
+    else printf 'NAME            UUID   TYPE      DEVICE\nMy Home WiFi    8f2e   wifi      wlan0\nWired   9a   ethernet  eth0\n'; fi ;;
+  *"wifi list"*)
+    if [[ "$a" == *-t* ]]; then printf '*:My Home WiFi:80:WPA2\n :My Home WiFi:40:WPA2\n :Cafe\\:Net:60:\n ::30:WPA2\n :Other:55:WPA1 WPA2\n'
+    else printf 'IN-USE  BSSID              SSID          MODE   CHAN  RATE        SIGNAL  BARS  SECURITY\n*       AA:BB:CC:DD:EE:FF  My Home WiFi  Infra  6     195 Mbit/s  80      ****  WPA2\n        AA:BB:CC:DD:EE:00  Other         Infra  1     65 Mbit/s   55      **    WPA1 WPA2\n'; fi ;;
+  *"wifi connect"*)
+    if [[ "$a" == *badpass* ]]; then echo "Error: Connection activation failed: (7) Secrets were required, but not provided." >&2; exit 4; fi
+    echo ok ;;
+  *"connection down"*) echo ok ;;
+esac
+exit 0

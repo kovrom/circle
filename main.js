@@ -1,11 +1,13 @@
-const { app, BrowserWindow, BrowserView, ipcMain, Menu, shell } = require('electron');
+const { app, BrowserWindow, BrowserView, ipcMain, Menu, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const { exec, spawn } = require('child_process');
+const { pathToFileURL } = require('url');
+const { exec } = require('child_process');
 const log = require('electron-log');
 const { Moon } = require('lunarphase-js');
-const sqlite3 = require('sqlite3').verbose();
+const { getFactsForDay } = require('./facts');
+const wifi = require('./wifi');
 
 // Configure electron-log
 log.transports.file.level = 'info';
@@ -13,24 +15,42 @@ log.transports.console.level = process.env.NODE_ENV === 'development' ? 'debug' 
 log.transports.file.maxSize = 5 * 1024 * 1024; // 5MB
 log.transports.file.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] [{level}] {text}';
 
-// Suppress common harmless warnings
 process.on('warning', (warning) => {
-  // Suppress MaxListenersExceededWarning for development
-  if (warning.name === 'MaxListenersExceededWarning') {
-    log.warn('MaxListenersExceededWarning suppressed (development)');
-    return;
-  }
   log.warn('Process warning:', warning);
 });
 
+const ERR_ABORTED = -3; // Chromium's code for a navigation that was replaced or cancelled
+const RETRY_BASE_MS = 5000;
+const RETRY_MAX_MS = 60000;
+
+// Space around a slide for the on-screen controls; tuned for the round display.
+const SLIDE_INSET = { left: 190, top: 120, horizontal: 380, vertical: 220 };
+
+const BUILT_IN_CONFIG = {
+  urls: [
+    'https://timechaincalendar.com/en',
+    'https://bitfeed.live/'
+  ],
+  autoRotate: false,
+  autoRotateInterval: 60000, // 1 minute
+  fullscreen: true,
+  enableDevTools: false
+};
+
 let mainWindow;
 let config = {};
-let browserViews = [];
+let views = []; // { view, url, backgroundColor, error, loadFailed, retryTimer, retryCount, closed }
 let currentViewIndex = 0;
+let attachedView = null;
 let screensaverView = null;
 let isScreensaverActive = false;
 let isModalOpen = false;
-let bitcoinFactsDb = null;
+
+function sendToRenderer(channel, ...args) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(channel, ...args);
+  }
+}
 
 // Get user data directory for config storage
 function getConfigPath() {
@@ -46,455 +66,348 @@ function getDefaultConfigPath() {
 // Resolve screensaver URL, handling @Quotes special path
 function resolveScreensaverUrl(url) {
   if (url && url.startsWith('@Quotes/')) {
-    const quotesPath = path.join(__dirname, 'Quotes');
-    const relativePath = url.substring(8); // Remove '@Quotes/' prefix
-    const fullPath = path.join(quotesPath, relativePath);
-    
-    // Convert to file:// URL for loading in BrowserView
-    return `file://${fullPath}`;
+    const relativePath = url.substring('@Quotes/'.length);
+    return pathToFileURL(path.join(__dirname, 'Quotes', relativePath)).href;
   }
   return url;
 }
 
-// Load configuration
-function loadConfig() {
+function isUsableConfig(value) {
+  return Boolean(value) && Array.isArray(value.urls) && value.urls.length > 0;
+}
+
+// Write to a temp file and rename, so a power cut can't leave a truncated file.
+function writeFileAtomic(filePath, data) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  const tempPath = `${filePath}.tmp`;
+  const fd = fs.openSync(tempPath, 'w');
   try {
-    const configPath = getConfigPath();
-    const configData = fs.readFileSync(configPath, 'utf8');
-    config = JSON.parse(configData);
+    fs.writeSync(fd, data);
+    fs.fsyncSync(fd);
+  } finally {
+    fs.closeSync(fd);
+  }
+  fs.renameSync(tempPath, filePath);
+}
+
+function readShippedConfig() {
+  try {
+    const shipped = JSON.parse(fs.readFileSync(getDefaultConfigPath(), 'utf8'));
+    if (isUsableConfig(shipped)) return shipped;
+    log.error('Shipped config has no URLs, using built-in defaults');
+  } catch (error) {
+    log.error('Error loading shipped config:', error);
+  }
+  return { ...BUILT_IN_CONFIG };
+}
+
+function loadConfig() {
+  const configPath = getConfigPath();
+
+  let raw;
+  try {
+    raw = fs.readFileSync(configPath, 'utf8');
+  } catch (error) {
+    config = readShippedConfig();
+    if (error.code === 'ENOENT') {
+      log.info('No user config yet, creating one from defaults');
+      try {
+        writeFileAtomic(configPath, JSON.stringify(config, null, 2));
+      } catch (writeError) {
+        log.warn('Could not write default config:', writeError);
+      }
+    } else {
+      log.error('Could not read user config, running on defaults:', error);
+    }
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!isUsableConfig(parsed)) throw new Error('config has no URLs');
+    config = parsed;
     log.info('Config loaded from user data directory:', configPath);
   } catch (error) {
-    log.info('User config not found, trying default config...');
+    // Leave the file in place so a typo can be fixed; only run on defaults for now.
+    log.error(`User config is invalid (${error.message}), running on defaults. A copy is at ${configPath}.broken`);
     try {
-      // Try to load default config from app directory
-      const defaultConfigPath = getDefaultConfigPath();
-      const defaultConfigData = fs.readFileSync(defaultConfigPath, 'utf8');
-      config = JSON.parse(defaultConfigData);
-      log.info('Default config loaded from app directory');
-      
-      // Copy default config to user data directory for future edits
-      try {
-        const userDataPath = app.getPath('userData');
-        if (!fs.existsSync(userDataPath)) {
-          fs.mkdirSync(userDataPath, { recursive: true });
-        }
-        fs.writeFileSync(getConfigPath(), defaultConfigData, 'utf8');
-        log.info('Default config copied to user data directory');
-      } catch (copyError) {
-        log.warn('Could not copy default config to user data directory:', copyError);
-      }
-    } catch (defaultError) {
-      log.error('Error loading default config:', defaultError);
-      // Default configuration
-      config = {
-        urls: [
-          'https://timechaincalendar.com/en',
-          'https://bitfeed.live/'          
-        ],
-        autoRotate: false,
-        autoRotateInterval: 60000, // 1 minute
-        fullscreen: true,
-        enableDevTools: false
-      };
+      fs.writeFileSync(`${configPath}.broken`, raw, 'utf8');
+    } catch (copyError) {
+      log.warn('Could not back up invalid config:', copyError);
     }
+    config = readShippedConfig();
   }
 }
 
-// Bitcoin Facts Database Functions
-function getBitcoinFactsDbPath() {
-  const userDataPath = app.getPath('userData');
-  return path.join(userDataPath, 'bitcoin_facts.db');
+function normalizeUrlEntry(urlData) {
+  if (typeof urlData === 'string') return { url: urlData, backgroundColor: '#000000' };
+  return { url: urlData.url, backgroundColor: urlData.backgroundColor || '#000000' };
 }
 
-function ensureBitcoinFactsDatabase() {
-  const userDbPath = getBitcoinFactsDbPath();
-  const bundledDbPath = path.join(__dirname, 'bitcoin_facts.db');
-  
-  if (!fs.existsSync(bundledDbPath)) {
-    log.warn('Bundled bitcoin_facts.db not found');
-    return;
+// Decides what is on screen. Every change of state calls this instead of
+// attaching views directly: screensaver first, then the current slide unless a
+// modal is open or the slide failed to load (so the error overlay can be seen).
+function syncAttachedView() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+
+  const { width, height } = mainWindow.getBounds();
+  const entry = views[currentViewIndex];
+  let target = null;
+  let bounds = null;
+
+  if (isScreensaverActive) {
+    target = screensaverView;
+    bounds = { x: 0, y: 0, width, height };
+  } else if (!isModalOpen && entry && !entry.error) {
+    target = entry.view;
+    bounds = {
+      x: SLIDE_INSET.left,
+      y: SLIDE_INSET.top,
+      width: width - SLIDE_INSET.horizontal,
+      height: height - SLIDE_INSET.vertical
+    };
   }
-  
-  let shouldCopy = false;
-  
-  if (!fs.existsSync(userDbPath)) {
-    // Copy bundled DB to user data if it doesn't exist
-    shouldCopy = true;
-    log.info('User database not found, will copy bundled version');
-  } else {
-    // Check if bundled DB is newer than user DB
-    const bundledStats = fs.statSync(bundledDbPath);
-    const userStats = fs.statSync(userDbPath);
-    
-    if (bundledStats.mtime > userStats.mtime) {
-      shouldCopy = true;
-      log.info('Bundled database is newer than user database, will update');
-    }
+
+  if (attachedView !== target) {
+    mainWindow.setBrowserView(target);
+    attachedView = target;
   }
-  
-  if (shouldCopy) {
-    fs.copyFileSync(bundledDbPath, userDbPath);
-    log.info('Copied bundled bitcoin_facts.db to user data folder');
-  }
+  if (target) target.setBounds(bounds);
 }
 
-function initBitcoinFactsDatabase() {
-  ensureBitcoinFactsDatabase();
-  const dbPath = getBitcoinFactsDbPath();
-  bitcoinFactsDb = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-      log.error('Error opening Bitcoin facts database:', err);
-      return;
-    }
-    log.info('Bitcoin facts database connected at:', dbPath);
-  });
+function publishCurrentView() {
+  const entry = views[currentViewIndex];
+  if (!entry || !mainWindow || mainWindow.isDestroyed()) return;
 
-  bitcoinFactsDb.serialize(() => {
-    // Create table if not exists
-    bitcoinFactsDb.run(`
-      CREATE TABLE IF NOT EXISTS bitcoin_facts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT NOT NULL,
-        month INTEGER,
-        day INTEGER,
-        year INTEGER,
-        title TEXT NOT NULL,
-        description TEXT NOT NULL,
-        category TEXT,
-        importance INTEGER DEFAULT 1,
-        source_url TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Create indexes
-    bitcoinFactsDb.run(`CREATE INDEX IF NOT EXISTS idx_date ON bitcoin_facts(date)`);
-    bitcoinFactsDb.run(`CREATE INDEX IF NOT EXISTS idx_month_day ON bitcoin_facts(month, day)`);
-    bitcoinFactsDb.run(`CREATE INDEX IF NOT EXISTS idx_importance ON bitcoin_facts(importance DESC)`);
-
-    // Log database connection success
-    bitcoinFactsDb.get("SELECT COUNT(*) as count FROM bitcoin_facts", (err, row) => {
-      if (err) {
-        log.error('Error checking Bitcoin facts count:', err);
-        return;
-      }
-      
-      log.info(`Bitcoin facts database loaded with ${row.count} facts`);
-    });
+  mainWindow.setBackgroundColor(entry.backgroundColor);
+  sendToRenderer('view-changed', {
+    index: currentViewIndex,
+    url: entry.url,
+    backgroundColor: entry.backgroundColor,
+    error: entry.error
   });
 }
 
-
-function getTodaysBitcoinFacts(callback) {
-  const today = new Date();
-  const month = today.getMonth() + 1;
-  const day = today.getDate();
-  const todayString = today.toISOString().split('T')[0];
-
-  if (!bitcoinFactsDb) {
-    callback(null, []);
-    return;
-  }
-
-  bitcoinFactsDb.all(`
-    SELECT * FROM bitcoin_facts 
-    WHERE (month = ? AND day = ?) OR date = ?
-    ORDER BY importance DESC, year ASC
-  `, [month, day, todayString], (err, rows) => {
-    if (err) {
-      log.error('Error fetching today\'s Bitcoin facts:', err);
-      callback(err, null);
-    } else {
-      callback(null, rows || []);
-    }
-  });
+function loadView(entry) {
+  entry.loadFailed = false;
+  // Failures are reported through did-fail-load.
+  entry.view.webContents.loadURL(entry.url).catch(() => {});
 }
 
-// Create BrowserViews for each URL
-function createBrowserViews() {
-  // Clear existing views with proper cleanup
-  browserViews.forEach(view => {
-    // Remove all event listeners to prevent memory leaks
-    view.webContents.removeAllListeners();
-    
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.removeBrowserView(view);
-    }
-    
-    // Explicitly destroy the webContents to free memory
-    try {
-      view.webContents.destroy();
-    } catch (error) {
-      log.warn('Error destroying view webContents:', error);
-    }
-  });
-  browserViews = [];
-
-  // Create new views
-  config.urls.forEach((urlData, index) => {
-    // Handle both legacy (string) and new (object) formats
-    const url = typeof urlData === 'string' ? urlData : urlData.url;
-    
-    const view = new BrowserView({
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        webSecurity: true
-      }
-    });
-
-    // Set up error handling
-    view.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-      log.error(`BrowserView ${index} failed to load ${validatedURL}:`, errorDescription);
-      mainWindow.webContents.send('webview-error', { index, url: validatedURL, error: errorDescription });
-    });
-
-    view.webContents.on('did-finish-load', () => {
-      log.info(`BrowserView ${index} loaded:`, url);
-      mainWindow.webContents.send('webview-loaded', { index, url });
-      
-      // Note: Window background color will be set when this view is shown
-    });
-
-    // Load the URL
-    view.webContents.loadURL(url);
-    browserViews.push(view);
-  });
-
-  // Show the current view (or first view if invalid)
-  const targetIndex = (currentViewIndex >= 0 && currentViewIndex < browserViews.length) ? currentViewIndex : 0;
-  showBrowserView(targetIndex);
+function scheduleRetry(entry) {
+  if (entry.closed) return;
+  clearTimeout(entry.retryTimer);
+  const delay = Math.min(RETRY_BASE_MS * 2 ** entry.retryCount, RETRY_MAX_MS);
+  entry.retryCount++;
+  entry.retryTimer = setTimeout(() => loadView(entry), delay);
 }
 
-// Show a specific BrowserView
-function showBrowserView(index) {
-  if (index < 0 || index >= browserViews.length) return;
-  
-  // Don't switch views if screensaver is active
-  if (isScreensaverActive) return;
-  
-  // Hide current view
-  if (mainWindow.getBrowserView()) {
-    mainWindow.removeBrowserView(mainWindow.getBrowserView());
+function markViewFailed(entry, message) {
+  entry.loadFailed = true;
+  entry.error = message;
+
+  const index = views.indexOf(entry);
+  if (index === currentViewIndex) {
+    syncAttachedView();
+    sendToRenderer('webview-error', { index, url: entry.url, error: message });
   }
-  
-  // Show new view
-  const view = browserViews[index];
-  mainWindow.setBrowserView(view);
-  
-  // Set bounds to leave space for navigation buttons
-  const bounds = mainWindow.getBounds();
-  view.setBounds({ 
-    x: 190, // Leave space for left button
-    y: 120, // Leave space for top indicators  
-    width: bounds.width - 380, // Leave space for both buttons
-    height: bounds.height - 220 // Leave space for top and bottom
-  });
-  
-  // Apply background color
-  const urlData = config.urls[index];
-  const backgroundColor = typeof urlData === 'string' ? '#000000' : (urlData.backgroundColor || '#000000');
-  mainWindow.setBackgroundColor(backgroundColor);
-  
-  currentViewIndex = index;
-  
-  // Notify renderer with URL and background color
-  const url = typeof urlData === 'string' ? urlData : urlData.url;
-  mainWindow.webContents.send('view-changed', { index, url, backgroundColor });
+  scheduleRetry(entry);
 }
 
-// Create screensaver BrowserView
-function createScreensaverView() {
-  if (screensaverView) {
-    // Cleanup existing screensaver view properly
-    screensaverView.webContents.removeAllListeners();
-    
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      try {
-        mainWindow.removeBrowserView(screensaverView);
-      } catch (error) {
-        log.error('Error removing screensaver view:', error);
-      }
-    }
-    
-    // Explicitly destroy the webContents
-    try {
-      screensaverView.webContents.destroy();
-    } catch (error) {
-      log.warn('Error destroying screensaver webContents:', error);
-    }
-    
-    screensaverView = null;
-  }
-
-  screensaverView = new BrowserView({
+function createView(url, backgroundColor) {
+  const view = new BrowserView({
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true
     }
   });
+  const entry = { view, url, backgroundColor, error: null, loadFailed: false, retryTimer: null, retryCount: 0, closed: false };
 
-  // Set up error handling
-  screensaverView.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-    log.error(`Screensaver failed to load ${validatedURL}:`, errorDescription);
-    mainWindow.webContents.send('screensaver-error', { url: validatedURL, error: errorDescription });
+  view.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+    if (!isMainFrame || errorCode === ERR_ABORTED) return;
+    log.error(`Failed to load ${validatedURL}:`, errorDescription);
+    markViewFailed(entry, errorDescription);
   });
 
-  screensaverView.webContents.on('did-finish-load', () => {
+  view.webContents.on('did-finish-load', () => {
+    // Chromium also reports "finished" for the error page of a failed load.
+    if (entry.loadFailed) return;
+
+    log.info('Loaded:', url);
+    entry.error = null;
+    entry.retryCount = 0;
+    const index = views.indexOf(entry);
+    if (index === currentViewIndex) {
+      syncAttachedView();
+      sendToRenderer('webview-loaded', { index, url });
+    }
+  });
+
+  view.webContents.on('render-process-gone', (event, details) => {
+    if (details.reason === 'clean-exit') return;
+    log.error(`Page process for ${url} is gone:`, details.reason);
+    markViewFailed(entry, `Page stopped unexpectedly (${details.reason})`);
+  });
+
+  loadView(entry);
+  return entry;
+}
+
+function closeWebContents(view) {
+  try {
+    view.webContents.close();
+  } catch (error) {
+    log.warn('Error closing view:', error);
+  }
+}
+
+function closeView(entry) {
+  entry.closed = true;
+  clearTimeout(entry.retryTimer);
+  if (attachedView === entry.view) {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setBrowserView(null);
+    attachedView = null;
+  }
+  closeWebContents(entry.view);
+}
+
+// Match the views to config.urls, keeping any page whose URL is still wanted.
+function syncBrowserViews() {
+  const current = views[currentViewIndex];
+  const reusable = [...views];
+
+  views = config.urls.map((urlData) => {
+    const { url, backgroundColor } = normalizeUrlEntry(urlData);
+    const match = reusable.findIndex((entry) => entry.url === url);
+    if (match === -1) return createView(url, backgroundColor);
+
+    const [entry] = reusable.splice(match, 1);
+    entry.backgroundColor = backgroundColor;
+    return entry;
+  });
+  reusable.forEach(closeView);
+
+  currentViewIndex = Math.max(views.indexOf(current), 0);
+  syncAttachedView();
+  publishCurrentView();
+}
+
+function showBrowserView(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= views.length) return;
+  if (isScreensaverActive) return;
+
+  currentViewIndex = index;
+  syncAttachedView();
+  publishCurrentView();
+}
+
+function retryView(entry) {
+  clearTimeout(entry.retryTimer);
+  entry.retryCount = 0;
+  loadView(entry);
+}
+
+function createScreensaverView() {
+  const view = new BrowserView({
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      webSecurity: true
+    }
+  });
+  const contents = view.webContents;
+
+  contents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+    if (!isMainFrame || errorCode === ERR_ABORTED) return;
+    log.error(`Screensaver failed to load ${validatedURL}:`, errorDescription);
+    sendToRenderer('screensaver-error', { url: validatedURL, error: errorDescription });
+  });
+
+  contents.on('did-finish-load', () => {
     log.info('Screensaver loaded successfully');
-    mainWindow.webContents.send('screensaver-loaded');
-    
-    // Inject JavaScript to detect clicks and send them via console message
-    screensaverView.webContents.executeJavaScript(`
+    sendToRenderer('screensaver-loaded');
+
+    // Report clicks and touches through a console message
+    contents.executeJavaScript(`
       (function() {
         const sendHideMessage = () => {
           console.log('SCREENSAVER_HIDE_INTERACTION');
         };
-        
+
         document.addEventListener('click', sendHideMessage, true);
         document.addEventListener('touchstart', sendHideMessage, true);
         document.addEventListener('mousedown', sendHideMessage, true);
-        
-        // Also add to window and body to catch any missed events
-        window.addEventListener('click', sendHideMessage, true);
-        if (document.body) {
-          document.body.addEventListener('click', sendHideMessage, true);
-        }
       })();
-    `);
+    `).catch((error) => log.warn('Could not add screensaver input listeners:', error));
   });
 
-  // Listen for console messages from screensaver
-  screensaverView.webContents.on('console-message', (event) => {
-    if (event.message === 'SCREENSAVER_HIDE_INTERACTION' && isScreensaverActive) {
-      log.info('Mouse/touch interaction detected in screensaver, hiding...');
-      hideScreensaver();
-    }
+  contents.on('console-message', (event) => {
+    if (event.message === 'SCREENSAVER_HIDE_INTERACTION') hideScreensaver();
+  });
+  contents.on('before-input-event', () => hideScreensaver());
+  contents.on('context-menu', () => hideScreensaver());
+  contents.on('will-navigate', (event) => {
+    event.preventDefault();
+    hideScreensaver();
   });
 
-  // Add click/touch listeners to screensaver BrowserView
-  screensaverView.webContents.on('before-input-event', (event, input) => {
-    if (isScreensaverActive) {
-      // Any key press hides screensaver
-      log.info('Key pressed in screensaver, hiding...');
-      hideScreensaver();
-    }
-  });
-
-  // Listen for mouse events on screensaver
-  screensaverView.webContents.on('context-menu', () => {
-    if (isScreensaverActive) {
-      log.info('Right click in screensaver, hiding...');
-      hideScreensaver();
-    }
-  });
-
-  // Listen for navigation events (clicks) in screensaver
-  screensaverView.webContents.on('will-navigate', (event) => {
-    if (isScreensaverActive) {
-      event.preventDefault();
-      log.info('Click interaction in screensaver, hiding...');
-      hideScreensaver();
-    }
-  });
+  return view;
 }
 
-// Show screensaver
 function showScreensaver() {
   if (isScreensaverActive) return;
 
-  // Create screensaver view if it doesn't exist
-  if (!screensaverView) {
-    createScreensaverView();
-  }
+  screensaverView = createScreensaverView();
+  isScreensaverActive = true;
+  syncAttachedView();
 
-  // Hide current browser view
-  if (mainWindow.getBrowserView()) {
-    mainWindow.removeBrowserView(mainWindow.getBrowserView());
-  }
-
-  // Set screensaver view
-  mainWindow.setBrowserView(screensaverView);
-
-  // Set screensaver to cover entire window
-  const bounds = mainWindow.getBounds();
-  screensaverView.setBounds({
-    x: 0,
-    y: 0,
-    width: bounds.width,
-    height: bounds.height
-  });
-
-  // Load the screensaver URL from config or use default
   const configUrl = config.screensaverUrl || 'https://lodev09.github.io/web-screensavers/jellyfish/';
   const screensaverUrl = resolveScreensaverUrl(configUrl);
   log.info('Loading screensaver URL:', screensaverUrl);
-  screensaverView.webContents.loadURL(screensaverUrl);
+  screensaverView.webContents.loadURL(screensaverUrl).catch(() => {});
 
-  isScreensaverActive = true;
-  mainWindow.webContents.send('screensaver-shown');
+  sendToRenderer('screensaver-shown');
 }
 
-// Hide screensaver
 function hideScreensaver() {
   if (!isScreensaverActive) return;
 
-  // Remove screensaver view
-  if (screensaverView && mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.removeBrowserView(screensaverView);
-  }
-
-  // Set screensaver as inactive first so showBrowserView works
   isScreensaverActive = false;
+  syncAttachedView();
+  publishCurrentView();
+  sendToRenderer('screensaver-hidden');
 
-  // Show the current browser view again
-  if (browserViews[currentViewIndex]) {
-    const view = browserViews[currentViewIndex];
-    mainWindow.setBrowserView(view);
-    
-    // Set bounds to leave space for navigation buttons
-    const bounds = mainWindow.getBounds();
-    view.setBounds({ 
-      x: 190, // Leave space for left button
-      y: 120, // Leave space for top indicators  
-      width: bounds.width - 380, // Leave space for both buttons
-      height: bounds.height - 220 // Leave space for top and bottom
-    });
-    
-    // Apply background color
-    const urlData = config.urls[currentViewIndex];
-    const backgroundColor = typeof urlData === 'string' ? '#000000' : (urlData.backgroundColor || '#000000');
-    mainWindow.setBackgroundColor(backgroundColor);
-    
-    // Notify renderer with URL and background color
-    const url = typeof urlData === 'string' ? urlData : urlData.url;
-    mainWindow.webContents.send('view-changed', { index: currentViewIndex, url, backgroundColor });
-  }
-
-  mainWindow.webContents.send('screensaver-hidden');
+  // The screensaver's memory is only freed by closing it. This often runs inside
+  // one of its own event handlers, where it can't be closed straight away.
+  const view = screensaverView;
+  screensaverView = null;
+  setImmediate(() => closeWebContents(view));
 }
 
 // Handle keyboard shortcuts when window is focused
 function handleKeyPress(event, input) {
   if (!mainWindow || mainWindow.isDestroyed()) return;
-  
+  if (input.type !== 'keyDown') return;
+
   // Only handle shortcuts when main window is focused
   if (!mainWindow.isFocused()) return;
-  
-  // When modal is open, prevent Escape from closing the app but allow other keys
-  if (isModalOpen) {
-    if (input.key === 'Escape') {
-      event.preventDefault();
-    }
+
+  // Any key dismisses the screensaver
+  if (isScreensaverActive) {
+    event.preventDefault();
+    hideScreensaver();
     return;
   }
-  
+
+  // An open modal gets all keys, including Escape to close itself
+  if (isModalOpen) return;
+
   switch (input.key) {
     case 'ArrowLeft':
       if (!input.meta && !input.control && !input.alt) {
         event.preventDefault();
-        const prevIndex = (currentViewIndex - 1 + browserViews.length) % browserViews.length;
+        const prevIndex = (currentViewIndex - 1 + views.length) % views.length;
         showBrowserView(prevIndex);
       }
       break;
@@ -502,7 +415,7 @@ function handleKeyPress(event, input) {
     case 'ArrowRight':
       if (!input.meta && !input.control && !input.alt) {
         event.preventDefault();
-        const nextIndex = (currentViewIndex + 1) % browserViews.length;
+        const nextIndex = (currentViewIndex + 1) % views.length;
         showBrowserView(nextIndex);
       }
       break;
@@ -528,7 +441,6 @@ function createWindow() {
   }
 
   loadConfig();
-  initBitcoinFactsDatabase();
 
   mainWindow = new BrowserWindow({
     width: 1080,
@@ -539,7 +451,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
-      spellcheck: true,
+      spellcheck: false,
       preload: path.join(__dirname, 'preload.js')
     },
     show: true, // Show window immediately
@@ -547,67 +459,28 @@ function createWindow() {
     frame: false
   });
 
-  // Increase max listeners to prevent warnings during development
-  mainWindow.setMaxListeners(20);
-
   mainWindow.loadFile('index.html');
 
   // Send config to renderer once content is loaded
   mainWindow.webContents.once('did-finish-load', () => {
-    log.info('Main window loaded, sending config:', config);
     mainWindow.webContents.send('config-loaded', config);
     // Create BrowserViews after main window is ready
-    createBrowserViews();
+    syncBrowserViews();
   });
 
-  // Handle window resizing
-  mainWindow.on('resize', () => {
-    const bounds = mainWindow.getBounds();
-    if (mainWindow.getBrowserView()) {
-      if (isScreensaverActive && screensaverView === mainWindow.getBrowserView()) {
-        // Screensaver covers entire window
-        screensaverView.setBounds({
-          x: 0,
-          y: 0,
-          width: bounds.width,
-          height: bounds.height
-        });
-      } else {
-        // Normal browser view with space for controls
-        mainWindow.getBrowserView().setBounds({ 
-          x: 190, // Leave space for left button
-          y: 120, // Leave space for top indicators  
-          width: bounds.width - 380, // Leave space for both buttons
-          height: bounds.height - 220 // Leave space for top and bottom
-        });
-      }
-    }
-  });
+  mainWindow.on('resize', syncAttachedView);
 
-  // Handle window closed
   mainWindow.on('closed', () => {
-    // Clean up BrowserViews properly
-    browserViews.forEach(view => {
-      view.webContents.removeAllListeners();
-      try {
-        view.webContents.destroy();
-      } catch (error) {
-        log.warn('Error destroying view on window close:', error);
-      }
-    });
-    browserViews = [];
-    
-    // Clean up screensaver view
+    views.forEach(closeView);
+    views = [];
+
     if (screensaverView) {
-      screensaverView.webContents.removeAllListeners();
-      try {
-        screensaverView.webContents.destroy();
-      } catch (error) {
-        log.warn('Error destroying screensaver on window close:', error);
-      }
+      closeWebContents(screensaverView);
       screensaverView = null;
+      isScreensaverActive = false;
     }
-    
+
+    attachedView = null;
     mainWindow = null;
   });
 
@@ -659,27 +532,32 @@ function createWindow() {
 }
 
 // App event handlers
-app.whenReady().then(createWindow);
+if (app.requestSingleInstanceLock()) {
+  app.on('second-instance', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+
+  app.whenReady().then(() => {
+    // Displayed web pages get no camera, microphone, location, notifications, etc.
+    session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => callback(false));
+    session.defaultSession.setPermissionCheckHandler(() => false);
+    createWindow();
+  });
+} else {
+  app.quit();
+}
 
 app.on('window-all-closed', () => {
-  // Close database connection
-  if (bitcoinFactsDb) {
-    bitcoinFactsDb.close((err) => {
-      if (err) {
-        log.error('Error closing Bitcoin facts database:', err);
-      } else {
-        log.info('Bitcoin facts database connection closed');
-      }
-    });
-  }
-  
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
+  if (app.isReady() && BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 });
@@ -689,51 +567,31 @@ ipcMain.handle('get-config', () => {
   return config;
 });
 
-ipcMain.handle('reload-config', () => {
-  loadConfig();
-  createBrowserViews();
-  return config;
-});
-
 // Navigation handlers
 ipcMain.handle('go-to-slide', (event, index) => {
   showBrowserView(index);
 });
 
 ipcMain.handle('next-slide', () => {
-  const nextIndex = (currentViewIndex + 1) % browserViews.length;
+  const nextIndex = (currentViewIndex + 1) % views.length;
   showBrowserView(nextIndex);
 });
 
 ipcMain.handle('previous-slide', () => {
-  const prevIndex = (currentViewIndex - 1 + browserViews.length) % browserViews.length;
+  const prevIndex = (currentViewIndex - 1 + views.length) % views.length;
   showBrowserView(prevIndex);
 });
 
-ipcMain.handle('get-current-slide', () => {
-  return currentViewIndex;
-});
-
 ipcMain.handle('reload-current-slide', () => {
-  if (browserViews[currentViewIndex]) {
-    browserViews[currentViewIndex].webContents.reload();
-  }
+  if (views[currentViewIndex]) retryView(views[currentViewIndex]);
 });
 
 // Save config to file
 ipcMain.handle('save-config', async (event, newConfig) => {
   try {
     const configPath = getConfigPath();
-    const configData = JSON.stringify(newConfig, null, 2);
-    
-    // Ensure user data directory exists
-    const userDataPath = app.getPath('userData');
-    if (!fs.existsSync(userDataPath)) {
-      fs.mkdirSync(userDataPath, { recursive: true });
-    }
-    
-    fs.writeFileSync(configPath, configData, 'utf8');
-    
+    writeFileAtomic(configPath, JSON.stringify(newConfig, null, 2));
+
     // Update current config
     config = newConfig;
     
@@ -749,47 +607,11 @@ ipcMain.handle('save-config', async (event, newConfig) => {
   }
 });
 
-// Hide BrowserView for settings popup
-ipcMain.handle('hide-browser-view', () => {
-  if (mainWindow && mainWindow.getBrowserView()) {
-    mainWindow.removeBrowserView(mainWindow.getBrowserView());
-  }
-});
-
-// Show BrowserView after settings popup
-ipcMain.handle('show-browser-view', () => {
-  if (mainWindow && browserViews[currentViewIndex]) {
-    const view = browserViews[currentViewIndex];
-    mainWindow.setBrowserView(view);
-    
-    // Reset bounds
-    const bounds = mainWindow.getBounds();
-    view.setBounds({ 
-      x: 190, 
-      y: 120, 
-      width: bounds.width - 380, 
-      height: bounds.height - 220 
-    });
-  }
-});
-
-// Reload with new configuration
+// Apply a config that save-config has already stored
 ipcMain.handle('reload-with-new-config', () => {
-  try {
-    // Reload config (it's already updated by save-config)
-    log.info('Reloading with new config');
-    
-    // Recreate BrowserViews with new URLs
-    createBrowserViews();
-    
-    // Send updated config to renderer
-    mainWindow.webContents.send('config-reloaded', config);
-    
-    return { success: true };
-  } catch (error) {
-    log.error('Failed to reload with new config:', error);
-    throw error;
-  }
+  log.info('Applying new config');
+  syncBrowserViews();
+  return { success: true };
 });
 
 // Exit app handler
@@ -824,15 +646,13 @@ ipcMain.handle('get-moon-phase', () => {
 
 // Bitcoin fact handler
 ipcMain.handle('get-todays-bitcoin-fact', () => {
-  return new Promise((resolve, reject) => {
-    getTodaysBitcoinFacts((err, facts) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(facts);
-      }
-    });
-  });
+  const today = new Date();
+  try {
+    return getFactsForDay(today.getMonth() + 1, today.getDate());
+  } catch (error) {
+    log.error('Could not read Bitcoin facts:', error);
+    return [];
+  }
 });
 
 // Logging handlers for renderer process
@@ -851,7 +671,7 @@ ipcMain.handle('log-warn', (event, { message, args }) => {
 // Modal state handlers
 ipcMain.handle('set-modal-state', (event, modalOpen) => {
   isModalOpen = modalOpen;
-  log.info('Modal state changed:', modalOpen ? 'open' : 'closed');
+  syncAttachedView();
 });
 
 // Autostart functionality (Linux only)
@@ -934,6 +754,12 @@ async function enableAutostart() {
     fs.mkdirSync(configDir, { recursive: true });
   }
   
+  // systemd unit-file quoting, so paths with spaces or special characters work
+  const escapedExecPath = execPath
+    .replace(/(["\\])/g, '\\$1')
+    .replace(/%/g, '%%')
+    .replace(/\$/g, '$$$$');
+
   // Create service file content
   const serviceContent = `[Unit]
 Description=Circle
@@ -943,7 +769,7 @@ Wants=graphical.target
 
 [Service]
 Type=simple
-ExecStart=${execPath}
+ExecStart="${escapedExecPath}"
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal
@@ -969,23 +795,13 @@ WantedBy=default.target
 
 // Disable autostart by disabling and removing systemd service
 async function disableAutostart() {
+  // Only disable, never stop: the app may itself be running under this service.
   try {
-    // Stop the service if running
-    await execPromise('systemctl --user stop circle.service').catch(() => {
-      // Ignore errors if service is not running
-    });
-    
-    // Disable the service
-    await execPromise('systemctl --user disable circle.service').catch(() => {
-      // Ignore errors if service is not enabled
-    });
-    
-    log.info('Autostart disabled successfully');
+    await execPromise('systemctl --user disable circle.service');
   } catch (error) {
-    // If the commands fail, it's likely the service wasn't properly set up
-    log.warn('Error during disable (service may not exist):', error.message);
+    log.warn('Could not disable service (it may not exist):', error.message);
   }
-  
+
   // Remove service file if it exists
   const homeDir = os.homedir();
   const serviceFile = path.join(homeDir, '.config', 'systemd', 'user', 'circle.service');
@@ -1004,203 +820,54 @@ async function disableAutostart() {
 }
 
 // WiFi functionality (Linux only)
+const isLinux = os.platform() === 'linux';
+
 ipcMain.handle('get-wifi-status', async () => {
-  const isLinux = os.platform() === 'linux';
-  
-  if (!isLinux) {
-    return { connected: false, networkName: null };
-  }
-  
+  if (!isLinux) return { connected: false, networkName: null };
+
   try {
-    const { stdout } = await execPromise('nmcli connection show --active');
-    const lines = stdout.trim().split('\n');
-    
-    // Skip header line and find WiFi connections
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i];
-      const parts = line.split(/\s+/);
-      
-      // Check if it's a wifi connection type
-      if (parts.length >= 3 && (parts[2] === 'wifi' || parts[2] === '802-11-wireless')) {
-        const networkName = parts[0];
-        return { connected: true, networkName };
-      }
-    }
-    
-    return { connected: false, networkName: null };
+    const networkName = await wifi.getActiveWifiName();
+    return { connected: networkName !== null, networkName };
   } catch (error) {
-    log.error('Error getting WiFi status:', error);
+    log.error('Error getting WiFi status:', error.message);
     return { connected: false, networkName: null };
   }
 });
 
 ipcMain.handle('scan-wifi', async () => {
-  const isLinux = os.platform() === 'linux';
-  
-  if (!isLinux) {
-    throw new Error('WiFi scanning is only supported on Linux');
-  }
-  
+  if (!isLinux) throw new Error('WiFi scanning is only supported on Linux');
+
   try {
-    const { stdout } = await execPromise('nmcli dev wifi list');
-    const lines = stdout.trim().split('\n');
-    const networks = [];
-    
-    // Skip header line
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-      
-      // Parse nmcli wifi list output using split approach
-      // Skip BSSID column and extract SSID properly
-      const parts = line.split(/\s+/);
-      if (parts.length < 8) continue;
-      
-      const isConnected = parts[0] === '*';
-      let ssidIndex = isConnected ? 1 : 0;
-      
-      // Skip BSSID (MAC address format) to find actual SSID
-      if (parts[ssidIndex] && parts[ssidIndex].match(/^[0-9A-Fa-f:]{17}$/)) {
-        ssidIndex++; // Skip BSSID
-      }
-      
-      const ssid = parts[ssidIndex];
-      
-      // Find signal strength (number before "Mbit/s")
-      let signal = 0;
-      for (let j = 0; j < parts.length - 1; j++) {
-        if (parts[j + 1] === 'Mbit/s' && !isNaN(parts[j])) {
-          // Look for signal strength (should be after Mbit/s)
-          if (j + 2 < parts.length && !isNaN(parts[j + 2])) {
-            signal = parseInt(parts[j + 2], 10);
-          }
-          break;
-        }
-      }
-      
-      // Security is typically the last part
-      const security = parts.slice(-1)[0] || '';
-      
-      if (ssid) {
-        
-        // Skip if SSID is empty or contains only dashes
-        if (!ssid || ssid.trim() === '--') continue;
-        
-        const cleanSSID = ssid.trim();
-        const signalStrength = signal;
-        
-        // Determine security type (simplified)
-        const isSecured = security && security.includes('WPA');
-        const securityType = isSecured ? 'secured' : 'open';
-        
-        // Skip duplicates
-        const exists = networks.some(n => n.ssid === cleanSSID);
-        if (!exists) {
-          networks.push({
-            ssid: cleanSSID,
-            signal: signalStrength,
-            security: securityType,
-            connected: isConnected === '*'
-          });
-        }
-      }
-    }
-    
-    // Sort by signal strength (highest first)
-    networks.sort((a, b) => b.signal - a.signal);
-    
-    return networks;
+    return await wifi.scanNetworks();
   } catch (error) {
-    log.error('Error scanning WiFi networks:', error);
-    throw new Error('Failed to scan WiFi networks: ' + error.message);
+    log.error('Error scanning WiFi networks:', error.message);
+    throw new Error(`Failed to scan WiFi networks: ${error.message}`);
   }
 });
 
 ipcMain.handle('connect-wifi', async (event, { ssid, password }) => {
-  const isLinux = os.platform() === 'linux';
-  
-  if (!isLinux) {
-    throw new Error('WiFi connection is only supported on Linux');
-  }
-  
+  if (!isLinux) throw new Error('WiFi connection is only supported on Linux');
+
   try {
-    let command;
-    
-    if (password && password.length > 0) {
-      // Escape password for shell safety
-      const escapedPassword = password.replace(/'/g, "'\"'\"'");
-      const escapedSSID = ssid.replace(/'/g, "'\"'\"'");
-      command = `nmcli dev wifi connect '${escapedSSID}' password '${escapedPassword}'`;
-    } else {
-      // Open network
-      const escapedSSID = ssid.replace(/'/g, "'\"'\"'");
-      command = `nmcli dev wifi connect '${escapedSSID}'`;
-    }
-    
-    const { stdout, stderr } = await execPromise(command);
-    
-    // Check if connection was successful
-    if (stderr && stderr.toLowerCase().includes('error')) {
-      throw new Error(stderr);
-    }
-    
-    log.info(`Successfully connected to WiFi: ${ssid}`);
+    await wifi.connect(ssid, password);
+    log.info(`Connected to WiFi: ${ssid}`);
     return { success: true, message: `Connected to ${ssid}` };
   } catch (error) {
-    log.error('Error connecting to WiFi:', error);
-    
-    // Parse common error messages
-    let errorMessage = error.message;
-    if (errorMessage.includes('Secrets were required')) {
-      errorMessage = 'Invalid password or authentication failed';
-    } else if (errorMessage.includes('No network with SSID')) {
-      errorMessage = 'Network not found';
-    } else if (errorMessage.includes('Connection activation failed')) {
-      errorMessage = 'Failed to connect - network may be out of range';
-    }
-    
-    throw new Error(errorMessage);
+    log.error('Error connecting to WiFi:', error.message);
+    throw error;
   }
 });
 
 ipcMain.handle('disconnect-wifi', async () => {
-  const isLinux = os.platform() === 'linux';
-  
-  if (!isLinux) {
-    throw new Error('WiFi disconnection is only supported on Linux');
-  }
-  
+  if (!isLinux) throw new Error('WiFi disconnection is only supported on Linux');
+
   try {
-    // Get current active WiFi connection
-    const { stdout } = await execPromise('nmcli connection show --active');
-    const lines = stdout.trim().split('\n');
-    
-    let wifiConnectionName = null;
-    
-    // Find active WiFi connection
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i];
-      const parts = line.split(/\s+/);
-      
-      if (parts.length >= 3 && (parts[2] === 'wifi' || parts[2] === '802-11-wireless')) {
-        wifiConnectionName = parts[0];
-        break;
-      }
-    }
-    
-    if (!wifiConnectionName) {
-      throw new Error('No active WiFi connection found');
-    }
-    
-    // Disconnect the WiFi connection
-    const escapedConnectionName = wifiConnectionName.replace(/'/g, "'\"'\"'");
-    await execPromise(`nmcli connection down '${escapedConnectionName}'`);
-    
-    log.info(`Successfully disconnected from WiFi: ${wifiConnectionName}`);
-    return { success: true, message: `Disconnected from ${wifiConnectionName}` };
+    const name = await wifi.disconnectActive();
+    log.info(`Disconnected from WiFi: ${name}`);
+    return { success: true, message: `Disconnected from ${name}` };
   } catch (error) {
-    log.error('Error disconnecting from WiFi:', error);
-    throw new Error('Failed to disconnect: ' + error.message);
+    log.error('Error disconnecting from WiFi:', error.message);
+    throw new Error(`Failed to disconnect: ${error.message}`);
   }
 });
 
@@ -1220,15 +887,14 @@ function getMoonPhaseEmoji(phase) {
   return phaseNames[phase] || '🌑';
 }
 
-// Handle app protocol for better security
-app.setAsDefaultProtocolClient('digital-signage');
-
-// Prevent navigation to external sites in the main window
 app.on('web-contents-created', (event, contents) => {
-  contents.on('will-navigate', (event, navigationUrl) => {
-    // Allow navigation within webviews but not in main window
-    if (contents === mainWindow.webContents) {
-      event.preventDefault();
+  // New windows would cover the kiosk with no way to close them on a touch screen
+  contents.setWindowOpenHandler(() => ({ action: 'deny' }));
+
+  // The main window never navigates away from the app UI
+  contents.on('will-navigate', (navigationEvent) => {
+    if (mainWindow && !mainWindow.isDestroyed() && contents === mainWindow.webContents) {
+      navigationEvent.preventDefault();
     }
   });
 });

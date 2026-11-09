@@ -3,198 +3,135 @@ if (!window.electronAPI) {
     console.error('electronAPI not available - preload script may have failed');
 }
 
+const DEFAULT_LATITUDE = 40.7128; // New York
+const DEFAULT_LONGITUDE = -74.0060;
+const DAY_CHECK_INTERVAL_MS = 60000;
+const WEATHER_TIMEOUT_MS = 15000;
+const WEATHER_RETRY_BASE_MS = 30000;
+const WEATHER_RETRY_MAX_MS = 15 * 60000;
+
 class DigitalSignage {
     constructor() {
         this.config = {};
         this.currentIndex = 0;
+        this.isSetUp = false;
         this.autoRotateTimer = null;
-        this.autoRotateCountdown = null;
-        this.moonPhaseTimer = null;
+        this.autoRotatePaused = false;
+        this.autostartEnabled = null; // last known state; null until read from the system
         this.weatherTimer = null;
-        this.uvTimer = null;
-        this.sunriseTime = null;
-        this.sunsetTime = null;
+        this.weatherRetryTimer = null;
+        this.weatherRetryDelay = WEATHER_RETRY_BASE_MS;
+        this.weatherRequestId = 0;
+        this.currentDay = null;
         this.touchStartX = 0;
         this.touchStartY = 0;
         this.isTransitioning = false;
         this.isScreensaverActive = false;
-        this.ipcListeners = [];
-        this.eventListeners = [];
-        
+
         this.init();
     }
 
-    // Comprehensive cleanup method to prevent memory leaks
-    cleanup() {
-        window.electronAPI.log.info('Starting DigitalSignage cleanup...');
-        
-        // Clear all timers
-        if (this.moonPhaseTimer) {
-            clearTimeout(this.moonPhaseTimer);
-            clearInterval(this.moonPhaseTimer);
-            this.moonPhaseTimer = null;
-        }
-        if (this.weatherTimer) {
-            clearTimeout(this.weatherTimer);
-            clearInterval(this.weatherTimer);
-            this.weatherTimer = null;
-        }
-        if (this.uvTimer) {
-            clearInterval(this.uvTimer);
-            this.uvTimer = null;
-        }
-        if (this.bitcoinHistoryTimer) {
-            clearTimeout(this.bitcoinHistoryTimer);
-            clearInterval(this.bitcoinHistoryTimer);
-            this.bitcoinHistoryTimer = null;
-        }
-        if (this.autoRotateTimer) {
-            clearTimeout(this.autoRotateTimer);
-            this.autoRotateTimer = null;
-        }
-        if (this.autoRotateCountdown) {
-            clearInterval(this.autoRotateCountdown);
-            this.autoRotateCountdown = null;
-        }
-        
-        // Remove all IPC listeners
-        this.ipcListeners.forEach(({ event, unsubscribe }) => {
-            if (unsubscribe) {
-                unsubscribe();
-            }
-        });
-        this.ipcListeners = [];
-        
-        // Remove all DOM event listeners
-        this.eventListeners.forEach(({ element, event, listener, options }) => {
-            if (element && element.removeEventListener) {
-                element.removeEventListener(event, listener, options);
-            }
-        });
-        this.eventListeners = [];
-        
-        window.electronAPI.log.info('DigitalSignage cleanup completed');
-    }
+    init() {
+        const api = window.electronAPI;
 
-    // Helper method to add tracked IPC listeners
-    addIpcListener(event, listener) {
-        const unsubscribe = window.electronAPI.on(event, listener);
-        this.ipcListeners.push({ event, unsubscribe });
-    }
-
-    // Helper method to add tracked DOM event listeners
-    addEventListenerTracked(element, event, listener, options) {
-        element.addEventListener(event, listener, options);
-        this.eventListeners.push({ element, event, listener, options });
-    }
-
-    async init() {
-        // Set up IPC listeners with tracking
-        this.addIpcListener('config-loaded', async (config) => {
+        api.on('config-loaded', (config) => {
             this.config = config;
-            await this.setupApp();
+            this.setupApp();
         });
 
-        this.addIpcListener('view-changed', ({ index, url, backgroundColor }) => {
-            window.electronAPI.log.info(`Renderer received view-changed: index=${index}, backgroundColor=${backgroundColor}`);
+        api.on('view-changed', ({ index, url, backgroundColor, error }) => {
             this.currentIndex = index;
             this.updateUI();
             if (backgroundColor) {
                 this.applyBackgroundColor(backgroundColor);
             }
-        });
-
-        this.addIpcListener('webview-error', ({ index, url, error }) => {
-            if (index === this.currentIndex) {
-                this.showError(`Failed to load: ${url}\nError: ${error}`);
+            if (error) {
+                this.showLoadError(url, error);
+            } else {
+                this.hideError();
             }
         });
 
-        this.addIpcListener('webview-loaded', ({ index, url }) => {
+        api.on('webview-error', ({ index, url, error }) => {
+            if (index === this.currentIndex) {
+                this.showLoadError(url, error);
+            }
+        });
+
+        api.on('webview-loaded', ({ index }) => {
             if (index === this.currentIndex) {
                 this.hideError();
             }
         });
 
-        this.addIpcListener('config-reloaded', (newConfig) => {
-            this.config = newConfig;
-            this.createIndicators();
-            this.currentIndex = 0;
-            this.updateUI();
-        });
-
-        // Screensaver IPC listeners
-        this.addIpcListener('screensaver-shown', () => {
+        api.on('screensaver-shown', () => {
             this.isScreensaverActive = true;
         });
 
-        this.addIpcListener('screensaver-hidden', () => {
+        api.on('screensaver-hidden', () => {
             this.isScreensaverActive = false;
         });
 
-        this.addIpcListener('screensaver-error', ({ url, error }) => {
-            window.electronAPI.log.error(`Screensaver failed to load: ${url}`, error);
+        api.on('screensaver-error', ({ url, error }) => {
+            api.log.error(`Screensaver failed to load: ${url}`, error);
         });
 
-        this.addIpcListener('screensaver-loaded', () => {
-            window.electronAPI.log.info('Screensaver loaded successfully');
-        });
-
-        // Request config if not received within 3 seconds
+        // Ask for the config if it hasn't arrived within 3 seconds (e.g. after a dev reload)
         setTimeout(async () => {
-            if (!this.config.urls) {
-                try {
-                    this.config = await window.electronAPI.invoke('get-config');
-                    await this.setupApp();
-                } catch (error) {
-                    window.electronAPI.log.error('Failed to load config:', error);
-                    // Use default config if loading fails
-                    this.config = {
-                        urls: ['https://timechaincalendar.com/en', 'https://bitfeed.live/'],
-                        autoRotate: false,
-                        autoRotateInterval: 60000,
-                        fullscreen: false,
-                        enableDevTools: false
-                    };
-                    await this.setupApp();
-                }
+            if (this.config.urls) return;
+            try {
+                this.config = await api.invoke('get-config');
+            } catch (error) {
+                api.log.error('Failed to load config:', error);
+                this.config = {
+                    urls: ['https://timechaincalendar.com/en', 'https://bitfeed.live/'],
+                    autoRotate: false,
+                    autoRotateInterval: 60000,
+                    fullscreen: false,
+                    enableDevTools: false
+                };
             }
+            this.setupApp();
         }, 3000);
     }
 
-    async setupApp() {
+    // One-time setup. Anything that depends on the config belongs in applyConfig.
+    setupApp() {
+        if (this.isSetUp) return;
+        this.isSetUp = true;
+
         try {
-            this.createIndicators();
             this.setupNavigation();
             this.setupGestures();
             this.setupErrorHandling();
             this.setupSettings();
             this.setupVirtualKeyboard();
             this.setupScreensaver();
-            this.updateScreensaverButtonVisibility();
             this.setupExitButton();
             this.setupUVClickHandler();
             this.setupBitcoinHistoryClickHandler();
             this.setupTemperatureClickHandler();
-            
-            await this.setupMoonPhase();
-            this.startMoonPhaseTimer();
-            
-            await this.setupWeatherData();
-            this.startWeatherTimer();
-            
-            await this.setupUVData();
-            this.startUVTimer();
-            
-            await this.setupBitcoinHistory();
-            this.startBitcoinHistoryTimer();
-            
-            this.startAutoRotate();
-            this.hideLoadingScreen();
-            this.updateUI();
+
+            this.applyConfig();
+            this.startDayChangeCheck();
         } catch (error) {
             window.electronAPI.log.error('Error in setupApp:', error);
         }
+
+        // Nothing above waits for the network, so a slow connection can't hold this up
+        this.hideLoadingScreen();
+    }
+
+    // Runs at startup and again after settings are saved.
+    applyConfig() {
+        this.createIndicators();
+        this.updateScreensaverButtonVisibility();
+        this.updateUI();
+
+        this.setupMoonPhase();
+        this.setupBitcoinHistory();
+        this.refreshWeather();
+        this.startWeatherTimer();
     }
 
     createIndicators() {
@@ -208,7 +145,7 @@ class DigitalSignage {
             // Create indicator
             const indicator = document.createElement('div');
             indicator.className = `indicator ${index === 0 ? 'active' : ''}`;
-            this.addEventListenerTracked(indicator, 'click', () => this.goToSlide(index));
+            indicator.addEventListener('click', () => this.goToSlide(index));
             indicatorsContainer.appendChild(indicator);
         });
     }
@@ -254,69 +191,23 @@ class DigitalSignage {
         const nextBtn = document.getElementById('next-btn');
 
         if (prevBtn) {
-            this.addEventListenerTracked(prevBtn, 'click', () => this.previousSlide());
+            prevBtn.addEventListener('click', () => this.previousSlide());
         }
         if (nextBtn) {
-            this.addEventListenerTracked(nextBtn, 'click', () => this.nextSlide());
+            nextBtn.addEventListener('click', () => this.nextSlide());
         }
-
-        // Keyboard navigation
-        this.addEventListenerTracked(document, 'keydown', async (e) => {
-            // If screensaver is active, hide it on any key press
-            if (this.isScreensaverActive) {
-                try {
-                    await window.electronAPI.invoke('hide-screensaver');
-                } catch (error) {
-                    window.electronAPI.log.error('Failed to hide screensaver:', error);
-                }
-                return;
-            }
-
-            // Check if any modals are open - if so, don't handle slide navigation
-            const settingsOverlay = document.getElementById('settings-overlay');
-            const bitcoinHistoryOverlay = document.getElementById('bitcoin-history-overlay');
-            const isModalOpen = (settingsOverlay && !settingsOverlay.classList.contains('hidden')) ||
-                               (bitcoinHistoryOverlay && !bitcoinHistoryOverlay.classList.contains('hidden'));
-
-            switch(e.key) {
-                case 'ArrowLeft':
-                    if (!isModalOpen) {
-                        this.previousSlide();
-                    }
-                    break;
-                case 'ArrowRight':
-                    if (!isModalOpen) {
-                        this.nextSlide();
-                    }
-                    break;
-                case 'Escape':
-                    // Exit fullscreen or close app
-                    if (document.fullscreenElement) {
-                        document.exitFullscreen();
-                    }
-                    break;
-                case 'F11':
-                    // Toggle fullscreen
-                    if (document.fullscreenElement) {
-                        document.exitFullscreen();
-                    } else {
-                        document.documentElement.requestFullscreen();
-                    }
-                    break;
-            }
-        });
     }
 
     setupGestures() {
         const gestureArea = document.getElementById('gesture-area');
         
         // Touch events
-        this.addEventListenerTracked(gestureArea, 'touchstart', (e) => {
+        gestureArea.addEventListener('touchstart', (e) => {
             this.touchStartX = e.touches[0].clientX;
             this.touchStartY = e.touches[0].clientY;
         });
 
-        this.addEventListenerTracked(gestureArea, 'touchmove', (e) => {
+        gestureArea.addEventListener('touchmove', (e) => {
             if (!this.touchStartX || !this.touchStartY) return;
 
             const touchCurrentX = e.touches[0].clientX;
@@ -331,7 +222,7 @@ class DigitalSignage {
             }
         });
 
-        this.addEventListenerTracked(gestureArea, 'touchend', async (e) => {
+        gestureArea.addEventListener('touchend', async (e) => {
             if (!this.touchStartX || !this.touchStartY) return;
 
             const touchEndX = e.changedTouches[0].clientX;
@@ -367,11 +258,11 @@ class DigitalSignage {
 
         // Mouse events (for desktop testing)
         let mouseStartX = 0;
-        this.addEventListenerTracked(gestureArea, 'mousedown', (e) => {
+        gestureArea.addEventListener('mousedown', (e) => {
             mouseStartX = e.clientX;
         });
 
-        this.addEventListenerTracked(gestureArea, 'mouseup', async (e) => {
+        gestureArea.addEventListener('mouseup', async (e) => {
             // If screensaver is active, hide it on any click
             if (this.isScreensaverActive) {
                 try {
@@ -395,7 +286,7 @@ class DigitalSignage {
 
     setupErrorHandling() {
         const retryBtn = document.getElementById('retry-btn');
-        this.addEventListenerTracked(retryBtn, 'click', () => {
+        retryBtn.addEventListener('click', () => {
             this.retryCurrentSlide();
         });
     }
@@ -409,42 +300,51 @@ class DigitalSignage {
         const addUrlBtn = document.getElementById('add-url-btn');
 
         // Open settings
-        this.addEventListenerTracked(settingsBtn, 'click', () => {
+        settingsBtn.addEventListener('click', () => {
             this.openSettings();
         });
 
         // Close settings
-        this.addEventListenerTracked(settingsClose, 'click', () => {
+        settingsClose.addEventListener('click', () => {
             this.closeSettings();
         });
 
-        this.addEventListenerTracked(settingsCancel, 'click', () => {
+        settingsCancel.addEventListener('click', () => {
             this.closeSettings();
         });
 
         // Close on overlay click
-        this.addEventListenerTracked(settingsOverlay, 'click', (e) => {
+        settingsOverlay.addEventListener('click', (e) => {
             if (e.target === settingsOverlay) {
                 this.closeSettings();
             }
         });
 
         // Handle form submission
-        this.addEventListenerTracked(settingsForm, 'submit', (e) => {
+        settingsForm.addEventListener('submit', (e) => {
             e.preventDefault();
             this.saveSettings();
         });
 
         // Add URL button
-        this.addEventListenerTracked(addUrlBtn, 'click', () => {
+        addUrlBtn.addEventListener('click', () => {
             this.addUrlEntry();
         });
 
         // Tab switching
         this.setupTabs();
 
+        const useQuotesCheck = document.getElementById('use-quotes-screensaver');
+        const screensaverUrlInput = document.getElementById('screensaver-url');
+        useQuotesCheck.addEventListener('change', () => {
+            screensaverUrlInput.disabled = useQuotesCheck.checked;
+            screensaverUrlInput.value = useQuotesCheck.checked ? '' : 'https://lodev09.github.io/web-screensavers/jellyfish/';
+        });
+
+        this.setupWifiControls();
+
         // ESC key to close settings
-        this.addEventListenerTracked(document, 'keydown', (e) => {
+        document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 const bitcoinHistoryOverlay = document.getElementById('bitcoin-history-overlay');
                 
@@ -467,21 +367,20 @@ class DigitalSignage {
         const virtualKeyboard = document.getElementById('virtual-keyboard');
         const keyButtons = virtualKeyboard.querySelectorAll('.key-btn');
         
-        let isKeyboardVisible = false;
+        const isKeyboardVisible = () => !virtualKeyboard.classList.contains('hidden');
         let isCapsLock = false;
         let isShiftActive = false;
         let activeInput = null;
         let lastActiveInput = null;
         
         // Prevent toggle button from stealing focus
-        this.addEventListenerTracked(keyboardToggle, 'mousedown', (e) => {
+        keyboardToggle.addEventListener('mousedown', (e) => {
             e.preventDefault();
         });
         
         // Toggle keyboard visibility
-        this.addEventListenerTracked(keyboardToggle, 'click', () => {
-            isKeyboardVisible = !isKeyboardVisible;
-            if (isKeyboardVisible) {
+        keyboardToggle.addEventListener('click', () => {
+            if (!isKeyboardVisible()) {
                 virtualKeyboard.classList.remove('hidden');
                 keyboardToggle.classList.add('active');
                 // Position keyboard under active input if there is one
@@ -498,18 +397,18 @@ class DigitalSignage {
         });
         
         // Track active input for focusing (using delegation for dynamic inputs)
-        this.addEventListenerTracked(document, 'focusin', (e) => {
+        document.addEventListener('focusin', (e) => {
             if (e.target.matches('#settings-form input[type="text"], #settings-form input[type="url"], #settings-form input[type="password"]')) {
                 activeInput = e.target;
                 lastActiveInput = e.target; // Keep a backup reference
                 // Position keyboard under the focused input if visible
-                if (isKeyboardVisible) {
+                if (isKeyboardVisible()) {
                     this.positionKeyboardUnderInput(activeInput, virtualKeyboard);
                 }
             }
         });
         
-        this.addEventListenerTracked(document, 'focusout', (e) => {
+        document.addEventListener('focusout', (e) => {
             if (e.target.matches('#settings-form input[type="text"], #settings-form input[type="url"], #settings-form input[type="password"]')) {
                 // Only clear activeInput if we're not clicking on the virtual keyboard
                 setTimeout(() => {
@@ -531,11 +430,11 @@ class DigitalSignage {
         // Handle key button clicks
         keyButtons.forEach(button => {
             // Prevent buttons from stealing focus on mousedown
-            this.addEventListenerTracked(button, 'mousedown', (e) => {
+            button.addEventListener('mousedown', (e) => {
                 e.preventDefault(); // Prevents focus from changing
             });
             
-            this.addEventListenerTracked(button, 'click', (e) => {
+            button.addEventListener('click', (e) => {
                 e.preventDefault();
                 const key = button.dataset.key;
                 
@@ -588,21 +487,20 @@ class DigitalSignage {
         });
         
         // Close keyboard when clicking outside settings form or virtual keyboard
-        this.addEventListenerTracked(document, 'click', (e) => {
+        document.addEventListener('click', (e) => {
             const settingsContent = document.querySelector('.settings-content');
             const clickedOnKeyboard = virtualKeyboard.contains(e.target);
             const clickedOnSettings = settingsContent && settingsContent.contains(e.target);
             
-            if (isKeyboardVisible && !clickedOnKeyboard && !clickedOnSettings) {
+            if (isKeyboardVisible() && !clickedOnKeyboard && !clickedOnSettings) {
                 virtualKeyboard.classList.add('hidden');
                 keyboardToggle.classList.remove('active');
-                isKeyboardVisible = false;
             }
         });
         
         // Handle window resize to reposition keyboard
-        this.addEventListenerTracked(window, 'resize', () => {
-            if (isKeyboardVisible) {
+        window.addEventListener('resize', () => {
+            if (isKeyboardVisible()) {
                 if (activeInput) {
                     // Small delay to let the layout settle
                     setTimeout(() => {
@@ -617,8 +515,8 @@ class DigitalSignage {
         // Handle scrolling in settings content to reposition keyboard
         const settingsContent = document.querySelector('.settings-content');
         if (settingsContent) {
-            this.addEventListenerTracked(settingsContent, 'scroll', () => {
-                if (isKeyboardVisible && activeInput) {
+            settingsContent.addEventListener('scroll', () => {
+                if (isKeyboardVisible() && activeInput) {
                     this.positionKeyboardUnderInput(activeInput, virtualKeyboard);
                 }
             });
@@ -885,7 +783,7 @@ class DigitalSignage {
     setupScreensaver() {
         const screensaverBtn = document.getElementById('screensaver-btn');
         
-        this.addEventListenerTracked(screensaverBtn, 'click', async () => {
+        screensaverBtn.addEventListener('click', async () => {
             try {
                 if (this.isScreensaverActive) {
                     await window.electronAPI.invoke('hide-screensaver');
@@ -910,7 +808,7 @@ class DigitalSignage {
     setupExitButton() {
         const exitBtn = document.getElementById('exit-btn');
         
-        this.addEventListenerTracked(exitBtn, 'click', async () => {
+        exitBtn.addEventListener('click', async () => {
             // Show confirmation dialog
             const confirmExit = confirm('Are you sure you want to exit the application?');
             if (confirmExit) {
@@ -926,9 +824,8 @@ class DigitalSignage {
     setupUVClickHandler() {
         const uvIcon = document.getElementById('uv-icon');
         
-        this.addEventListenerTracked(uvIcon, 'click', async () => {
-            window.electronAPI.log.info('UV Index icon clicked - refreshing data');
-            await this.refreshUVData();
+        uvIcon.addEventListener('click', async () => {
+            await this.refreshWeather();
         });
         
         // Add cursor pointer style to indicate it's clickable
@@ -940,7 +837,7 @@ class DigitalSignage {
     setupBitcoinHistoryClickHandler() {
         const historyIcon = document.getElementById('bitcoin-history-icon');
         
-        this.addEventListenerTracked(historyIcon, 'click', () => {
+        historyIcon.addEventListener('click', () => {
             window.electronAPI.log.info('Bitcoin history icon clicked');
             if (this.bitcoinFacts && this.bitcoinFacts.length > 0) {
                 this.showBitcoinHistoryModal(this.bitcoinFacts);
@@ -956,9 +853,8 @@ class DigitalSignage {
     setupTemperatureClickHandler() {
         const temperatureIcon = document.getElementById('temperature-icon');
         
-        this.addEventListenerTracked(temperatureIcon, 'click', async () => {
-            window.electronAPI.log.info('Temperature icon clicked - refreshing data');
-            await this.refreshUVData(); // This will refresh both UV and temperature
+        temperatureIcon.addEventListener('click', async () => {
+            await this.refreshWeather();
         });
         
         // Add cursor pointer style to indicate it's clickable
@@ -1009,381 +905,140 @@ class DigitalSignage {
     }
 
 
-    startMoonPhaseTimer() {
-        // Clear existing timer
-        if (this.moonPhaseTimer) {
-            clearTimeout(this.moonPhaseTimer);
-        }
-
-        // Only start timer if moon phase is enabled
-        if (this.config.showMoonPhase === false) {
-            return;
-        }
-
-        // Calculate milliseconds until next 1 AM
-        const now = new Date();
-        const next1AM = new Date();
-        next1AM.setHours(1, 0, 0, 0); // Set to 1:00:00 AM
-
-        // If it's already past 1 AM today, set for tomorrow
-        if (now >= next1AM) {
-            next1AM.setDate(next1AM.getDate() + 1);
-        }
-
-        const msUntil1AM = next1AM.getTime() - now.getTime();
-        
-        window.electronAPI.log.info(`Moon phase will refresh at: ${next1AM.toLocaleString()}`);
-
-        // Set timer for next 1 AM
-        this.moonPhaseTimer = setTimeout(() => {
-            this.refreshMoonPhase();
-            // Set up daily recurring timer (24 hours = 86400000 ms)
-            this.moonPhaseTimer = setInterval(() => {
-                this.refreshMoonPhase();
-            }, 86400000);
-        }, msUntil1AM);
+    // Compares the calendar date instead of timing "midnight": a fixed 24h timer
+    // drifts when clocks change, and a Pi's clock can jump when NTP syncs at boot.
+    startDayChangeCheck() {
+        this.currentDay = new Date().toDateString();
+        setInterval(() => this.checkDayChange(), DAY_CHECK_INTERVAL_MS);
     }
 
-    async refreshMoonPhase() {
-        window.electronAPI.log.info('Refreshing moon phase at:', new Date().toLocaleString());
-        if (this.config.showMoonPhase !== false) {
-            await this.setupMoonPhase();
-        }
+    checkDayChange() {
+        const today = new Date().toDateString();
+        if (today === this.currentDay) return;
+
+        this.currentDay = today;
+        this.setupMoonPhase();
+        this.setupBitcoinHistory();
+        this.refreshWeather();
     }
 
-    startBitcoinHistoryTimer() {
-        // Clear existing timer
-        if (this.bitcoinHistoryTimer) {
-            clearTimeout(this.bitcoinHistoryTimer);
-        }
-
-        // Calculate milliseconds until next midnight (00:00)
-        const now = new Date();
-        const nextMidnight = new Date();
-        nextMidnight.setHours(24, 0, 0, 0); // Set to next midnight
-        
-        const msUntilMidnight = nextMidnight.getTime() - now.getTime();
-        
-        window.electronAPI.log.info(`Bitcoin history will refresh at: ${nextMidnight.toLocaleString()}`);
-
-        // Set timer for next midnight
-        this.bitcoinHistoryTimer = setTimeout(() => {
-            this.refreshBitcoinHistory();
-            // Set up daily recurring timer (24 hours = 86400000 ms)
-            this.bitcoinHistoryTimer = setInterval(() => {
-                this.refreshBitcoinHistory();
-            }, 86400000);
-        }, msUntilMidnight);
+    getWeatherPreferences() {
+        const { showWeather, showUV, showTemperature, showHumidity } = this.config;
+        return {
+            sun: showWeather !== false,
+            uv: showUV !== false,
+            temperature: showTemperature !== false,
+            humidity: showHumidity !== false
+        };
     }
 
-    async refreshBitcoinHistory() {
-        window.electronAPI.log.info('Refreshing Bitcoin history at:', new Date().toLocaleString());
-        await this.setupBitcoinHistory();
-    }
-
-    async setupWeatherData() {
-        // Check if weather should be shown
-        if (this.config.showWeather === false) {
-            this.hideWeatherDisplay();
-            return;
-        }
-
-        try {
-            // Use configured coordinates or default to New York
-            const latitude = this.config.latitude || 40.7128;
-            const longitude = this.config.longitude || -74.0060;
-            
-            const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=sunrise,sunset,uv_index_max&timezone=auto&forecast_days=1`
-            );
-            
-            if (!response.ok) {
-                throw new Error('Weather API request failed');
-            }
-            
-            const data = await response.json();
-            this.updateWeatherDisplay(data);
-            
-        } catch (error) {
-            window.electronAPI.log.error('Weather data setup failed:', error);
-            // Fallback display
-            const sunriseTimeElement = document.getElementById('sunrise-time');
-            const sunsetTimeElement = document.getElementById('sunset-time');
-            if (sunriseTimeElement) {
-                sunriseTimeElement.textContent = '--:--';
-            }
-            if (sunsetTimeElement) {
-                sunsetTimeElement.textContent = '--:--';
-            }
-        }
-    }
-
-    updateWeatherDisplay(data) {
-        const sunriseTimeElement = document.getElementById('sunrise-time');
-        const sunsetTimeElement = document.getElementById('sunset-time');
-        
-        // Show weather elements
-        this.showWeatherDisplay();
-        
-        // Determine time format
-        const use12Hour = this.config.timeFormat === '12';
-        
-        if (sunriseTimeElement && data.daily && data.daily.sunrise && data.daily.sunrise[0]) {
-            this.sunriseTime = new Date(data.daily.sunrise[0]);
-            const timeString = this.sunriseTime.toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: use12Hour 
-            });
-            sunriseTimeElement.textContent = timeString;
-        }
-        
-        if (sunsetTimeElement && data.daily && data.daily.sunset && data.daily.sunset[0]) {
-            this.sunsetTime = new Date(data.daily.sunset[0]);
-            const timeString = this.sunsetTime.toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: use12Hour 
-            });
-            sunsetTimeElement.textContent = timeString;
-        }
-    }
-
-    showWeatherDisplay() {
-        const sunriseGroup = document.querySelector('.sunrise-group');
-        const sunsetGroup = document.querySelector('.sunset-group');
-        
-        if (sunriseGroup) {
-            sunriseGroup.style.display = 'flex';
-        }
-        if (sunsetGroup) {
-            sunsetGroup.style.display = 'flex';
-        }
-    }
-
-    hideWeatherDisplay() {
-        const sunriseGroup = document.querySelector('.sunrise-group');
-        const sunsetGroup = document.querySelector('.sunset-group');
-        
-        if (sunriseGroup) {
-            sunriseGroup.style.display = 'none';
-        }
-        if (sunsetGroup) {
-            sunsetGroup.style.display = 'none';
+    setGroupVisible(selector, visible) {
+        const group = document.querySelector(selector);
+        if (group) {
+            group.style.display = visible ? 'flex' : 'none';
         }
     }
 
     startWeatherTimer() {
-        // Clear existing timer
-        if (this.weatherTimer) {
-            clearTimeout(this.weatherTimer);
-        }
+        clearInterval(this.weatherTimer);
+        this.weatherTimer = null;
 
-        // Calculate milliseconds until next 3 AM for weather update
-        const now = new Date();
-        const next3AM = new Date();
-        next3AM.setHours(3, 0, 0, 0);
+        if (!Object.values(this.getWeatherPreferences()).some(Boolean)) return;
 
-        // If it's already past 3 AM today, set for tomorrow
-        if (now >= next3AM) {
-            next3AM.setDate(next3AM.getDate() + 1);
-        }
-
-        const msUntil3AM = next3AM.getTime() - now.getTime();
-        
-        window.electronAPI.log.info(`Weather data will refresh at: ${next3AM.toLocaleString()}`);
-
-        // Set timer for next 3 AM
-        this.weatherTimer = setTimeout(() => {
-            this.refreshWeatherData();
-            // Set up daily recurring timer (24 hours = 86400000 ms)
-            this.weatherTimer = setInterval(() => {
-                this.refreshWeatherData();
-            }, 86400000);
-        }, msUntil3AM);
+        const minutes = this.config.uvUpdateFrequency || 60;
+        this.weatherTimer = setInterval(() => this.refreshWeather(), minutes * 60000);
     }
 
-    refreshWeatherData() {
-        window.electronAPI.log.info('Refreshing weather data at:', new Date().toLocaleString());
-        this.setupWeatherData();
+    async fetchWeather(show) {
+        const latitude = this.config.latitude ?? DEFAULT_LATITUDE;
+        const longitude = this.config.longitude ?? DEFAULT_LONGITUDE;
+
+        let url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&timezone=auto`;
+        if (show.sun) {
+            url += '&daily=sunrise,sunset&forecast_days=1';
+        }
+        const current = [];
+        if (show.uv) current.push('uv_index');
+        if (show.temperature) current.push('temperature_2m');
+        if (show.humidity) current.push('relative_humidity_2m');
+        if (current.length > 0) {
+            url += `&current=${current.join(',')}`;
+        }
+
+        const response = await fetch(url, { signal: AbortSignal.timeout(WEATHER_TIMEOUT_MS) });
+        if (!response.ok) {
+            throw new Error(`Weather API returned ${response.status}`);
+        }
+        return response.json();
     }
 
-    async setupUVData() {
-        // Check if weather elements should be shown
-        const shouldShowUV = this.config.showUV !== false; // Default to true
-        const shouldShowTemperature = this.config.showTemperature !== false; // Default to true
-        const shouldShowHumidity = this.config.showHumidity !== false; // Default to true
-        
-        if (!shouldShowUV) {
-            this.hideUVDisplay();
-        }
-        
-        if (!shouldShowTemperature) {
-            this.hideTemperatureDisplay();
-        }
-        
-        if (!shouldShowHumidity) {
-            this.hideHumidityDisplay();
-        }
-        
-        // If all are disabled, return early
-        if (!shouldShowUV && !shouldShowTemperature && !shouldShowHumidity) {
-            return;
-        }
+    async refreshWeather() {
+        const show = this.getWeatherPreferences();
+        this.setGroupVisible('.sunrise-group', show.sun);
+        this.setGroupVisible('.sunset-group', show.sun);
+        this.setGroupVisible('.uv-index-group', show.uv);
+        this.setGroupVisible('.temperature-group', show.temperature);
+        this.setGroupVisible('.humidity-group', show.humidity);
 
-        // Check if it's currently daylight hours
-        if (!this.isDaylight()) {
-            window.electronAPI.log.info('UV Index not fetched - outside daylight hours');
-            
-            // Show UV display but with nighttime value (only if enabled)
-            if (shouldShowUV) {
-                this.showUVDisplay();
-                const uvValueElement = document.getElementById('uv-value');
-                if (uvValueElement) {
-                    uvValueElement.textContent = '0';
-                    uvValueElement.style.borderColor = 'rgba(0, 128, 0, 0.7)'; // Green for no UV at night
-                }
-            }
-            
-            // Still try to get current temperature and humidity even at night (only if enabled)
-            if (shouldShowTemperature || shouldShowHumidity) {
-                if (shouldShowTemperature) {
-                    this.showTemperatureDisplay();
-                }
-                if (shouldShowHumidity) {
-                    this.showHumidityDisplay();
-                }
-                
-                try {
-                    const latitude = this.config.latitude || 40.7128;
-                    const longitude = this.config.longitude || -74.0060;
-                    
-                    let nightParams = [];
-                    if (shouldShowTemperature) {
-                        nightParams.push('temperature_2m');
-                    }
-                    if (shouldShowHumidity) {
-                        nightParams.push('relative_humidity_2m');
-                    }
-                    
-                    const response = await fetch(
-                        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=${nightParams.join(',')}&timezone=auto`
-                    );
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        const temperatureValueElement = document.getElementById('temperature-value');
-                        const humidityValueElement = document.getElementById('humidity-value');
-                        
-                        if (shouldShowTemperature && temperatureValueElement && data.current && typeof data.current.temperature_2m === 'number') {
-                            const temperature = this.convertTemperature(data.current.temperature_2m);
-                            const unit = this.getTemperatureUnit();
-                            temperatureValueElement.textContent = `${temperature}°${unit}`;
-                        }
-                        
-                        if (shouldShowHumidity && humidityValueElement && data.current && typeof data.current.relative_humidity_2m === 'number') {
-                            const humidity = Math.round(data.current.relative_humidity_2m);
-                            humidityValueElement.textContent = `${humidity}%`;
-                        }
-                    }
-                } catch (error) {
-                    window.electronAPI.log.error('Failed to fetch nighttime temperature:', error);
-                }
-            }
-            return;
-        }
+        clearTimeout(this.weatherRetryTimer);
+        if (!Object.values(show).some(Boolean)) return;
 
+        const requestId = ++this.weatherRequestId;
         try {
-            // Use configured coordinates or default to New York
-            const latitude = this.config.latitude || 40.7128;
-            const longitude = this.config.longitude || -74.0060;
-            
-            // Build API request based on what's enabled
-            let currentParams = [];
-            if (shouldShowUV) {
-                currentParams.push('uv_index');
-            }
-            if (shouldShowTemperature) {
-                currentParams.push('temperature_2m');
-            }
-            if (shouldShowHumidity) {
-                currentParams.push('relative_humidity_2m');
-            }
-            
-            const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=${currentParams.join(',')}&timezone=auto`
-            );
-            
-            if (!response.ok) {
-                throw new Error('Weather API request failed');
-            }
-            
-            const data = await response.json();
-            this.updateUVDisplay(data, shouldShowUV, shouldShowTemperature, shouldShowHumidity);
-            
+            const data = await this.fetchWeather(show);
+            if (requestId !== this.weatherRequestId) return;
+
+            this.renderWeather(data, show);
+            this.weatherRetryDelay = WEATHER_RETRY_BASE_MS;
         } catch (error) {
-            window.electronAPI.log.error('Weather data setup failed:', error);
-            // Fallback display
-            if (shouldShowUV) {
-                const uvValueElement = document.getElementById('uv-value');
-                if (uvValueElement) {
-                    uvValueElement.textContent = '--';
-                    uvValueElement.style.borderColor = 'white';
-                }
-            }
-            if (shouldShowTemperature) {
-                const temperatureValueElement = document.getElementById('temperature-value');
-                if (temperatureValueElement) {
-                    const unit = this.getTemperatureUnit();
-                    temperatureValueElement.textContent = `--°${unit}`;
-                }
-            }
-            // Show humidity fallback only if enabled
-            if (shouldShowHumidity) {
-                this.showHumidityDisplay();
-                const humidityValueElement = document.getElementById('humidity-value');
-                if (humidityValueElement) {
-                    humidityValueElement.textContent = '--%';
-                }
-            }
+            if (requestId !== this.weatherRequestId) return;
+
+            window.electronAPI.log.error('Weather update failed:', error.message);
+            this.renderWeather({}, show);
+            this.weatherRetryTimer = setTimeout(() => this.refreshWeather(), this.weatherRetryDelay);
+            this.weatherRetryDelay = Math.min(this.weatherRetryDelay * 2, WEATHER_RETRY_MAX_MS);
         }
     }
 
-    updateUVDisplay(data, shouldShowUV = true, shouldShowTemperature = true, shouldShowHumidity = true) {
-        const uvValueElement = document.getElementById('uv-value');
-        const temperatureValueElement = document.getElementById('temperature-value');
-        const humidityValueElement = document.getElementById('humidity-value');
-        
-        // Show UV element only if enabled
-        if (shouldShowUV) {
-            this.showUVDisplay();
-            if (uvValueElement && data.current && typeof data.current.uv_index === 'number') {
-                const uvIndex = Math.round(data.current.uv_index);
-                uvValueElement.textContent = uvIndex.toString();
-                
-                // Color code based on UV Index levels
-                const uvColor = this.getUVColor(uvIndex);
-                uvValueElement.style.borderColor = uvColor;
-            }
+    formatSunTime(isoTime) {
+        if (!isoTime) return '--:--';
+        return new Date(isoTime).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: this.config.timeFormat === '12'
+        });
+    }
+
+    // Fields missing from data are shown as placeholders.
+    renderWeather(data, show) {
+        const current = data.current || {};
+        const setText = (id, text) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = text;
+        };
+
+        if (show.sun) {
+            setText('sunrise-time', this.formatSunTime(data.daily?.sunrise?.[0]));
+            setText('sunset-time', this.formatSunTime(data.daily?.sunset?.[0]));
         }
-        
-        // Show temperature element only if enabled
-        if (shouldShowTemperature) {
-            this.showTemperatureDisplay();
-            if (temperatureValueElement && data.current && typeof data.current.temperature_2m === 'number') {
-                const temperature = this.convertTemperature(data.current.temperature_2m);
-                const unit = this.getTemperatureUnit();
-                temperatureValueElement.textContent = `${temperature}°${unit}`;
-            }
+
+        if (show.uv) {
+            const hasUV = typeof current.uv_index === 'number';
+            const uvIndex = Math.round(current.uv_index);
+            setText('uv-value', hasUV ? String(uvIndex) : '--');
+            const uvElement = document.getElementById('uv-value');
+            if (uvElement) uvElement.style.borderColor = hasUV ? this.getUVColor(uvIndex) : 'white';
         }
-        
-        // Show humidity only if enabled
-        if (shouldShowHumidity) {
-            this.showHumidityDisplay();
-            if (humidityValueElement && data.current && typeof data.current.relative_humidity_2m === 'number') {
-                const humidity = Math.round(data.current.relative_humidity_2m);
-                humidityValueElement.textContent = `${humidity}%`;
-            }
+
+        if (show.temperature) {
+            const hasTemperature = typeof current.temperature_2m === 'number';
+            const value = hasTemperature ? this.convertTemperature(current.temperature_2m) : '--';
+            setText('temperature-value', `${value}°${this.getTemperatureUnit()}`);
+        }
+
+        if (show.humidity) {
+            const hasHumidity = typeof current.relative_humidity_2m === 'number';
+            setText('humidity-value', hasHumidity ? `${Math.round(current.relative_humidity_2m)}%` : '--%');
         }
     }
 
@@ -1409,85 +1064,6 @@ class DigitalSignage {
     getTemperatureUnit() {
         const unit = this.config.temperatureUnit || 'C';
         return unit === 'F' ? 'F' : 'C';
-    }
-
-    isDaylight() {
-        if (!this.sunriseTime || !this.sunsetTime) {
-            return true; // Default to fetching if we don't have sunrise/sunset data yet
-        }
-        
-        const now = new Date();
-        return now >= this.sunriseTime && now <= this.sunsetTime;
-    }
-
-    showUVDisplay() {
-        const uvGroup = document.querySelector('.uv-index-group');
-        if (uvGroup) {
-            uvGroup.style.display = 'flex';
-        }
-    }
-
-    hideUVDisplay() {
-        const uvGroup = document.querySelector('.uv-index-group');
-        if (uvGroup) {
-            uvGroup.style.display = 'none';
-        }
-    }
-
-    showTemperatureDisplay() {
-        const temperatureGroup = document.querySelector('.temperature-group');
-        if (temperatureGroup) {
-            temperatureGroup.style.display = 'flex';
-        }
-    }
-
-    hideTemperatureDisplay() {
-        const temperatureGroup = document.querySelector('.temperature-group');
-        if (temperatureGroup) {
-            temperatureGroup.style.display = 'none';
-        }
-    }
-
-    showHumidityDisplay() {
-        const humidityGroup = document.querySelector('.humidity-group');
-        if (humidityGroup) {
-            humidityGroup.style.display = 'flex';
-        }
-    }
-
-    hideHumidityDisplay() {
-        const humidityGroup = document.querySelector('.humidity-group');
-        if (humidityGroup) {
-            humidityGroup.style.display = 'none';
-        }
-    }
-
-    startUVTimer() {
-        // Clear existing timer
-        if (this.uvTimer) {
-            clearInterval(this.uvTimer);
-        }
-
-        // Only start timer if UV Index is enabled
-        if (this.config.showUV === false) {
-            return;
-        }
-
-        // Get update frequency in minutes (default 60)
-        const updateFrequency = this.config.uvUpdateFrequency || 60;
-        const intervalMs = updateFrequency * 60 * 1000; // Convert to milliseconds
-        
-        window.electronAPI.log.info(`UV Index will refresh every ${updateFrequency} minutes`);
-
-        // Set up recurring timer
-        this.uvTimer = setInterval(() => {
-            this.refreshUVData();
-        }, intervalMs);
-    }
-
-    refreshUVData() {
-        window.electronAPI.log.info('Refreshing UV Index data at:', new Date().toLocaleString());
-        this.setupUVData();
     }
 
     async setupBitcoinHistory() {
@@ -1541,20 +1117,13 @@ class DigitalSignage {
         const nextButton = document.getElementById('bitcoin-history-next');
 
         if (overlay && dateElement && titleElement && descriptionElement && counterElement) {
-            // Notify main process that modal is opening
+            // The main process hides the page while a modal is open, since it would cover it
             try {
                 await window.electronAPI.invoke('set-modal-state', true);
             } catch (error) {
                 window.electronAPI.log.error('Failed to set modal state:', error);
             }
             
-            // Hide BrowserView so it doesn't cover the modal
-            try {
-                await window.electronAPI.invoke('hide-browser-view');
-            } catch (error) {
-                window.electronAPI.log.error('Failed to hide browser view:', error);
-            }
-
             // Pause auto-rotate while modal is open
             this.pauseAutoRotate();
 
@@ -1673,13 +1242,6 @@ class DigitalSignage {
         
         // Resume auto-rotate when modal is closed
         this.resumeAutoRotate();
-        
-        // Show BrowserView again
-        try {
-            await window.electronAPI.invoke('show-browser-view');
-        } catch (error) {
-            window.electronAPI.log.error('Failed to show browser view:', error);
-        }
     }
 
     setupTabs() {
@@ -1687,7 +1249,7 @@ class DigitalSignage {
         const tabContents = document.querySelectorAll('.tab-content');
 
         tabButtons.forEach(button => {
-            this.addEventListenerTracked(button, 'click', () => {
+            button.addEventListener('click', () => {
                 const targetTab = button.getAttribute('data-tab');
                 
                 // Remove active class from all buttons and contents
@@ -1707,18 +1269,11 @@ class DigitalSignage {
     async openSettings() {
         const settingsOverlay = document.getElementById('settings-overlay');
         
-        // Notify main process that modal is opening
+        // The main process hides the page while a modal is open, since it would cover it
         try {
             await window.electronAPI.invoke('set-modal-state', true);
         } catch (error) {
             window.electronAPI.log.error('Failed to set modal state:', error);
-        }
-        
-        // Hide BrowserView so it doesn't cover the popup
-        try {
-            await window.electronAPI.invoke('hide-browser-view');
-        } catch (error) {
-            window.electronAPI.log.error('Failed to hide browser view:', error);
         }
         
         // Pause auto-rotate while settings modal is open
@@ -1752,13 +1307,6 @@ class DigitalSignage {
         
         // Resume auto-rotate when settings modal is closed
         this.resumeAutoRotate();
-        
-        // Show BrowserView again
-        try {
-            await window.electronAPI.invoke('show-browser-view');
-        } catch (error) {
-            window.electronAPI.log.error('Failed to show browser view:', error);
-        }
     }
 
     populateSettingsForm() {
@@ -1795,13 +1343,13 @@ class DigitalSignage {
         });
 
         // Create URL entries
-        urlsData.forEach((urlData, index) => {
-            this.createUrlEntry(urlData.url, urlData.backgroundColor, index);
+        urlsData.forEach((urlData) => {
+            this.createUrlEntry(urlData.url, urlData.backgroundColor);
         });
 
         // Add at least one empty entry if no URLs exist
         if (urlsData.length === 0) {
-            this.createUrlEntry('', '#000000', 0);
+            this.createUrlEntry('', '#000000');
         }
         
         // Populate checkboxes
@@ -1821,8 +1369,8 @@ class DigitalSignage {
         temperatureUnitSelect.value = this.config.temperatureUnit || 'C'; // Default to Celsius
         
         // Populate coordinates
-        latitudeInput.value = this.config.latitude || 40.7128; // Default to New York
-        longitudeInput.value = this.config.longitude || -74.0060;
+        latitudeInput.value = this.config.latitude ?? DEFAULT_LATITUDE;
+        longitudeInput.value = this.config.longitude ?? DEFAULT_LONGITUDE;
         
         // Populate UV update frequency
         uvUpdateFrequencySelect.value = this.config.uvUpdateFrequency || 60; // Default to 60 minutes
@@ -1834,72 +1382,50 @@ class DigitalSignage {
         screensaverUrlInput.disabled = isUsingQuotes;
         screensaverEnabledCheck.checked = this.config.screensaverEnabled !== false; // Default to true
         
-        // Add event listener for the quotes checkbox
-        useQuotesScreensaverCheck.addEventListener('change', () => {
-            if (useQuotesScreensaverCheck.checked) {
-                screensaverUrlInput.disabled = true;
-                screensaverUrlInput.value = '';
-            } else {
-                screensaverUrlInput.disabled = false;
-                screensaverUrlInput.value = 'https://lodev09.github.io/web-screensavers/jellyfish/';
-            }
-        });
-        
         // Populate interval (convert milliseconds to minutes)
-        rotateIntervalInput.value = this.config.autoRotateInterval / 60000;
+        // The field only accepts whole minutes; a fraction would silently block Save
+        rotateIntervalInput.value = Math.max(1, Math.round((this.config.autoRotateInterval || 60000) / 60000));
         
         // Populate autostart and WiFi settings (Linux only)
         this.updateLinuxSettings();
-        
-        // Populate WiFi settings
-        this.updateWifiSettings();
     }
 
     async updateLinuxSettings() {
         const autostartEnabledCheck = document.getElementById('autostart-enabled');
         const autostartStatusText = document.getElementById('autostart-status-text');
         const linuxTabButton = document.getElementById('linux-tab-button');
-        
+        const wifiTabButton = document.getElementById('wifi-tab-button');
+        const setTabsVisible = (visible) => {
+            if (linuxTabButton) linuxTabButton.style.display = visible ? 'block' : 'none';
+            if (wifiTabButton) wifiTabButton.style.display = visible ? 'block' : 'none';
+        };
+
+        this.autostartEnabled = null;
+
         try {
-            // Check if we're on Linux and get autostart status
             const autostartStatus = await window.electronAPI.invoke('get-autostart-status');
-            
-            if (autostartStatus.isLinux) {
-                // Show Linux tab
-                if (linuxTabButton) {
-                    linuxTabButton.style.display = 'block';
-                }
-                
-                // Update autostart checkbox based on current status
-                if (autostartEnabledCheck) {
-                    autostartEnabledCheck.checked = autostartStatus.enabled;
-                }
-                
-                // Update autostart status text
-                if (autostartStatusText) {
-                    if (autostartStatus.enabled) {
-                        autostartStatusText.textContent = '✓ Autostart is enabled';
-                        autostartStatusText.style.color = '#4CAF50';
-                    } else {
-                        autostartStatusText.textContent = '✗ Autostart is disabled';
-                        autostartStatusText.style.color = '#f44336';
-                    }
-                }
-                
-            } else {
-                // Hide Linux tab on non-Linux systems
-                if (linuxTabButton) {
-                    linuxTabButton.style.display = 'none';
-                }
+
+            if (!autostartStatus.isLinux) {
+                setTabsVisible(false);
+                return;
             }
+
+            setTabsVisible(true);
+            this.autostartEnabled = autostartStatus.enabled;
+
+            if (autostartEnabledCheck) {
+                autostartEnabledCheck.checked = autostartStatus.enabled;
+            }
+            if (autostartStatusText) {
+                autostartStatusText.textContent = autostartStatus.enabled ? '✓ Autostart is enabled' : '✗ Autostart is disabled';
+                autostartStatusText.style.color = autostartStatus.enabled ? '#4CAF50' : '#f44336';
+            }
+
+            await this.updateWifiStatus();
         } catch (error) {
             window.electronAPI.log.error('Failed to get Linux settings status:', error);
-            
-            // Hide Linux tab on error
-            if (linuxTabButton) {
-                linuxTabButton.style.display = 'none';
-            }
-            
+            setTabsVisible(false);
+
             if (autostartStatusText) {
                 autostartStatusText.textContent = 'Error checking status';
                 autostartStatusText.style.color = '#f44336';
@@ -1907,47 +1433,6 @@ class DigitalSignage {
         }
     }
 
-    async updateWifiSettings() {
-        const wifiStatusText = document.getElementById('wifi-status-text');
-        const wifiTabButton = document.getElementById('wifi-tab-button');
-        
-        try {
-            // Check if we're on Linux (WiFi management only available on Linux)
-            const autostartStatus = await window.electronAPI.invoke('get-autostart-status');
-            
-            if (autostartStatus.isLinux) {
-                // Show WiFi tab
-                if (wifiTabButton) {
-                    wifiTabButton.style.display = 'block';
-                }
-                
-                // Update WiFi status
-                await this.updateWifiStatus();
-                
-                // Set up WiFi management controls
-                this.setupWifiControls();
-                
-            } else {
-                // Hide WiFi tab on non-Linux systems
-                if (wifiTabButton) {
-                    wifiTabButton.style.display = 'none';
-                }
-            }
-        } catch (error) {
-            window.electronAPI.log.error('Failed to get WiFi settings status:', error);
-            
-            // Hide WiFi tab on error
-            if (wifiTabButton) {
-                wifiTabButton.style.display = 'none';
-            }
-            
-            if (wifiStatusText) {
-                wifiStatusText.textContent = 'Error checking WiFi';
-                wifiStatusText.style.color = '#f44336';
-            }
-        }
-    }
-    
     async updateWifiStatus() {
         const wifiStatusText = document.getElementById('wifi-status-text');
         const wifiDisconnectBtn = document.getElementById('wifi-disconnect-btn');
@@ -1985,21 +1470,21 @@ class DigitalSignage {
         
         // Refresh networks
         if (wifiRefreshBtn) {
-            this.addEventListenerTracked(wifiRefreshBtn, 'click', () => {
+            wifiRefreshBtn.addEventListener('click', () => {
                 this.refreshWifiNetworks();
             });
         }
         
         // Disconnect from current network
         if (wifiDisconnectBtn) {
-            this.addEventListenerTracked(wifiDisconnectBtn, 'click', () => {
+            wifiDisconnectBtn.addEventListener('click', () => {
                 this.disconnectWifi();
             });
         }
         
         // Connect to selected network
         if (wifiConnectBtn) {
-            this.addEventListenerTracked(wifiConnectBtn, 'click', () => {
+            wifiConnectBtn.addEventListener('click', () => {
                 this.connectToSelectedNetwork();
             });
         }
@@ -2139,20 +1624,20 @@ class DigitalSignage {
         }
     }
 
-    createUrlEntry(url = '', backgroundColor = '#000000', index = 0) {
+    createUrlEntry(url = '', backgroundColor = '#000000') {
         const urlsContainer = document.getElementById('urls-container');
-        
+
         const urlEntry = document.createElement('div');
         urlEntry.className = 'url-entry';
         urlEntry.innerHTML = `
-            <input type="text" placeholder="https://example.com" value="${url}" class="url-input">
-            <input type="color" value="${backgroundColor}" class="color-input">
+            <input type="text" placeholder="https://example.com" class="url-input">
+            <input type="color" class="color-input">
             <button type="button" class="remove-url-btn">×</button>
         `;
+        urlEntry.querySelector('.url-input').value = url;
+        urlEntry.querySelector('.color-input').value = backgroundColor;
 
-        // Add remove functionality
-        const removeBtn = urlEntry.querySelector('.remove-url-btn');
-        this.addEventListenerTracked(removeBtn, 'click', () => {
+        urlEntry.querySelector('.remove-url-btn').addEventListener('click', () => {
             urlEntry.remove();
         });
 
@@ -2161,9 +1646,7 @@ class DigitalSignage {
     }
 
     addUrlEntry() {
-        const urlsContainer = document.getElementById('urls-container');
-        const entryCount = urlsContainer.children.length;
-        this.createUrlEntry('', '#000000', entryCount);
+        this.createUrlEntry('', '#000000');
     }
 
     async saveSettings() {
@@ -2224,8 +1707,8 @@ class DigitalSignage {
         const rotateIntervalValue = rotateIntervalInput.value.trim();
         
         // Set defaults for empty fields and update input display
-        const latitude = latitudeValue === '' ? 40.7128 : parseFloat(latitudeValue);
-        const longitude = longitudeValue === '' ? -74.0060 : parseFloat(longitudeValue);
+        const latitude = latitudeValue === '' ? DEFAULT_LATITUDE : parseFloat(latitudeValue);
+        const longitude = longitudeValue === '' ? DEFAULT_LONGITUDE : parseFloat(longitudeValue);
         const rotateInterval = rotateIntervalValue === '' ? 1 : parseInt(rotateIntervalValue);
         
         // Update the input fields to show the default values if they were empty
@@ -2293,26 +1776,22 @@ class DigitalSignage {
             const result = await window.electronAPI.invoke('save-config', newConfig);
             
             if (result.success) {
-                // Handle autostart toggle (Linux only)
-                if (autostartEnabledCheck) {
+                // Only touch autostart if the user changed it (Linux only)
+                const wantAutostart = autostartEnabledCheck.checked;
+                if (this.autostartEnabled !== null && wantAutostart !== this.autostartEnabled) {
                     try {
-                        await window.electronAPI.invoke('set-autostart', autostartEnabledCheck.checked);
-                        window.electronAPI.log.info('Autostart setting updated:', autostartEnabledCheck.checked);
+                        await window.electronAPI.invoke('set-autostart', wantAutostart);
+                        this.autostartEnabled = wantAutostart;
                     } catch (autostartError) {
                         window.electronAPI.log.error('Failed to update autostart:', autostartError);
                         // Don't fail the entire save operation for autostart errors
                     }
                 }
-                
-                // Update local config
+
                 this.config = newConfig;
-                
-                // Close settings
-                this.closeSettings();
-                
-                // Reload the app with new settings
-                await this.reloadWithNewSettings();
-                
+                await this.applySavedSettings();
+                await this.closeSettings();
+
                 // Show success message
                 this.showMessage('Settings saved and applied successfully!');
                 window.electronAPI.log.info('Settings saved to:', result.path);
@@ -2327,67 +1806,12 @@ class DigitalSignage {
         }
     }
 
-    async reloadWithNewSettings() {
+    async applySavedSettings() {
         try {
-            // Clean up timers before reloading
-            this.cleanup();
-            
-            // Re-establish essential IPC listeners that were removed by cleanup
-            this.addIpcListener('view-changed', ({ index, url, backgroundColor }) => {
-                this.currentIndex = index;
-                this.updateUI();
-                if (backgroundColor) {
-                    this.applyBackgroundColor(backgroundColor);
-                }
-            });
-            
-            // Tell main process to reload with new config
             await window.electronAPI.invoke('reload-with-new-config');
-            
-            // Update indicators for new URLs
-            this.createIndicators();
-            
-            // Note: currentIndex will be updated by the view-changed event from main process
-            // Don't reset currentIndex here - let main process maintain it
-            
-            // Restart auto-rotate if enabled
-            if (this.config.autoRotate) {
-                this.startAutoRotate();
-            }
-            
-            // Update moon phase visibility and restart timer
-            await this.setupMoonPhase();
-            this.startMoonPhaseTimer();
-            
-            // Restart weather timer
-            await this.setupWeatherData();
-            this.startWeatherTimer();
-            
-            // Restart UV timer
-            await this.setupUVData();
-            this.startUVTimer();
-            
-            // Re-setup Bitcoin history
-            await this.setupBitcoinHistory();
-            this.startBitcoinHistoryTimer();
-            
-            // Update screensaver button visibility
-            this.updateScreensaverButtonVisibility();
-            
-            // Re-setup all event listeners that were cleaned up
-            this.setupNavigation();
-            this.setupGestures();
-            this.setupErrorHandling();
-            this.setupSettings();
-            this.setupVirtualKeyboard();
-            this.setupScreensaver();
-            this.setupExitButton();
-            this.setupUVClickHandler();
-            this.setupBitcoinHistoryClickHandler();
-            this.setupTemperatureClickHandler();
-            
+            this.applyConfig();
         } catch (error) {
-            window.electronAPI.log.error('Failed to reload with new settings:', error);
+            window.electronAPI.log.error('Failed to apply new settings:', error);
         }
     }
 
@@ -2405,7 +1829,6 @@ class DigitalSignage {
             border-radius: 15px;
             font-size: 16px;
             z-index: 25000;
-            backdrop-filter: blur(10px);
             animation: fadeIn 0.3s ease-out;
         `;
         messageDiv.textContent = message;
@@ -2458,62 +1881,32 @@ class DigitalSignage {
     }
 
 
-    startAutoRotate() {
-        if (!this.config.autoRotate || !this.config.autoRotateInterval || this.config.autoRotateInterval <= 0) return;
-
-        this.resetAutoRotate();
-    }
-
     pauseAutoRotate() {
-        // Store the current state to resume later
         this.autoRotatePaused = true;
-        
-        // Clear existing timers
-        if (this.autoRotateTimer) {
-            clearTimeout(this.autoRotateTimer);
-            this.autoRotateTimer = null;
-        }
-        if (this.autoRotateCountdown) {
-            clearInterval(this.autoRotateCountdown);
-            this.autoRotateCountdown = null;
-        }
+        clearTimeout(this.autoRotateTimer);
+        this.autoRotateTimer = null;
     }
 
     resumeAutoRotate() {
-        if (this.autoRotatePaused && this.config.autoRotate) {
-            this.autoRotatePaused = false;
-            this.resetAutoRotate();
-        }
+        this.autoRotatePaused = false;
+        this.resetAutoRotate();
     }
 
     resetAutoRotate() {
-        // Clear existing timers
-        if (this.autoRotateTimer) {
-            clearTimeout(this.autoRotateTimer);
-        }
-        if (this.autoRotateCountdown) {
-            clearInterval(this.autoRotateCountdown);
-        }
+        clearTimeout(this.autoRotateTimer);
+        this.autoRotateTimer = null;
 
-        if (!this.config.autoRotate || !this.config.autoRotateInterval || this.config.autoRotateInterval <= 0) return;
+        if (this.autoRotatePaused || !this.config.autoRotate || !(this.config.autoRotateInterval > 0)) return;
 
-        // Start countdown display
-        let timeLeft = this.config.autoRotateInterval / 1000;
-        
-        this.autoRotateCountdown = setInterval(() => {
-            timeLeft--;
-            
-            if (timeLeft <= 0) {
-                clearInterval(this.autoRotateCountdown);
-            }
-        }, 1000);
-
-        // Set auto-rotate timer
         this.autoRotateTimer = setTimeout(() => {
             this.nextSlide();
         }, this.config.autoRotateInterval);
     }
 
+
+    showLoadError(url, error) {
+        this.showError(`Failed to load: ${url}\nError: ${error}\nRetrying automatically...`);
+    }
 
     showError(message) {
         const errorOverlay = document.getElementById('error-overlay');
@@ -2528,51 +1921,25 @@ class DigitalSignage {
         errorOverlay.classList.add('hidden');
     }
 
+    // The error overlay stays up until the page has actually loaded.
     async retryCurrentSlide() {
         try {
             await window.electronAPI.invoke('reload-current-slide');
         } catch (error) {
             window.electronAPI.log.error('Failed to reload current slide:', error);
         }
-        this.hideError();
     }
 
     hideLoadingScreen() {
         const loadingScreen = document.getElementById('loading-screen');
         const mainContent = document.getElementById('main-content');
-        
+
+        loadingScreen.style.opacity = '0';
         setTimeout(() => {
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-                mainContent.classList.remove('hidden');
-                mainContent.classList.add('fade-in');
-            }, 500);
-        }, 1000);
-    }
-
-    // Show/hide UI elements on mouse movement
-    setupUIVisibility() {
-        let hideTimer;
-        const uiElements = [
-            document.querySelector('.nav-indicators')
-        ];
-
-        const showUI = () => {
-            uiElements.forEach(el => {
-                if (el) el.classList.add('show');
-            });
-            
-            clearTimeout(hideTimer);
-            hideTimer = setTimeout(() => {
-                uiElements.forEach(el => {
-                    if (el) el.classList.remove('show');
-                });
-            }, 3000);
-        };
-
-        this.addEventListenerTracked(document, 'mousemove', showUI);
-        this.addEventListenerTracked(document, 'touchstart', showUI);
+            loadingScreen.style.display = 'none';
+            mainContent.classList.remove('hidden');
+            mainContent.classList.add('fade-in');
+        }, 500);
     }
 
     applyBackgroundColor(backgroundColor) {
@@ -2597,32 +1964,9 @@ class DigitalSignage {
     }
 }
 
-// Global instance for cleanup
 let digitalSignageInstance = null;
 
 // Initialize the app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     digitalSignageInstance = new DigitalSignage();
-});
-
-// Clean up before page unload
-window.addEventListener('beforeunload', () => {
-    if (digitalSignageInstance) {
-        digitalSignageInstance.cleanup();
-    }
-});
-
-// Handle app-specific IPC events
-window.electronAPI.on('reload-config', async () => {
-    try {
-        // Clean up before reload
-        if (digitalSignageInstance) {
-            digitalSignageInstance.cleanup();
-        }
-        
-        const newConfig = await window.electronAPI.invoke('reload-config');
-        location.reload(); // Reload the renderer to apply new config
-    } catch (error) {
-        window.electronAPI.log.error('Failed to reload config:', error);
-    }
 });

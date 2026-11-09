@@ -95,7 +95,6 @@ body {
     padding: 10px 20px;
     background: rgba(0, 0, 0, 0.7);
     border-radius: 25px;
-    backdrop-filter: blur(10px);
 }
 
 .indicator {
@@ -148,7 +147,6 @@ body {
     pointer-events: auto;
     transition: all 0.3s ease;
     opacity: 0.7;
-    backdrop-filter: blur(10px);
     z-index: 10000;
 }
 
@@ -308,7 +306,6 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     opacity: 0.6;
-    backdrop-filter: blur(10px);
     z-index: 10000;
     pointer-events: auto;
     display: flex;
@@ -337,7 +334,6 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     opacity: 0.6;
-    backdrop-filter: blur(10px);
     z-index: 10000;
     pointer-events: auto;
     display: flex;
@@ -366,7 +362,6 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     opacity: 0.6;
-    backdrop-filter: blur(10px);
     z-index: 10000;
     pointer-events: auto;
     display: flex;
@@ -411,7 +406,6 @@ body {
     padding: 40px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
-    backdrop-filter: blur(20px);
 }
 
 .error-content h3 {

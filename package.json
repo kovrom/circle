@@ -6,6 +6,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
+    "test": "bash test/run.sh",
     "build": "electron-builder",
     "dist": "electron-builder --publish=never"
   },
@@ -31,12 +32,20 @@
       "main.js",
       "preload.js",
       "renderer.js",
+      "facts.js",
+      "wifi.js",
       "index.html",
       "style.css",
       "config.json",
+      "bitcoin_facts.json",
       "*.svg",
-      "Quotes/**/*",
-      "bitcoin_facts.db"
+      "icons/icon.png",
+      "Quotes/index.html",
+      "Quotes/script.js",
+      "Quotes/style.css",
+      "Quotes/*.ttf",
+      "Quotes/minified/TweenMax.min.js",
+      "Quotes/minified/SplitText.min.js"
     ],
     "mac": {
       "icon": "icons/icon.icns",
@@ -53,7 +62,6 @@
   },
   "dependencies": {
     "electron-log": "^5.4.2",
-    "lunarphase-js": "^2.0.3",
-    "sqlite3": "^5.1.7"
+    "lunarphase-js": "^2.0.3"
   }
 }

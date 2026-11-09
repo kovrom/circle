@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "systemctl $*" >> "$CIRCLE_STUB_LOG"
+[[ "$*" == *is-enabled* ]] && echo enabled
+exit 0
