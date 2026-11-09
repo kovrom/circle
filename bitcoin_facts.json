@@ -22,7 +22,7 @@
     "description": "Satoshi Nakamoto publishes the Bitcoin whitepaper titled 'Bitcoin: A Peer-to-Peer Electronic Cash System' on a cryptography mailing list at metzdowd.com",
     "category": "launch",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.metzdowd.com/pipermail/cryptography/2008-October/014810.html",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -48,16 +48,16 @@
     "description": "Satoshi sent the \"Bitcoin v0.1 released\" email to the cryptography mailing list on January 8, 2009 at 19:27:40 UTC, launching Bitcoin's code into the world.",
     "category": "launch",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.metzdowd.com/pipermail/cryptography/2009-January/014994.html",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 18,
-    "date": "2009-01-11",
+    "date": "2009-01-12",
     "month": 1,
-    "day": 11,
+    "day": 12,
     "year": 2009,
-    "title": "First Bitcoin Genesis Transaction",
+    "title": "First Bitcoin Transaction",
     "description": "Satoshi Nakamoto sends 10 BTC to Hal Finney in the first recorded Bitcoin transaction (block 170), demonstrating the network's functionality.",
     "category": "milestone",
     "importance": 5,
@@ -70,11 +70,11 @@
     "month": 2,
     "day": 6,
     "year": 2010,
-    "title": "Bitcoin Market Opens",
-    "description": "The Bitcoin Market, the first Bitcoin exchange, begins operation.",
+    "title": "Bitcoin Market Demo Goes Online",
+    "description": "An early demonstration version of the Bitcoin Market, which would become the first Bitcoin exchange, goes online with play-money trading.",
     "category": "economic",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://bitcointalk.org/index.php?topic=20.0",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -84,7 +84,7 @@
     "day": 22,
     "year": 2010,
     "title": "Bitcoin Pizza Day",
-    "description": "Laszlo Hanyecz makes the first commercial transaction using Bitcoin, buying two pizzas for 10,000 BTC. This day is now celebrated as Bitcoin Pizza Day.",
+    "description": "Laszlo Hanyecz makes the first notable retail transaction involving physical goods using Bitcoin, buying two pizzas for 10,000 BTC. This day is now celebrated as Bitcoin Pizza Day.",
     "category": "milestone",
     "importance": 5,
     "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
@@ -97,10 +97,10 @@
     "day": 11,
     "year": 2010,
     "title": "Slashdot Article Drives Attention",
-    "description": "A Slashdot article about Bitcoin brings significant attention to the cryptocurrency, leading to increased interest and adoption. The article was titled \"Bitcoin Releases Version 0.3\" and began with the famous line: \"How's this for a disruptive technology? Bitcoin is a peer-to-peer, network-based digital currency with no central bank, and no transaction fees.\" ",
+    "description": "A Slashdot article about Bitcoin brings significant attention to the cryptocurrency, leading to increased interest and adoption. The article was titled \"Bitcoin Releases Version 0.3\" and began with the famous line: \"How's this for a disruptive technology? Bitcoin is a peer-to-peer, network-based digital currency with no central bank, and no transaction fees.\"",
     "category": "media",
     "importance": 3,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://web.archive.org/web/2020/https://news.slashdot.org/story/10/07/11/1747245/Bitcoin-Releases-Version-03",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -110,10 +110,10 @@
     "day": 17,
     "year": 2010,
     "title": "Mt. Gox Exchange Launches",
-    "description": "Mt. Gox, which would become the largest Bitcoin exchange, begins operation. On Mt. Gox's first day of operations, 20 bitcoins (BTC) were traded. They each sold for 5 cents.",
+    "description": "Mt. Gox, which would become the largest Bitcoin exchange, begins operation. In Mt. Gox's first trade, 20 bitcoins (BTC) changed hands at just under 5 cents each.",
     "category": "economic",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://bitcoin.clarkmoody.com/posts/ten-years-bitcoin-market-data",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -126,7 +126,7 @@
     "description": "A critical bug allowing the creation of 184 billion bitcoins is discovered and fixed within hours. The block chain was forked. Although many unpatched nodes continued to build on the \"bad\" block chain, the \"good\" block chain overtook it at a block height of 74691 at which point all nodes accepted the \"good\" blockchain as the authoritative source of Bitcoin transaction history.",
     "category": "technical",
     "importance": 10,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://en.bitcoin.it/wiki/Value_overflow_incident",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -136,23 +136,23 @@
     "day": 9,
     "year": 2011,
     "title": "Bitcoin Reaches Dollar Parity",
-    "description": "Bitcoin first reached parity with the US dollar on February 9, 2011. 1 bitcoin traded for 1 US dollar on Mt. Gox.\nThis was a major milestone for the cryptocurrency. News of dollar parity attracted significant attention; bitcoin.org struggled to handle the traffic the following day. Forum posts began to emerge suggesting Bitcoiners around the world ought to throw \"parity parties\" (meaning a party celebrating Bitcoin's parity with the US Dollar).",
+    "description": "Bitcoin first reached parity with the US dollar on February 9, 2011. 1 bitcoin traded for 1 US dollar on Mt. Gox.\nThis was a major milestone for the cryptocurrency. News of dollar parity attracted significant attention; bitcoin.org struggled to handle the traffic the following day. Forum posts had begun to emerge weeks earlier suggesting Bitcoiners around the world ought to throw \"parity parties\" (meaning a party celebrating Bitcoin's parity with the US Dollar).",
     "category": "economic",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://en.bitcoin.it/wiki/2011",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 27,
-    "date": "2011-02-09",
+    "date": "2011-02-08",
     "month": 2,
-    "day": 9,
+    "day": 8,
     "year": 2011,
     "title": "Silk Road Launches",
-    "description": "The Silk Road marketplace launches, becoming the first major dark web marketplace to use Bitcoin.",
+    "description": "The Silk Road marketplace launches around this date, becoming a major dark web marketplace using Bitcoin. Creator Ross Ulbricht later wrote on the Bitcoin forum on March 1, 2011 that the site had launched three weeks earlier.",
     "category": "controversy",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://bitbo.io/calendar/silk-road-launch/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -165,7 +165,7 @@
     "description": "Satoshi Nakamoto sent a private email to developer Mike Hearn. In this email, Satoshi said \"I've moved on to other things. It's in good hands with Gavin and everyone\".",
     "category": "milestone",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://plan99.net/~mike/satoshi-emails/thread5.html",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -175,10 +175,10 @@
     "day": 8,
     "year": 2011,
     "title": "Bitcoin Reaches $31",
-    "description": "Bitcoin reaches an all-time high of $31.91. Unfortunately, this milestone was short-lived. Everything came to a screeching halt in June 2011, propelling Bitcoin into its first bear market due to the Mt. Gox security incidents. Over the course of a few days, bitcoin plummeted in value from a peak of $32 to just $0.01 on the MtGox exchange during the infamous flash crash on June 19, 2011\n",
+    "description": "Bitcoin reaches an all-time high of $31.91. Unfortunately, this milestone was short-lived. The bubble popped within days, and bitcoin briefly plummeted in value to just $0.01 on the MtGox exchange during the infamous flash crash on June 19, 2011",
     "category": "economic",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://bitcoinmagazine.com/articles/anniversary-of-the-great-bubble-of-2011-1339139269/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -191,7 +191,7 @@
     "description": "Mt. Gox suffers a major security breach, with attackers stealing user credentials and manipulating prices.",
     "category": "controversy",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://en.bitcoin.it/wiki/2011",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -204,7 +204,7 @@
     "description": "The Bitcoin Foundation is established to promote Bitcoin development and adoption.",
     "category": "institutional",
     "importance": 3,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://bitcointalk.org/index.php?topic=113400.msg1224721",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -217,20 +217,20 @@
     "description": "The first Bitcoin halving occurs, reducing block rewards from 50 to 25 BTC.",
     "category": "technical",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://en.bitcoin.it/wiki/Halving_day_2012",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 34,
-    "date": "2013-04-10",
+    "date": "2013-04-01",
     "month": 4,
-    "day": 10,
+    "day": 1,
     "year": 2013,
     "title": "Bitcoin Reaches $100",
-    "description": "Bitcoin crosses the $100 mark for the first time. This was during Bitcoin's first major bull run of 2013, which was part of the year that saw Bitcoin's market cap cross the $1 billion threshold in March and eventually reach over $1,000 by the end of the year.",
+    "description": "Bitcoin crosses the $100 mark for the first time. This was during Bitcoin's first major bull run of 2013, which was part of the year that saw Bitcoin's market cap cross the $1 billion threshold in March and its price eventually reach over $1,000 by the end of the year.",
     "category": "economic",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://en.bitcoin.it/wiki/First",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -239,50 +239,50 @@
     "month": 10,
     "day": 1,
     "year": 2013,
-    "title": "Silk Road Shut Down",
-    "description": "The FBI shuts down Silk Road and arrests its founder, Ross Ulbricht.",
+    "title": "Silk Road Founder Arrested",
+    "description": "The FBI arrests Silk Road founder Ross Ulbricht and seizes the site the next day.",
     "category": "controversy",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://techcrunch.com/2013/10/02/fbi-seize-deep-web-marketplace-silk-road-arrest-owner/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 36,
-    "date": "2013-11-28",
+    "date": "2013-11-27",
     "month": 11,
-    "day": 28,
+    "day": 27,
     "year": 2013,
     "title": "Bitcoin Reaches $1,000",
     "description": "Bitcoin reaches $1,000 for the first time during a major bull run.",
     "category": "economic",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://thenextweb.com/news/bitcoin-passes-1000-mark-first-time",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 37,
-    "date": "2014-02-24",
+    "date": "2014-02-28",
     "month": 2,
-    "day": 24,
+    "day": 28,
     "year": 2014,
     "title": "Mt. Gox Collapse",
-    "description": "Mt. Gox files for bankruptcy after revealing that 850,000 bitcoins were stolen from the exchange.",
+    "description": "Mt. Gox files for bankruptcy protection after revealing that 850,000 bitcoins were missing from the exchange.",
     "category": "controversy",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.pcworld.com/article/444218/10-questions-on-the-mt-gox-implosion.html",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 38,
-    "date": "2015-01-03",
+    "date": "2015-01-04",
     "month": 1,
-    "day": 3,
+    "day": 4,
     "year": 2015,
     "title": "Bitstamp Exchange Hacked",
-    "description": "Bitstamp exchange is hacked, with attackers stealing 19,000 bitcoins.",
+    "description": "Bitstamp exchange is hacked, with attackers stealing less than 19,000 bitcoins.",
     "category": "controversy",
     "importance": 3,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://techcrunch.com/2015/01/05/bitstamp-bitcoin-exchange-hack/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -295,7 +295,7 @@
     "description": "The second Bitcoin halving occurs, reducing block rewards from 25 to 12.5 BTC.",
     "category": "technical",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://techcrunch.com/2016/07/09/the-reward-for-mining-bitcoin-was-just-cut-in-half/amp/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -308,20 +308,20 @@
     "description": "Bitcoin Cash hard forks from Bitcoin following disagreements over scaling solutions.",
     "category": "technical",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://en.wikipedia.org/wiki/Bitcoin_Cash",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 42,
-    "date": "2017-08-23",
+    "date": "2017-08-24",
     "month": 8,
-    "day": 23,
+    "day": 24,
     "year": 2017,
     "title": "SegWit Activation",
     "description": "Segregated Witness (SegWit) activates on the Bitcoin network, increasing transaction capacity.",
     "category": "technical",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.blockchain.com/explorer/blocks/btc/481824",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -334,7 +334,7 @@
     "description": "Bitcoin reaches an all-time high of nearly $20,000 during the 2017 bull run.",
     "category": "economic",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://fortune.com/crypto/2017/12/17/bitcoin-record-high-short-of-20000/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -347,7 +347,7 @@
     "description": "Bitcoin begins a prolonged bear market, falling from its December highs.",
     "category": "economic",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://en.wikipedia.org/wiki/2018_cryptocurrency_crash",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -360,7 +360,7 @@
     "description": "Bitcoin crashes along with traditional markets during the COVID-19 pandemic, falling to around $3,800.",
     "category": "economic",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://forklog.com/en/bitcoin-collapse-and-the-crisis-in-the-financial-markets-with-live-updates-opinions-estimates-forecasts/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -373,7 +373,7 @@
     "description": "The third Bitcoin halving occurs, reducing block rewards from 12.5 to 6.25 BTC.",
     "category": "technical",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://cointelegraph.com/news/it-happened-bitcoin-just-experienced-third-halving-in-its-history",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -386,7 +386,7 @@
     "description": "MicroStrategy becomes the first major public company to adopt Bitcoin as a treasury reserve asset, purchasing 21,454 BTC for $250 million at an average price of about $11,652 per coin. CEO Michael Saylor described Bitcoin as a superior store of value amid economic uncertainties.",
     "category": "institutional",
     "importance": 7,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1050446/000119312520215604/d921849dex991.htm",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -399,7 +399,7 @@
     "description": "Square announces a $50 million investment in Bitcoin, following MicroStrategy's lead.",
     "category": "institutional",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://squareup.com/us/en/press/2020-bitcoin-investment",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -412,7 +412,7 @@
     "description": "Bitcoin surpasses its 2017 high, reaching over $20,000 and continuing to climb.",
     "category": "economic",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.aljazeera.com/economy/2020/12/16/bitcoin-smashes-above-20000-for-first-time",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -425,7 +425,7 @@
     "description": "Tesla announces a $1.5 billion investment in Bitcoin and plans to accept it as payment.",
     "category": "institutional",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.cnbc.com/2021/02/08/tesla-buys-1point5-billion-in-bitcoin.html",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -434,24 +434,24 @@
     "month": 4,
     "day": 14,
     "year": 2021,
-    "title": "Coinbase IPO",
-    "description": "Coinbase becomes the first major cryptocurrency exchange to go public on NASDAQ.",
+    "title": "Coinbase Direct Listing",
+    "description": "Coinbase becomes the first major cryptocurrency exchange to go public in the U.S., through a direct listing on NASDAQ.",
     "category": "institutional",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://abc7.com/coinbase-goes-public-in-watershed-event-for-cryptocurrency-/10514847",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 53,
-    "date": "2021-04-16",
+    "date": "2021-04-13",
     "month": 4,
-    "day": 16,
+    "day": 13,
     "year": 2021,
     "title": "Bitcoin Reaches $63,000",
     "description": "Bitcoin reaches a new all-time high of approximately $63,000.",
     "category": "economic",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.upi.com/Top_News/US/2021/04/13/bitcoin-record-high-coinbase-nasdaq/2511618316447/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -464,7 +464,7 @@
     "description": "Tesla suspends Bitcoin payments citing environmental concerns about Bitcoin mining.",
     "category": "controversy",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://cleantechnica.com/2021/05/12/tesla-suspends-bitcoin-vehicle-purchases-due-to-environmental-impacts-of-mining-transactions/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -477,7 +477,7 @@
     "description": "El Salvador becomes the first country to adopt Bitcoin as legal tender.",
     "category": "institutional",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.aljazeera.com/news/2021/6/9/el-salvador-congress-approves-bitcoin-as-legal-tender",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -490,7 +490,7 @@
     "description": "Elon Musk, Jack Dorsey, and Cathie Wood discuss Bitcoin's future at The B Word conference.",
     "category": "media",
     "importance": 3,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://fortune.com/2021/07/21/bitcoin-elon-musk-jack-dorsey-cathie-wood/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -503,7 +503,7 @@
     "description": "El Salvador's Bitcoin Law officially takes effect, making Bitcoin legal tender alongside the US dollar.",
     "category": "institutional",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://en.wikipedia.org/wiki/Bitcoin_in_El_Salvador",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -512,11 +512,11 @@
     "month": 10,
     "day": 19,
     "year": 2021,
-    "title": "First Bitcoin ETF Launches",
+    "title": "First US Bitcoin-Linked ETF Launches",
     "description": "The ProShares Bitcoin Strategy ETF (BITO) begins trading on the NYSE, becoming the first Bitcoin-linked ETF in the US.",
     "category": "institutional",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.nbcconnecticut.com/news/business/money-report/first-bitcoin-futures-etf-rises-2-in-trading-debut/2610058/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -526,23 +526,23 @@
     "day": 10,
     "year": 2021,
     "title": "Bitcoin Reaches $69,000",
-    "description": "Bitcoin reaches its highest price ever at approximately $69,000.",
+    "description": "Bitcoin reaches a then-record high of approximately $69,000.",
     "category": "economic",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://cointelegraph.com/markets/bitcoin-price-briefly-hits-69k-ath-before-plummeting-back-to-earth",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 60,
-    "date": "2022-01-11",
+    "date": "2022-01-18",
     "month": 1,
-    "day": 11,
+    "day": 18,
     "year": 2022,
     "title": "Bitcoin Mining Council Q4 Report",
-    "description": "The Bitcoin Mining Council releases a report showing increased use of renewable energy in Bitcoin mining.",
+    "description": "The Bitcoin Mining Council releases a report showing increased use of sustainable energy in Bitcoin mining.",
     "category": "technical",
     "importance": 3,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://cointelegraph.com/news/bitcoin-mining-becomes-more-sustainable-mining-council-s-q4-survey",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -552,23 +552,23 @@
     "day": 9,
     "year": 2022,
     "title": "Biden's Executive Order on Digital Assets",
-    "description": "President Biden signs an executive order on digital assets, providing regulatory clarity for cryptocurrencies.",
+    "description": "President Biden signs an executive order on digital assets, outlining a whole-of-government approach to their risks and potential benefits.",
     "category": "institutional",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://bidenwhitehouse.archives.gov/briefing-room/statements-releases/2022/03/09/fact-sheet-president-biden-to-sign-executive-order-on-ensuring-responsible-innovation-in-digital-assets/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 62,
-    "date": "2022-04-07",
+    "date": "2022-04-27",
     "month": 4,
-    "day": 7,
+    "day": 27,
     "year": 2022,
     "title": "Central African Republic Adopts Bitcoin",
     "description": "Central African Republic becomes the second country to adopt Bitcoin as legal tender.",
     "category": "institutional",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://siecledigital.fr/2022/04/28/la-centrafrique-adopte-le-bitcoin-comme-monnaie-legale/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -581,7 +581,7 @@
     "description": "The Terra Luna ecosystem collapses, causing widespread panic in cryptocurrency markets and affecting Bitcoin's price.",
     "category": "controversy",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.cnbc.com/2022/05/12/bitcoin-btc-price-falls-below-27000-as-crypto-sell-off-intensifies.html",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -594,7 +594,7 @@
     "description": "Bitcoin falls below $18,000, marking significant losses from its all-time high.",
     "category": "economic",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.kitco.com/news/article/2022-06-18/crypto-weekend-meltdown-bitcoin-price-touches-17k-ethereum-below-900",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -604,10 +604,10 @@
     "day": 11,
     "year": 2022,
     "title": "FTX Exchange Collapse",
-    "description": "FTX, one of the largest cryptocurrency exchanges, files for bankruptcy amid fraud allegations, severely impacting crypto markets.",
+    "description": "FTX, one of the largest cryptocurrency exchanges, files for bankruptcy amid a liquidity crisis and investigations into its handling of client funds, severely impacting crypto markets.",
     "category": "controversy",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://fortune.com/2022/11/11/ftx-chapter-11-bankruptcy-sam-bankman-fried-resigns/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -620,7 +620,7 @@
     "description": "The collapse of Silicon Valley Bank leads to renewed interest in Bitcoin as a hedge against traditional banking system risks.",
     "category": "economic",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.fdic.gov/news/press-releases/2023/pr23016.html",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -633,33 +633,20 @@
     "description": "BlackRock, the world's largest asset manager, files for a spot Bitcoin ETF application with the SEC.",
     "category": "institutional",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.kitco.com/news/article/2023-06-15/blackrock-files-application-spot-bitcoin-etf",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 68,
-    "date": "2023-10-30",
+    "date": "2023-10-24",
     "month": 10,
-    "day": 30,
+    "day": 24,
     "year": 2023,
     "title": "Bitcoin Reaches $35,000",
     "description": "Bitcoin surges to $35,000 amid speculation about potential ETF approvals.",
     "category": "economic",
     "importance": 3,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
-    "created_at": "2025-07-31 18:01:25"
-  },
-  {
-    "id": 69,
-    "date": "2024-01-10",
-    "month": 1,
-    "day": 10,
-    "year": 2024,
-    "title": "Spot Bitcoin ETFs Approved",
-    "description": "The SEC approves multiple spot Bitcoin ETFs, including those from BlackRock, Fidelity, and other major asset managers.",
-    "category": "institutional",
-    "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.dailymaverick.co.za/article/2023-10-24-bitcoin-hits-35000-for-first-time-since-2022-on-etf-optimism-2/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -672,20 +659,20 @@
     "description": "Bitcoin surpasses its previous all-time high, reaching over $69,000 driven by ETF inflows and institutional adoption.",
     "category": "economic",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://cointelegraph.com/news/bitcoin-price-sets-new-record-high-69k",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 71,
-    "date": "2024-04-19",
+    "date": "2024-04-20",
     "month": 4,
-    "day": 19,
+    "day": 20,
     "year": 2024,
     "title": "Fourth Bitcoin Halving",
-    "description": "Block 840,000 (April 19, 2024 at 8:09 p.m. ET). The fourth Bitcoin halving occurs, reducing block rewards from 6.25 to 3.125 BTC, continuing Bitcoin's deflationary monetary policy.",
+    "description": "Block 840,000 (April 20, 2024 at 00:09 UTC, the evening of April 19 in the US). The fourth Bitcoin halving occurs, reducing block rewards from 6.25 to 3.125 BTC, continuing Bitcoin's deflationary monetary policy.",
     "category": "technical",
     "importance": 5,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://unchainedcrypto.com/bitcoins-historic-fourth-halving-takes-place-with-block-subsidy-rewards-cut-in-half-to-3-125-btc/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
@@ -698,20 +685,20 @@
     "description": "Donald Trump wins the 2024 US Presidential election, leading to a surge in Bitcoin price due to his pro-crypto stance during the campaign.",
     "category": "institutional",
     "importance": 4,
-    "source_url": "https://en.wikipedia.org/wiki/History_of_bitcoin",
+    "source_url": "https://www.nbcsandiego.com/news/business/money-report/bitcoin-drifts-near-69000-on-election-night-as-crypto-investors-see-choppy-trading-ahead/3667767/",
     "created_at": "2025-07-31 18:01:25"
   },
   {
     "id": 73,
-    "date": "2018-03-01",
+    "date": "2018-03-15",
     "month": 3,
-    "day": 1,
+    "day": 15,
     "year": 2018,
     "title": "Lightning Network Beta Launch",
-    "description": "Lightning Labs releases the beta version of the Lightning Network on Bitcoin mainnet, introducing the first major Layer 2 scaling solution. The network enables fast, low-cost off-chain transactions through payment channels, addressing Bitcoin's scalability limitations.",
+    "description": "Lightning Labs releases lnd 0.4-beta, the first Lightning mainnet beta, on Bitcoin mainnet. The network enables fast, low-cost off-chain transactions through payment channels, addressing Bitcoin's scalability limitations.",
     "category": "launch",
     "importance": 4,
-    "source_url": "https://lightning.network/",
+    "source_url": "https://lightning.engineering/posts/2018-03-15-lnd-beta",
     "created_at": "2025-07-31 18:14:54"
   },
   {
@@ -724,7 +711,7 @@
     "description": "Anonymous Twitter user hodlonaut starts the viral \"Lightning Torch\" campaign, sending 100,000 satoshis through the Lightning Network. Each recipient adds 10,000 satoshis before passing it on, demonstrating the network's functionality and reaching notable figures like Jack Dorsey and Charlie Lee.",
     "category": "cultural",
     "importance": 3,
-    "source_url": "https://en.wikipedia.org/wiki/Lightning_Network",
+    "source_url": "https://bitcoinmagazine.com/technical/lightning-torchs-bitcoin-payment-is-running-a-worldwide-marathon",
     "created_at": "2025-07-31 18:14:54"
   },
   {
@@ -737,7 +724,7 @@
     "description": "The SEC's official Twitter account is compromised, with hackers posting false news about Bitcoin ETF approval. Bitcoin's price spikes and then drops sharply when the SEC deletes the post 30 minutes later, highlighting market sensitivity to regulatory news.",
     "category": "security",
     "importance": 3,
-    "source_url": "https://www.reuters.com/technology/sec-account-hack-renews-spotlight-xs-security-concerns-2024-01-10/",
+    "source_url": "https://www.sec.gov/secgov-x-account",
     "created_at": "2025-07-31 18:14:54"
   },
   {
@@ -747,10 +734,10 @@
     "day": 10,
     "year": 2024,
     "title": "First U.S. Spot Bitcoin ETF Approval",
-    "description": "The SEC approves 11 spot Bitcoin ETFs for trading on U.S. exchanges, including funds from BlackRock, Fidelity, and others. This watershed moment opens Bitcoin investment to mainstream investors through traditional brokerage accounts, marking crypto's entry into institutional finance.",
+    "description": "The SEC approves 11 spot Bitcoin ETFs for trading on U.S. exchanges, including funds from BlackRock, Fidelity, and others. This watershed moment opens Bitcoin investment to mainstream investors through traditional brokerage accounts.",
     "category": "adoption",
     "importance": 5,
-    "source_url": "https://www.sec.gov/newsroom/speeches-statements/gensler-statement-spot-bitcoin-011023",
+    "source_url": "https://www.cmcmarkets.com/en-au/market-news/landmark-moment-sec-greenlights-11-bitcoin-etfs",
     "created_at": "2025-07-31 18:14:54"
   },
   {
@@ -763,7 +750,7 @@
     "description": "The Runes protocol, created by Ordinals inventor Casey Rodarmor, launches on Bitcoin halving day at block 840,000 (00:09 UTC on April 20, 2024). This new fungible token standard enables efficient token creation on Bitcoin using the UTXO model, sparking renewed interest in Bitcoin-based tokens and causing record-high transaction fees.",
     "category": "launch",
     "importance": 4,
-    "source_url": "https://coinmarketcap.com/academy/article/what-is-the-runes-protocol",
+    "source_url": "https://malaysia.news.yahoo.com/runes-protocol-launches-bitcoin-sending-013547324.html",
     "created_at": "2025-07-31 18:14:54"
   },
   {
@@ -776,17 +763,17 @@
     "description": "Bitcoin reaches the long-awaited $100,000 milestone for the first time, driven by optimism around pro-crypto policies from President-elect Trump's administration. The psychological barrier represents Bitcoin's journey from an experimental digital currency to a major financial asset.",
     "category": "adoption",
     "importance": 5,
-    "source_url": "https://www.cnbc.com/2024/12/05/bitcoin-tops-100000-as-monster-2024-rally-reaches-new-heights.html",
+    "source_url": "https://www.nbcnews.com/business/markets/bitcoin-100000-rcna181008",
     "created_at": "2025-07-31 18:14:54"
   },
   {
     "id": 79,
-    "date": "2010-07-31",
+    "date": "2010-07-30",
     "month": 7,
-    "day": 31,
+    "day": 30,
     "year": 2010,
     "title": "Bitcoin Wikipedia Page Deleted",
-    "description": "Bitcoin's Wikipedia page is deleted for lack of \"notability,\" causing discussion in the early Bitcoin community. Users responded with humor, with one noting the deleting admin was \"an expert on glaciers\" and asking \"Does this make him an ice-hole?\" This reflected Bitcoin's struggle for mainstream recognition in its early days when it was trading at just $0.07.",
+    "description": "Bitcoin's Wikipedia page is deleted for lack of \"notability,\" causing discussion in the early Bitcoin community. Users responded with humor, with one noting the deleting admin was \"an expert on glaciers\" and asking \"Does this make him an ice-hole?\" This reflected Bitcoin's struggle for mainstream recognition in its early days when it was trading at around $0.07.",
     "category": "cultural",
     "importance": 2,
     "source_url": "https://satoshi.nakamotoinstitute.org/posts/bitcointalk/threads/154/",
@@ -794,28 +781,28 @@
   },
   {
     "id": 80,
-    "date": "2011-02-15",
+    "date": "2011-02-09",
     "month": 2,
-    "day": 15,
+    "day": 9,
     "year": 2011,
     "title": "StarCraft Tournament Offers Bitcoin Prize",
-    "description": "The iCCup Star League, a StarCraft gaming tournament, offered 25 bitcoins as prize money for 5th-8th place winners. With Bitcoin trading at $1.65, the total prize was worth $41.25.",
+    "description": "The AoV iCCup StarLeague, a StarCraft: Brood War tournament, begins. It awarded 25 bitcoins to its 5th-8th place finishers, an early use of Bitcoin as esports prize money.",
     "category": "cultural",
     "importance": 3,
-    "source_url": "https://beincrypto.com/fun-bitcoin-stories-from-the-depths-of-crypto-history/",
+    "source_url": "https://www.esportsearnings.com/tournaments/7014-isl-1",
     "created_at": "2025-07-31 18:24:34"
   },
   {
     "id": 81,
-    "date": "2010-12-05",
-    "month": 12,
-    "day": 5,
+    "date": "2010-10-03",
+    "month": 10,
+    "day": 3,
     "year": 2010,
     "title": "Satoshi's Exasperated Wallet Advice",
     "description": "Satoshi Nakamoto posted his frustrated response to a user who deleted their wallet: \"Sigh... why delete a wallet instead of moving it aside and keeping the old copy just in case? You should never delete a wallet.\" This quote became legendary among early Bitcoin users and highlighted the permanent nature of Bitcoin loss.",
     "category": "cultural",
     "importance": 2,
-    "source_url": "https://freedomnode.com/blog/21-wise-and-funny-bitcoin-quotes-by-satoshi-nakamoto/",
+    "source_url": "https://bitcointalk.org/index.php?topic=1327.msg15136#msg15136",
     "created_at": "2025-07-31 18:24:34"
   },
   {
@@ -825,10 +812,10 @@
     "day": 6,
     "year": 2015,
     "title": "Mircea Popescu Declares War on Bitcoin Forks",
-    "description": "Controversial Bitcoin blogger Mircea Popescu publishes \"If You Go On A Bitcoin Fork, Irrespective Which Scammer Proposes It, You Will Lose Your Bitcoins,\" becoming a rallying cry against protocol changes. This philosophy later led to TRB (\"The Real Bitcoin\"), a maintained fork of Bitcoin 0.5.3 that rejects all modern improvements including SegWit, P2SH, and other changes, maintaining what adherents consider the \"pure\" version of Bitcoin.",
+    "description": "Controversial Bitcoin blogger Mircea Popescu publishes \"If You Go On A Bitcoin Fork, Irrespective Which Scammer Proposes It, You Will Lose Your Bitcoins,\" warning against protocol changes. This philosophy is shared by TRB (\"The Real Bitcoin\"), a maintained fork of Bitcoin 0.5.3, begun in late 2014, that rejects all modern improvements including SegWit, P2SH, and other changes, maintaining what adherents consider the \"pure\" version of Bitcoin.",
     "category": "cultural",
     "importance": 3,
-    "source_url": "http://trilema.com/2015/if-you-go-on-a-bitcoin-fork-irrespective-which-scammer-proposes-it-you-will-lose-your-bitcoins/",
+    "source_url": "https://web.archive.org/web/2020/http://trilema.com/2015/if-you-go-on-a-bitcoin-fork-irrespective-which-scammer-proposes-it-you-will-lose-your-bitcoins/",
     "created_at": "2025-07-31 18:34:27"
   },
   {
@@ -838,7 +825,7 @@
     "day": 22,
     "year": 2014,
     "title": "TRB Project Conception",
-    "description": "The idea for \"The Real Bitcoin\" (TRB) emerges from discussions between Stanislav Datskovskiy (asciilifeform) and Mircea Popescu. They decide to create a \"printable\" reference implementation of Bitcoin based on version 0.5.3 - the oldest still-functioning version without obvious catastrophic bugs. This becomes a philosophical statement about Bitcoin purity, rejecting all modern protocol changes.",
+    "description": "On October 22, 2014, in the IRC discussions that led to \"The Real Bitcoin\" (TRB), Mircea Popescu and others raised the idea of a signed patch system (\"gpg commits! get everyone used to checking sigs.\"). The project grew out of Stanislav Datskovskiy's (asciilifeform) wish, posted the day before, for a printed book of the Bitcoin source code, which led to the need for a reference implementation. TRB was built on version 0.5.3, the oldest still-functioning version without obvious catastrophic bugs.",
     "category": "launch",
     "importance": 3,
     "source_url": "http://edgecase.net/articles/a_brief_history_of_the_real_bitcoin_trb",
@@ -846,12 +833,12 @@
   },
   {
     "id": 84,
-    "date": "2010-06-12",
+    "date": "2010-06-11",
     "month": 6,
-    "day": 12,
+    "day": 11,
     "year": 2010,
-    "title": "First Bitcoin Faucet Launches - 5 Free BTC Per Day",
-    "description": "Gavin Andresen launches the first \"Bitcoin Faucet\" website, giving away 5 bitcoins per day to anyone who solved a captcha. His goal: \"I want the Bitcoin project to succeed, and I think it is more likely to be a success if people can get a handful of coins to try it out.\" He eventually gave away 19,700 bitcoins total.",
+    "title": "First Bitcoin Faucet Launches - 5 Free BTC Per Customer",
+    "description": "Gavin Andresen launches the first \"Bitcoin Faucet\" website, giving away 5 bitcoins per customer (a captcha was added later). His goal: \"I want the Bitcoin project to succeed, and I think it is more likely to be a success if people can get a handful of coins to try it out.\" He reportedly gave away 19,700 bitcoins total.",
     "category": "cultural",
     "importance": 4,
     "source_url": "https://bitcointalk.org/index.php?topic=183.0",
@@ -859,28 +846,28 @@
   },
   {
     "id": 85,
-    "date": "2013-07-01",
-    "month": 7,
-    "day": 1,
+    "date": "2013-12-02",
+    "month": 12,
+    "day": 2,
     "year": 2013,
     "title": "Kentucky Police Chief Requests Bitcoin Salary",
-    "description": "Tony Vaughn, police officer from tiny Vicco, Kentucky (population under 300), asks to receive his salary in Bitcoin. The city commission agrees, making him possibly the first government employee paid in cryptocurrency when Bitcoin was still largely unknown.",
+    "description": "Tony Vaughn, police chief of tiny Vicco, Kentucky (population about 330), asks to receive his salary in Bitcoin. The city commission agrees, making him possibly the first government employee paid in cryptocurrency when Bitcoin was still largely unknown.",
     "category": "cultural",
     "importance": 3,
-    "source_url": "https://www.oddee.com/item_98810.aspx",
+    "source_url": "https://www.officer.com/news/11263128/vicco-ky-police-chief-to-be-paid-in-bitcoin",
     "created_at": "2025-07-31 18:45:13"
   },
   {
     "id": 86,
-    "date": "2013-07-15",
+    "date": "2013-07-27",
     "month": 7,
-    "day": 15,
+    "day": 27,
     "year": 2013,
     "title": "\"Life on Bitcoin\" Wedding Experiment Begins",
     "description": "Newlyweds Beccy and Austin Craig embark on \"Life on Bitcoin,\" committing to live and travel using only Bitcoin for the first 90 days of their marriage. They travel from Utah across the US and to Stockholm, Berlin, and Singapore, documenting their cryptocurrency-only lifestyle for a documentary.",
     "category": "cultural",
     "importance": 3,
-    "source_url": "https://swapspace.co/blog/craziest-stories-in-crypto",
+    "source_url": "https://www.ksl.com/article/25544479/provo-couple-plans-to-live-first-3-months-of-marriage-on-bitcoins",
     "created_at": "2025-07-31 18:45:13"
   },
   {
@@ -893,46 +880,33 @@
     "description": "Richard Branson's Virgin Galactic becomes one of the first companies to accept Bitcoin for high-end luxury services, allowing millionaires to pay for space tourism trips with cryptocurrency - showing Bitcoin's early adoption in exclusive markets.",
     "category": "adoption",
     "importance": 3,
-    "source_url": "https://www.oddee.com/item_98810.aspx",
+    "source_url": "https://www.theregister.com/2013/11/22/when_hot_cash_meets_a_vacuum_virgin_galactic_takes_bitcoin/",
     "created_at": "2025-07-31 18:45:13"
   },
   {
     "id": 88,
-    "date": "2013-12-01",
-    "month": 12,
-    "day": 1,
+    "date": "2013-11-02",
+    "month": 11,
+    "day": 2,
     "year": 2013,
     "title": "Miami Plastic Surgery Clinic Accepts Bitcoin",
-    "description": "Vanity Plastic Surgery in Miami, Florida starts accepting Bitcoin for all cosmetic procedures including tummy tucks and breast lifts, representing one of the early adoptions of Bitcoin in the medical services industry during the cryptocurrency's experimental phase.",
+    "description": "Vanity Cosmetic Surgery in Miami, Florida starts accepting Bitcoin for cosmetic procedures, with new patients able to pay 20 percent of the cost in Bitcoin and returning customers in full, representing one of the early adoptions of Bitcoin in the medical services industry during the cryptocurrency's experimental phase.",
     "category": "adoption",
     "importance": 2,
-    "source_url": "https://www.oddee.com/item_98810.aspx",
-    "created_at": "2025-07-31 18:45:13"
-  },
-  {
-    "id": 89,
-    "date": "2011-04-01",
-    "month": 4,
-    "day": 1,
-    "year": 2011,
-    "title": "12-Year-Old Erik Finman Becomes Bitcoin Millionaire",
-    "description": "Erik Finman uses $1,000 his grandmother gave him for college to buy Bitcoin when he was 12 years old. By age 19, he had accumulated 403 BTC, becoming the world's youngest cryptocurrency millionaire and proving that early Bitcoin adoption could yield extraordinary returns.",
-    "category": "cultural",
-    "importance": 3,
-    "source_url": "https://swapspace.co/blog/craziest-stories-in-crypto",
+    "source_url": "https://bitcoinmagazine.com/culture/miamis-vanity-cosmetic-surgery-now-accepts-bitcoin-1384197344",
     "created_at": "2025-07-31 18:45:13"
   },
   {
     "id": 90,
-    "date": "2013-04-01",
+    "date": "2013-04-11",
     "month": 4,
-    "day": 1,
+    "day": 11,
     "year": 2013,
-    "title": "Winklevoss Twins Invest Facebook Settlement in Bitcoin",
-    "description": "The Winklevoss twins, who sued Mark Zuckerberg for $65 million over Facebook, invest $11 million of their settlement money in Bitcoin at $120 per coin. They purchased approximately 91,666 BTC, making it one of the most profitable early institutional Bitcoin investments.",
+    "title": "Winklevoss Twins Disclose Bitcoin Holdings",
+    "description": "The Winklevoss twins, who sued Mark Zuckerberg over Facebook and received a settlement of $20 million in cash plus Facebook shares, disclose that they own nearly $11 million worth of Bitcoin, valued at about $120 per coin after a flash crash.",
     "category": "adoption",
     "importance": 4,
-    "source_url": "https://swapspace.co/blog/craziest-stories-in-crypto",
+    "source_url": "https://web.archive.org/web/2013/http://dealbook.nytimes.com/2013/04/11/as-big-investors-emerge-bitcoin-gets-ready-for-its-close-up/",
     "created_at": "2025-07-31 18:45:13"
   },
   {
@@ -942,7 +916,7 @@
     "day": 18,
     "year": 2013,
     "title": "The Birth of \"HODL\" - Drunk Forum Post Creates Bitcoin Legend",
-    "description": "User GameKyuubi posts \"I AM HODLING\" on BitcoinTalk forum while drunk, misspelling \"HOLD\" and creating Bitcoin's most famous meme. His post: \"I type d that tyitle twice because I knew it was wrong the first time. Still wrong. w/e. GF's out at a bar, BTC crashing WHY AM I HOLDING? I'LL TELL YOU WHY. It's because I'm a bad trader and I KNOW I'M A BAD TRADER.\" The typo becomes a global rallying cry.",
+    "description": "User GameKyuubi posts \"I AM HODLING\" on BitcoinTalk forum while drunk, misspelling \"HOLD\" and creating Bitcoin's most famous meme. His post: \"I type d that tyitle twice because I knew it was wrong the first time. Still wrong. w/e. GF's out at a lesbian bar, BTC crashing WHY AM I HOLDING? I'LL TELL YOU WHY. It's because I'm a bad trader and I KNOW I'M A BAD TRADER.\" The typo becomes a global rallying cry.",
     "category": "cultural",
     "importance": 5,
     "source_url": "https://bitcointalk.org/index.php?topic=375643.0",
@@ -955,10 +929,10 @@
     "day": 10,
     "year": 2009,
     "title": "First Bitcoin Tweet: \"Running bitcoin\"",
-    "description": "Hal Finney posts the first-ever tweet about Bitcoin, simply saying \"Running bitcoin\" after downloading and running Satoshi's software. This becomes the first public mention of Bitcoin on social media. Next day, Finney receives the first Bitcoin transaction from Satoshi Nakamoto, cementing his place as Bitcoin's first adopter after its creator.",
+    "description": "Hal Finney posts what is believed to be the first tweet about Bitcoin, simply saying \"Running bitcoin\" after downloading and running Satoshi's software. Soon after, Finney receives the first Bitcoin transaction from Satoshi Nakamoto, cementing his place as one of Bitcoin's earliest adopters.",
     "category": "cultural",
     "importance": 5,
-    "source_url": "https://twitter.com/halfin/status/1110302988",
+    "source_url": "https://decrypt.co/117477/hal-finney-twitter-just-came-back-life",
     "created_at": "2025-07-31 18:52:03"
   },
   {
@@ -968,10 +942,10 @@
     "day": 6,
     "year": 2014,
     "title": "The Slaying of the BearWhale",
-    "description": "An anonymous trader places a massive sell order for 30,000 bitcoins at $300 each on Bitstamp (worth $9 million), creating a \"wall\" that threatened to crash Bitcoin's price from $350 to below $300. The Bitcoin community rallied together over 6 hours to buy up all the coins, \"slaying the BearWhale\" and actually pushing the price UP to $340. The trader later revealed he had bought Bitcoin around $8 after \"bad experiences with banks\" and invested his life savings. This became one of Bitcoin's most celebrated community moments, inspiring artwork, poetry, t-shirts, and 3D printed objects.",
+    "description": "An anonymous trader places a massive sell order for 30,000 bitcoins at $300 each on Bitstamp (worth $9 million), creating a \"wall\" that threatened to crash Bitcoin's price from $350 to below $300. The Bitcoin community rallied together over 6 hours to buy up all the coins, \"slaying the BearWhale\" and actually pushing the price back up. The trader later revealed he had bought Bitcoin around $8 after \"a series of bad experiences with the banking system\" and invested most of his life savings. This became one of Bitcoin's most celebrated community moments, inspiring artwork, poetry, t-shirts, and 3D printed objects.",
     "category": "cultural",
     "importance": 4,
-    "source_url": "https://bravenewcoin.com/insights/the-legacy-of-bitcoins-bearwhale",
+    "source_url": "https://news.bitcoin.com/8-years-ago-today-bitcoin-traders-slayed-the-infamous-bear-whale-who-dumped-30000-btc-in-a-single-trade/",
     "created_at": "2025-07-31 18:55:19"
   },
   {
@@ -981,10 +955,10 @@
     "day": 2,
     "year": 2016,
     "title": "Bitfinex Exchange Hacked - 119,756 BTC Stolen",
-    "description": "Hackers steal 119,756 bitcoins (worth $72 million) from Bitfinex exchange in one of the largest cryptocurrency thefts to date. Bitcoin price plunges 20% immediately after the announcement. Bitfinex spreads losses across all customers (36% haircut) and issues BFX tokens as IOUs. In 2022, married couple Ilya Lichtenstein and Heather Morgan are arrested for laundering the stolen Bitcoin - with Morgan being revealed as rapper \"Razzlekhan.\" By then, the stolen Bitcoin was worth $4.5 billion, making it the largest financial seizure in DOJ history.",
+    "description": "Hackers steal 119,756 bitcoins (worth $72 million) from Bitfinex exchange in one of the largest cryptocurrency thefts to date. Bitcoin price plunges 20% immediately after the announcement. Bitfinex spreads losses across all customers (36% haircut) and issues BFX tokens as IOUs. In 2022, married couple Ilya Lichtenstein and Heather Morgan are arrested for laundering the stolen Bitcoin - with Morgan being revealed as rapper \"Razzlekhan.\" By then, the stolen Bitcoin was worth $4.5 billion, and the $3.6 billion recovered was the largest financial seizure in DOJ history.",
     "category": "security",
     "importance": 5,
-    "source_url": "https://blog.bitfinex.com/announcements/security-breach/",
+    "source_url": "https://fortune.com/2016/08/15/bitfinex-bitcoin-hack-hong-kong-customers-law",
     "created_at": "2025-07-31 19:38:40"
   },
   {
@@ -995,9 +969,9 @@
     "year": 2009,
     "title": "First Bitcoin Valuation",
     "description": "New Liberty Standard published the first official Bitcoin-to-dollar exchange rate of 1,309.03 BTC per $1 USD (approximately $0.000764 per Bitcoin). This rate was calculated based on the cost of electricity required to mine Bitcoin, marking the first time Bitcoin had a formal monetary value assigned to it.",
-    "category": "Economic",
+    "category": "economic",
     "importance": 9,
-    "source_url": "https://newlibertystandard.io/",
+    "source_url": "https://web.archive.org/web/20091229132610/http://newlibertystandard.wetpaint.com/page/Exchange+Rate",
     "created_at": "2025-07-31 19:48:07"
   },
   {
@@ -1007,8 +981,8 @@
     "day": 29,
     "year": 2013,
     "title": "First Bitcoin ATM",
-    "description": "The world's first Bitcoin ATM was installed and launched at Waves Coffee House in downtown Vancouver, Canada, by Bitcoiniacs and Nevada-based Robocoin. The machine allowed users to exchange Canadian cash for Bitcoin at a rate of approximately $211.79 per Bitcoin, featuring palm scan identification and a daily transaction limit of $3,000 CAD to comply with anti-money-laundering laws.",
-    "category": "Infrastructure",
+    "description": "The world's first Bitcoin ATM was installed and launched at Waves Coffee House in downtown Vancouver, Canada, by Bitcoiniacs and Nevada-based Robocoin. The machine allowed users to exchange Canadian cash for Bitcoin at a rate of approximately $207 to $211 per Bitcoin, featuring palm scan identification and a daily transaction limit of $3,000 CAD.",
+    "category": "infrastructure",
     "importance": 8,
     "source_url": "https://www.cbc.ca/news/science/world-s-first-bitcoin-atm-opens-in-vancouver-1.2286877",
     "created_at": "2025-07-31 19:51:28"
@@ -1021,9 +995,9 @@
     "year": 2014,
     "title": "This is GENTLEMEN Meme Origin",
     "description": "The famous \"This is GENTLEMEN!\" meme originated from a typographical error on a Bitcoin forum/Reddit when a user intended to write \"This is it, gentlemen\" but accidentally omitted the word \"it\". The phrase became a popular celebratory expression in the Bitcoin community used to announce positive news or developments in cryptocurrency markets. It was added to Urban Dictionary in 2014 and became an integral part of Bitcoin culture.",
-    "category": "Cultural",
+    "category": "cultural",
     "importance": 5,
-    "source_url": "https://www.urbandictionary.com/define.php?term=This+is+gentlemen",
+    "source_url": "https://arctic-shift.photon-reddit.com/api/comments/ids?ids=cm0085i",
     "created_at": "2025-07-31 19:54:41"
   },
   {
@@ -1033,10 +1007,10 @@
     "day": 2,
     "year": 2017,
     "title": "Bitcoin vs Gold Parity",
-    "description": "For the first time in Bitcoin's history, the price of a single Bitcoin exceeded the price of an ounce of gold. Bitcoin reached above $1,290 per unit while gold was trading at $1,228 per ounce on March 2, 2017. This was a psychologically important milestone that demonstrated Bitcoin's growing acceptance as a store of value and \"digital gold,\" marking a historic moment in cryptocurrency's evolution from experimental technology to legitimate financial asset.",
-    "category": "Economic",
+    "description": "For the first time since a parity on Mt. Gox more than three years earlier, the price of a single Bitcoin exceeded the price of an ounce of gold. Bitcoin passed gold on March 2, 2017, and by the next day it reached above $1,290 per unit while gold was trading at $1,228 per ounce. This was a psychologically important milestone that demonstrated Bitcoin's growing acceptance as a store of value and \"digital gold,\" marking a historic moment in cryptocurrency's evolution from experimental technology to legitimate financial asset.",
+    "category": "economic",
     "importance": 8,
-    "source_url": "https://money.cnn.com/2017/03/03/investing/bitcoin-gold-price-value/",
+    "source_url": "https://www.coindesk.com/markets/2017/03/02/the-price-of-bitcoin-is-now-worth-more-than-one-ounce-of-gold",
     "created_at": "2025-07-31 19:58:34"
   },
   {
@@ -1047,9 +1021,9 @@
     "year": 2019,
     "title": "First Proof of Keys Day",
     "description": "Bitcoin investor Trace Mayer launched the first annual \"Proof of Keys\" event on January 3, 2019, the 10th anniversary of Bitcoin's Genesis Block. The event encourages cryptocurrency holders to withdraw their funds from exchanges and third-party services to personal wallets where they control their private keys, embodying the principle \"Not your keys, not your Bitcoin.\" The date was chosen to commemorate Bitcoin's founding principles of monetary sovereignty and decentralization.",
-    "category": "Cultural",
+    "category": "cultural",
     "importance": 6,
-    "source_url": "https://bitcoinmagazine.com/culture/video-trace-mayer-on-proof-of-keys-sovereignty-and-bitcoin-privacy",
+    "source_url": "https://en.cryptonomist.ch/2018/12/19/bitcoin-proof-of-keys-on-twitter/",
     "created_at": "2025-07-31 20:00:08"
   },
   {
@@ -1058,9 +1032,9 @@
     "month": 1,
     "day": 14,
     "year": 2016,
-    "title": "Lightning Network Whitepaper Released",
-    "description": "Joseph Poon and Thaddeus Dryja released the Lightning Network whitepaper on January 14, 2016, proposing a revolutionary second-layer scaling solution for Bitcoin. The whitepaper outlined a network of micropayment channels that would enable instant, low-cost Bitcoin transactions without requiring every transaction to be recorded on the main blockchain. This innovation addressed Bitcoin's scalability limitations and paved the way for Bitcoin to handle millions to billions of transactions per second.",
-    "category": "Technical",
+    "title": "Lightning Network Whitepaper v0.5.9.2 Released",
+    "description": "Joseph Poon and Thaddeus Dryja released draft version 0.5.9.2 of the Lightning Network whitepaper on January 14, 2016, after first publishing the paper in February 2015, proposing a revolutionary second-layer scaling solution for Bitcoin. The whitepaper outlined a network of micropayment channels that would enable instant, low-cost Bitcoin transactions without requiring every transaction to be recorded on the main blockchain. This innovation addressed Bitcoin's scalability limitations, and the project describes the network as capable of millions to billions of transactions per second.",
+    "category": "technical",
     "importance": 9,
     "source_url": "https://lightning.network/lightning-network-paper.pdf",
     "created_at": "2025-07-31 20:07:15"
@@ -1073,9 +1047,9 @@
     "year": 2016,
     "title": "Mike Hearn Quits Bitcoin",
     "description": "On January 14, 2016, prominent Bitcoin developer Mike Hearn publicly announced he was quitting Bitcoin, stating that the project had “failed.” He cited issues such as the block size debate, censorship, and governance challenges as reasons for his departure. Hearn’s resignation and his highly critical blog post sparked widespread media attention and temporarily shook investor confidence in Bitcoin.",
-    "category": "Governance",
+    "category": "governance",
     "importance": 8,
-    "source_url": "https://blog.plan99.net/the-resolution-of-the-bitcoin-experiment-dabb30201f7",
+    "source_url": "https://web.archive.org/web/2016/https://blog.plan99.net/the-resolution-of-the-bitcoin-experiment-dabb30201f7",
     "created_at": "2025-07-31 20:10:29"
   },
   {
@@ -1084,11 +1058,11 @@
     "month": 2,
     "day": 7,
     "year": 2014,
-    "title": "Mt. Gox Hack",
-    "description": "On February 7, 2014, Mt. Gox, once the world's largest Bitcoin exchange, halted all Bitcoin withdrawals due to suspicious activity. It was later revealed that hackers had been siphoning Bitcoin for years, culminating in the loss of approximately 850,000 BTC, valued at over $450 million at the time. The exchange filed for bankruptcy soon after, marking one of the most devastating security incidents in Bitcoin's history and leading to increased scrutiny of cryptocurrency exchanges worldwide.",
-    "category": "Security",
+    "title": "Mt. Gox Halts Bitcoin Withdrawals",
+    "description": "On February 7, 2014, Mt. Gox, once the world's largest Bitcoin exchange, halted all Bitcoin withdrawals, saying it needed to obtain a clear technical view of the currency processes. It was later revealed that hackers had been siphoning Bitcoin for years, culminating in the loss of approximately 850,000 BTC, valued at over $450 million at the time. The exchange filed for bankruptcy soon after, marking one of the most devastating security incidents in Bitcoin's history and leading to increased scrutiny of cryptocurrency exchanges worldwide.",
+    "category": "security",
     "importance": 10,
-    "source_url": "https://www.reuters.com/article/us-bitcoin-mtgox-idUSBREA1O1KF20140225",
+    "source_url": "https://en.bitcoin.it/wiki/Collapse_of_Mt._Gox",
     "created_at": "2025-07-31 20:15:12"
   },
   {
@@ -1098,10 +1072,10 @@
     "day": 25,
     "year": 2018,
     "title": "Lightning Pizza Day",
-    "description": "Laszlo Hanyecz used bitcoin’s second layer Lightning Network to buy pizza for the first time. On February 25, 2018, Lightning Labs and the Bitcoin community celebrated “Lightning Pizza Day,” allowing users to order Domino’s Pizza using Bitcoin via the Lightning Network. This event served as a public demonstration of the Lightning Network's potential for everyday microtransactions, showcasing its ability to enable fast and low-fee Bitcoin payments. It echoed the spirit of the original Bitcoin Pizza Day in 2010 and helped generate public interest in second-layer scaling technologies.",
-    "category": "Cultural",
+    "description": "Laszlo Hanyecz used bitcoin’s second layer Lightning Network to buy pizza. On February 25, 2018, Hanyecz bought two pizzas via the Lightning Network, paying 0.00649 bitcoins. It echoed the spirit of the original Bitcoin Pizza Day in 2010.",
+    "category": "cultural",
     "importance": 6,
-    "source_url": "https://bitcoinmagazine.com/business/you-can-now-buy-dominos-pizza-with-bitcoin-using-lightning-network",
+    "source_url": "https://blog.bitfinex.com/education/19288/",
     "created_at": "2025-07-31 20:23:10"
   },
   {
@@ -1112,7 +1086,7 @@
     "year": 1993,
     "title": "Cypherpunk Manifesto Released",
     "description": "On March 9, 1993, Eric Hughes released the Cypherpunk Manifesto, a foundational text for the digital privacy movement. The manifesto advocated for the use of cryptography to preserve individual privacy in the digital age and laid the philosophical groundwork for projects like Bitcoin. It emphasized the importance of anonymous transactions and decentralized systems, influencing early cryptocurrency pioneers and shaping the ethos of the Bitcoin community.",
-    "category": "Philosophy",
+    "category": "philosophy",
     "importance": 9,
     "source_url": "https://www.activism.net/cypherpunk/manifesto.html",
     "created_at": "2025-07-31 20:24:56"
@@ -1125,9 +1099,9 @@
     "year": 2013,
     "title": "Bitcoin Passes $1 Billion Market Cap",
     "description": "On March 28, 2013, Bitcoin's total market capitalization surpassed $1 billion for the first time, marking a significant milestone in its adoption and valuation. The price of a single bitcoin had risen to over $90, reflecting growing interest from investors and increased media coverage. This milestone was seen as a signal that Bitcoin was evolving from an experimental digital currency into a serious financial asset.",
-    "category": "Adoption",
+    "category": "adoption",
     "importance": 8,
-    "source_url": "https://www.coindesk.com/markets/2013/03/28/bitcoin-market-cap-passes-1-billion/",
+    "source_url": "https://techcrunch.com/2013/03/28/bitcoin-how-an-unregulated-decentralized-virtual-currency-just-became-a-billion-dollar-market",
     "created_at": "2025-07-31 20:26:31"
   },
   {
@@ -1137,10 +1111,10 @@
     "day": 5,
     "year": 1975,
     "title": "Satoshi Nakamoto Birthday",
-    "description": "April 5, 1975, is the birth date listed on Satoshi Nakamoto's P2P Foundation profile. While likely a pseudonymous or symbolic date, it has drawn attention due to its historical significance—April 5, 1933, was the date of U.S. Executive Order 6102, which outlawed private gold ownership. The choice of 1975 is also notable as it was the year the order was repealed. Many interpret the date as a nod to personal financial sovereignty, a principle at the heart of Bitcoin's philosophy.",
-    "category": "Identity",
+    "description": "April 5, 1975, is the birth date listed on Satoshi Nakamoto's P2P Foundation profile. While likely a pseudonymous or symbolic date, it has drawn attention due to its historical significance—April 5, 1933, was the date of U.S. Executive Order 6102, which outlawed private gold ownership. The choice of 1975 is also notable as the ban was repealed effective December 31, 1974. Many interpret the date as a nod to personal financial sovereignty, a principle at the heart of Bitcoin's philosophy.",
+    "category": "identity",
     "importance": 7,
-    "source_url": "https://p2pfoundation.ning.com/profile/SatoshiNakamoto",
+    "source_url": "https://decrypt.co/313481/happy-birthday-satoshi-nakamoto-bitcoin",
     "created_at": "2025-07-31 20:29:41"
   },
   {
@@ -1149,11 +1123,11 @@
     "month": 5,
     "day": 10,
     "year": 2017,
-    "title": "First Lightning Network Transaction",
-    "description": "On May 10, 2017, the first Lightning Network transaction on Bitcoin's mainnet was successfully completed by Christian Decker and Johan Pouwelse. The transaction demonstrated the functionality of Bitcoin's second-layer scaling solution, using payment channels to transfer funds instantly and with minimal fees. This milestone marked the beginning of real-world experimentation with the Lightning Network and laid the groundwork for its broader adoption.",
-    "category": "Technical",
+    "title": "First Lightning Network Payment on Litecoin Mainnet",
+    "description": "On May 10, 2017, the first full Lightning Network payment on a non-test network was successfully completed by Christian Decker on Litecoin's mainnet. The transaction demonstrated the functionality of the second-layer scaling solution, using payment channels to transfer funds instantly and with minimal fees. This milestone marked the beginning of real-world experimentation with the Lightning Network and laid the groundwork for its broader adoption.",
+    "category": "technical",
     "importance": 8,
-    "source_url": "https://twitter.com/Snyke/status/862386008644120577",
+    "source_url": "https://news.bitcoin.com/litecoin-activates-segwit-completes-first-lightning-network-transaction",
     "created_at": "2025-07-31 20:32:42"
   },
   {
@@ -1164,9 +1138,9 @@
     "year": 2017,
     "title": "New York Agreement",
     "description": "On May 23, 2017, the New York Agreement was signed by a group of major Bitcoin companies and miners at the Consensus conference in New York. The agreement aimed to resolve the long-standing block size debate by proposing SegWit activation followed by a hard fork to increase the block size to 2MB (SegWit2x). While SegWit was eventually adopted, the 2MB fork was never implemented due to lack of consensus. The agreement significantly influenced the trajectory of Bitcoin scaling debates and contributed to the eventual split that created Bitcoin Cash.",
-    "category": "Governance",
+    "category": "governance",
     "importance": 9,
-    "source_url": "https://www.coindesk.com/markets/2017/05/23/bitcoin-scaling-agreement-reached-at-digital-currency-group-meeting/",
+    "source_url": "https://web.archive.org/web/2018/https://medium.com/@DCGco/bitcoin-scaling-agreement-at-consensus-2017-133521fe9a77",
     "created_at": "2025-07-31 20:37:21"
   },
   {
@@ -1175,11 +1149,11 @@
     "month": 6,
     "day": 14,
     "year": 2011,
-    "title": "WikiLeaks Bypasses Sanctions Using Bitcoin",
+    "title": "WikiLeaks Bypasses Payment Blockade Using Bitcoin",
     "description": "On June 14, 2011, WikiLeaks began accepting Bitcoin donations to circumvent financial blockades imposed by major payment processors like Visa, Mastercard, and PayPal. This move showcased Bitcoin’s censorship-resistant qualities and demonstrated its use as a tool for financial freedom. The event brought increased public attention to Bitcoin and helped solidify its role as a decentralized alternative for global transactions.",
-    "category": "Adoption",
+    "category": "adoption",
     "importance": 8,
-    "source_url": "https://www.theguardian.com/technology/2011/jun/14/wikileaks-bitcoin-donations",
+    "source_url": "https://bitcoinmagazine.com/culture/wikileaks-public-donation-address-receives-th-bitcoin-1480629241",
     "created_at": "2025-07-31 20:40:08"
   },
   {
@@ -1188,11 +1162,11 @@
     "month": 1,
     "day": 15,
     "year": 2015,
-    "title": "1000 BTC Bitcoin Puzzle Posted",
-    "description": "On January 15, 2015, the user \"saatoshi_rising\" posted the 1000 BTC Bitcoin Puzzle to the BitcoinTalk forum. The challenge involved a series of Bitcoin addresses with incrementally increasing private key difficulty, intended as a community experiment in brute-force cracking ability. The largest prize—1,000 BTC—remains unsolved. The puzzle became a legendary challenge in the Bitcoin community, blending cryptography, gaming, and curiosity. The author described it as \"a crude measuring instrument, of the cracking strength of the community.\"",
-    "category": "Culture",
+    "title": "Bitcoin Puzzle Transaction Created",
+    "description": "On January 15, 2015, an anonymous creator funded the Bitcoin Puzzle transaction, sending a combined 32.896 BTC to 256 addresses. The challenge involved a series of Bitcoin addresses with incrementally increasing private key difficulty, intended as a community experiment in brute-force cracking ability. The prizes were later increased to a total of about 1,000 BTC. The puzzle became a legendary challenge in the Bitcoin community, blending cryptography, gaming, and curiosity. Posting as \"saatoshi_rising\" on BitcoinTalk in 2017, the author described it as \"a crude measuring instrument, of the cracking strength of the community.\"",
+    "category": "cultural",
     "importance": 7,
-    "source_url": "https://bitcointalk.org/index.php?topic=1034087.0",
+    "source_url": "https://news.bitcoin.com/key-hunters-eye-58-87m-bitcoin-puzzle-as-916-btc-sits-unsolved-in-78-addresses/",
     "created_at": "2025-07-31 20:45:44"
   },
   {
@@ -1203,22 +1177,22 @@
     "year": 2017,
     "title": "Blockstream Bitcoin Satellite Launch",
     "description": "On August 15, 2017, Blockstream announced the launch of its Bitcoin Satellite project, broadcasting the Bitcoin blockchain from space to make it accessible without an internet connection. The initiative aimed to increase Bitcoin's resilience and global accessibility by allowing anyone with a satellite dish and basic equipment to receive real-time blockchain data. This innovation reduced reliance on traditional internet infrastructure and enhanced Bitcoin's censorship resistance and decentralization.",
-    "category": "Technical",
+    "category": "technical",
     "importance": 8,
-    "source_url": "https://blockstream.com/2017/08/15/announcing-blockstream-satellite.html",
+    "source_url": "https://blockstream.com/press-releases/2017-08-15-announcing-blockstream-satellite-broadcasting-bitcoin-from-space/",
     "created_at": "2025-08-01 00:33:56"
   },
   {
     "id": 112,
-    "date": "2014-08-29",
-    "month": 8,
+    "date": "2014-07-29",
+    "month": 7,
     "day": 29,
     "year": 2014,
     "title": "First Hardware Wallet Released",
-    "description": "On August 29, 2014, SatoshiLabs released the Trezor One, the world's first commercially available Bitcoin hardware wallet. Designed to provide secure cold storage while remaining user-friendly, Trezor marked a major milestone in Bitcoin security. It introduced a way to store private keys offline, protecting users from malware and online attacks, and helped establish the hardware wallet as a standard in personal crypto asset protection.",
-    "category": "Security",
+    "description": "On July 29, 2014, SatoshiLabs released the Trezor One, the world's first commercially available Bitcoin hardware wallet. Designed to provide secure cold storage while remaining user-friendly, Trezor marked a major milestone in Bitcoin security. It introduced a way to store private keys offline, protecting users from malware and online attacks, and helped establish the hardware wallet as a standard in personal crypto asset protection.",
+    "category": "security",
     "importance": 8,
-    "source_url": "https://blog.trezor.io/trezor-anniversary-7-years-of-the-first-hardware-wallet-81d0a51a770",
+    "source_url": "https://trezor.io/blog/news/a-decade-of-pioneering-10-years-since-trezors-first-hardware-wallet-revolution",
     "created_at": "2025-08-01 00:39:29"
   },
   {
@@ -1228,10 +1202,10 @@
     "day": 10,
     "year": 2013,
     "title": "BIP39 Published",
-    "description": "On September 10, 2013, Pavol Rusnak (stick) published BIP39, introducing the mnemonic code standard for generating deterministic keys using a sequence of easily memorable words. This standard became the basis for seed phrases used in most modern hardware and software wallets, dramatically improving user experience and security by simplifying wallet backup and recovery.",
-    "category": "Technical",
+    "description": "On September 10, 2013, BIP39, authored by Marek Palatinus, Pavol Rusnak (stick), Aaron Voisine and Sean Bowe, was created, introducing the mnemonic code standard for generating deterministic keys using a sequence of easily memorable words. This standard became the basis for seed phrases used in most modern hardware and software wallets, dramatically improving user experience and security by simplifying wallet backup and recovery.",
+    "category": "technical",
     "importance": 9,
-    "source_url": "https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki",
+    "source_url": "https://raw.githubusercontent.com/bitcoin/bips/master/bip-0039.mediawiki",
     "created_at": "2025-08-01 00:45:37"
   },
   {
@@ -1242,9 +1216,9 @@
     "year": 2013,
     "title": "First Bitcoin ASIC Miner Released",
     "description": "On January 20, 2013, the first Bitcoin ASIC miner was released by Avalon. This specialized hardware was significantly more efficient than GPUs and FPGAs, signaling the start of industrial-scale Bitcoin mining. The Avalon ASIC delivered a massive leap in hash rate and energy efficiency, and its launch sparked an arms race in mining hardware development that continues to this day.",
-    "category": "Technical",
+    "category": "technical",
     "importance": 9,
-    "source_url": "https://bitcointalk.org/index.php?topic=120184.0",
+    "source_url": "https://garzikrants.blogspot.com/2013/01/avalon-asic-miner-review.html",
     "created_at": "2025-08-01 00:57:25"
   },
   {
@@ -1254,10 +1228,10 @@
     "day": 8,
     "year": 2009,
     "title": "Bitcoin Announced on Reddit",
-    "description": "On May 8, 2009, Reddit user \"satoshin\" posted about Bitcoin on r/business with the title “Bitcoin: A Peer-to-Peer Network Based Anonymous Digital Currency.” This marked one of the earliest public introductions of Bitcoin outside cryptography forums. The post linked to the original whitepaper and helped expose Bitcoin to a wider tech-savvy audience.",
-    "category": "Launch",
+    "description": "On May 8, 2009, a Reddit user posted about Bitcoin on r/business with the title “Bitcoin: A peer-to-peer network based anonymous digital currency.” This marked one of the earliest public introductions of Bitcoin outside cryptography forums. The post linked to the Bitcoin project's website and helped expose Bitcoin to a wider tech-savvy audience.",
+    "category": "launch",
     "importance": 8,
-    "source_url": "https://np.reddit.com/r/business/comments/8itlf/bitcoin_a_peertopeer_network_based_anonymous/",
+    "source_url": "https://www.reddit.com/r/business/comments/8itlf/",
     "created_at": "2025-08-01 01:19:02"
   },
   {
@@ -1267,10 +1241,10 @@
     "day": 1,
     "year": 2017,
     "title": "Bitcoin Independence Day",
-    "description": "On August 1, 2017, Bitcoin activated BIP148, a user-activated soft fork (UASF) signaling support for Segregated Witness (SegWit). This grassroots initiative, driven by users and smaller nodes rather than miners or corporations, was seen as a reclaiming of Bitcoin's decentralized governance. It led to the eventual activation of SegWit and is celebrated by many in the community as “Bitcoin Independence Day,” symbolizing the power of user consensus in shaping the network's future.",
-    "category": "Governance",
+    "description": "On August 1, 2017, the BIP148 user-activated soft fork (UASF), which required blocks to signal support for Segregated Witness (SegWit), took effect on the nodes enforcing it. This grassroots initiative, driven by users rather than miners or corporations, was seen as a reclaiming of Bitcoin's decentralized governance. Miners had already locked in BIP91 on July 20, but the pressure of the UASF contributed to the eventual activation of SegWit, and the day is celebrated by many in the community as “Bitcoin Independence Day,” symbolizing the power of user consensus in shaping the network's future.",
+    "category": "governance",
     "importance": 9,
-    "source_url": "https://blog.bitmex.com/uasing-into-the-fork/",
+    "source_url": "https://bitcoinmagazine.com/culture/bitcoin-independence-day-how-this-watershed-day-defines-community-consensus",
     "created_at": "2025-08-01 04:12:38"
   },
   {
@@ -1280,10 +1254,10 @@
     "day": 11,
     "year": 2013,
     "title": "Bitcoin Network Forks Due to Version Conflict",
-    "description": "On March 11, 2013, a critical incident occurred when Bitcoin Core versions 0.7 and 0.8 became incompatible due to differences in database handling. This caused a chain split at block 225430, resulting in a temporary fork of the Bitcoin blockchain. Exchanges halted withdrawals, and major services paused operations. Developers and miners coordinated quickly to downgrade to version 0.7, rejoining the network and restoring consensus. The event underscored the importance of careful version upgrades and network coordination.",
-    "category": "Security",
+    "description": "On March 11, 2013, a critical incident occurred when Bitcoin versions 0.7 and 0.8 became incompatible due to differences in database handling. This caused a chain split at block 225430, resulting in a temporary fork of the Bitcoin blockchain. Exchanges suspended deposits, and major services paused operations. Developers and miners coordinated quickly to downgrade to version 0.7, rejoining the network and restoring consensus. The event underscored the importance of careful version upgrades and network coordination.",
+    "category": "security",
     "importance": 9,
-    "source_url": "https://bitcoinmagazine.com/technical/bitcoin-network-shaken-by-chain-fork",
+    "source_url": "https://bitcoin.org/en/alert/2013-03-11-chain-fork",
     "created_at": "2025-08-01 04:27:00"
   },
   {
@@ -1293,10 +1267,10 @@
     "day": 1,
     "year": 2010,
     "title": "Bitcoin Logo Released",
-    "description": "On November 1, 2010, the now-iconic Bitcoin logo—a stylized “₿” in a tilted orange circle—was released by an unknown artist using the pseudonym “Bitboy.” This design replaced earlier, less polished versions used by Satoshi and others. The logo became a symbol of the Bitcoin movement and one of the most recognized emblems in the cryptocurrency world.",
-    "category": "Cultural",
+    "description": "On November 1, 2010, the now-iconic Bitcoin logo—a tilted, stylized “₿” in an orange circle—was released by an unknown artist using the pseudonym “Bitboy.” This design replaced earlier, less polished versions used by Satoshi and others. The logo became a symbol of the Bitcoin movement and one of the most recognized emblems in the cryptocurrency world.",
+    "category": "cultural",
     "importance": 7,
-    "source_url": "https://bitcointalk.org/index.php?topic=1631.msg25816#msg25816",
+    "source_url": "https://cointelegraph.com/news/the-btc-origin-story-who-designed-the-bitcoin-logo",
     "created_at": "2025-08-01 04:38:57"
   },
   {
@@ -1307,9 +1281,9 @@
     "year": 2021,
     "title": "Taproot Upgrade Activated",
     "description": "On November 14, 2021, Bitcoin activated the Taproot upgrade at block 709,632. This was Bitcoin's first major protocol upgrade since SegWit in 2017. Taproot introduced significant improvements in privacy, efficiency, and smart contract flexibility by combining Schnorr signatures and Merkelized Abstract Syntax Trees (MAST). The activation was achieved through a soft fork and marked a key step in Bitcoin’s ongoing technical evolution.",
-    "category": "Technical",
+    "category": "technical",
     "importance": 9,
-    "source_url": "https://bitcoinops.org/en/topics/taproot/",
+    "source_url": "https://digitalmoneybox.com/news/bitcoin/highly-anticipated-bitcoin-upgrade-taproot-activates-taproot-script-spends-seen-in-the-wild",
     "created_at": "2025-08-01 04:50:27"
   },
   {
@@ -1320,9 +1294,9 @@
     "year": 2024,
     "title": "Bitcoin Hits 1 Billion Transactions",
     "description": "On May 5, 2024, Bitcoin surpassed 1 billion confirmed transactions on its blockchain. This milestone highlighted Bitcoin’s resilience, growth, and continued use over 15 years since its inception. The achievement underscored the increasing adoption of Bitcoin as a secure and decentralized financial network.",
-    "category": "Adoption",
+    "category": "adoption",
     "importance": 8,
-    "source_url": "https://www.blockchain.com/explorer/charts/n-transactions-total",
+    "source_url": "https://cointelegraph.com/news/bitcoin-reaches-one-billion-transactions",
     "created_at": "2025-08-01 04:54:13"
   },
   {
@@ -1332,21 +1306,21 @@
     "day": 9,
     "year": 2009,
     "title": "Bitcoin Block 1 Mined",
-    "description": "On January 9, 2009, Bitcoin Block 1 was mined by Satoshi Nakamoto, six days after the Genesis Block. This was the first block mined under normal consensus rules and contained a 50 BTC block reward. It marked the start of the Bitcoin blockchain as a continuous ledger and the beginning of Bitcoin’s operational history.",
-    "category": "Launch",
+    "description": "On January 9, 2009, Bitcoin Block 1 was mined, six days after the Genesis Block. This was the first block mined under normal consensus rules and contained a 50 BTC block reward. It marked the start of the Bitcoin blockchain as a continuous ledger and the beginning of Bitcoin’s operational history.",
+    "category": "launch",
     "importance": 10,
     "source_url": "https://www.blockchain.com/explorer/blocks/btc/1",
     "created_at": "2025-08-06 06:06:02"
   },
   {
     "id": 123,
-    "date": "2009-01-10",
+    "date": "2009-01-11",
     "month": 1,
-    "day": 10,
+    "day": 11,
     "year": 2009,
     "title": "Block 78 Mined by Hal Finney",
-    "description": "On January 10, 2009, Bitcoin Block 78 was mined by Hal Finney. This marked the first known instance of someone other than Satoshi Nakamoto contributing to the Bitcoin blockchain. Finney, a respected cryptographer and early supporter of Bitcoin, played a crucial role in its early testing and development.",
-    "category": "Launch",
+    "description": "On January 11, 2009, Bitcoin Block 78 was mined by Hal Finney. This was the first Bitcoin block found by Finney, a respected cryptographer and early supporter of Bitcoin, who played a crucial role in its early testing and development.",
+    "category": "launch",
     "importance": 9,
     "source_url": "https://www.blockchain.com/explorer/blocks/btc/78",
     "created_at": "2025-08-06 06:19:17"
@@ -1358,10 +1332,10 @@
     "day": 26,
     "year": 2011,
     "title": "Last Known Email from Satoshi to Gavin Andresen",
-    "description": "On April 26, 2011, Satoshi Nakamoto sent his last known email to Bitcoin developer Gavin Andresen. In the message, Satoshi expressed concern about being portrayed as a mysterious figure, saying, “I wish you wouldn’t keep talking about me as a mysterious shadowy figure, the press just turns that into a pirate currency angle.” He encouraged Gavin to focus on the open-source nature of the project and give more credit to other contributors. After this, Satoshi withdrew from public communication.",
-    "category": "Identity",
+    "description": "On April 26, 2011, Satoshi Nakamoto sent his last known email to Bitcoin developer Gavin Andresen. In the message, Satoshi expressed concern about being portrayed as a mysterious figure, saying, “I wish you wouldn’t keep talking about me as a mysterious shadowy figure, the press just turns that into a pirate currency angle.” He encouraged Gavin to focus on the open-source nature of the project and give more credit to other contributors.",
+    "category": "identity",
     "importance": 9,
-    "source_url": "https://bitcointalk.org/index.php?topic=155054.0",
+    "source_url": "https://news.bitcoin.com/satoshis-final-messages-leave-tantalizing-clues-to-his-disappearance/",
     "created_at": "2025-08-06 18:24:13"
   },
   {
@@ -1371,10 +1345,10 @@
     "day": 24,
     "year": 2012,
     "title": "SatoshiDice.com Announced",
-    "description": "On April 24, 2012, the online gambling platform SatoshiDice.com was announced on the BitcoinTalk forum. Operated by Erik Voorhees, SatoshiDice became one of the most popular Bitcoin-based gambling sites, notable for its use of on-chain transactions for provably fair betting. At its peak, it accounted for a significant portion of all Bitcoin transactions, showcasing one of the earliest use cases for Bitcoin beyond payments. Some consider it to be DDoS attack against the Bitcoin network since it is bypassing the built-in anti-DDoS features of Bitcoin (transaction fees). Others see it as proof that the incentives created by the bitcoin transaction fee scheme do not produce the results originally expected. ",
-    "category": "Adoption",
+    "description": "On April 24, 2012, the online gambling platform SatoshiDice.com was announced on the BitcoinTalk forum. Operated by Erik Voorhees, SatoshiDice became one of the most popular Bitcoin-based gambling sites, notable for its use of on-chain transactions for provably fair betting. At its peak, it accounted for a significant portion of all Bitcoin transactions, showcasing one of the earliest use cases for Bitcoin beyond payments. Some consider it to be DDoS attack against the Bitcoin network since it is bypassing the built-in anti-DDoS features of Bitcoin (transaction fees). Others see it as proof that the incentives created by the bitcoin transaction fee scheme do not produce the results originally expected.",
+    "category": "adoption",
     "importance": 7,
-    "source_url": "https://bitcointalk.org/index.php?topic=77780.0",
+    "source_url": "https://bitcointalk.org/index.php?topic=77870.0",
     "created_at": "2025-08-06 20:54:29"
   },
   {
@@ -1384,10 +1358,10 @@
     "day": 20,
     "year": 2023,
     "title": "Bitcoin Ordinals Launched",
-    "description": "On January 20, 2023, Casey Rodarmor launched Bitcoin Ordinals, a protocol that enabled the inscription of data such as images, text, and other media directly onto individual satoshis. This innovation brought NFT-like capabilities to Bitcoin for the first time, sparking debate within the community over the appropriate use of block space and pushing the boundaries of what could be built natively on the Bitcoin blockchain.",
-    "category": "Technical",
+    "description": "On January 20, 2023, Casey Rodarmor launched Bitcoin Ordinals, a protocol that enabled the inscription of data such as images, text, and other media directly onto individual satoshis. This innovation brought NFT-like capabilities to Bitcoin, sparking debate within the community over the appropriate use of block space and pushing the boundaries of what could be built natively on the Bitcoin blockchain.",
+    "category": "technical",
     "importance": 8,
-    "source_url": "https://ordinals.com/",
+    "source_url": "https://rodarmor.com/blog/how-ordinals-came-to-be/",
     "created_at": "2025-08-06 21:06:52"
   },
   {
@@ -1398,9 +1372,9 @@
     "year": 2023,
     "title": "BitVM Announced",
     "description": "On October 9, 2023, Robin Linus published the BitVM whitepaper, proposing a way to enable Turing-complete contracts on Bitcoin without changing the base protocol. BitVM uses fraud proofs and logic circuits within Bitcoin’s existing scripting capabilities, allowing complex computations to be verified off-chain and challenged on-chain. The proposal generated excitement and controversy as a potential leap in Bitcoin programmability.",
-    "category": "Technical",
+    "category": "technical",
     "importance": 8,
-    "source_url": "https://bitvm.org/",
+    "source_url": "https://cointelegraph.com/news/bitcoin-bitvm-whitepaper-computation-smart-contracts",
     "created_at": "2025-08-06 21:11:56"
   },
   {
@@ -1410,21 +1384,21 @@
     "day": 7,
     "year": 2023,
     "title": "Bitcoin Stamps Launched",
-    "description": "On March 7, 2023, Bitcoin Stamps were launched by developer mikeinspace as a method to inscribe image data onto Bitcoin using the Counterparty protocol. Unlike Ordinals, which rely on witness data, Stamps embed data in a way that is preserved by Bitcoin full nodes indefinitely. This creates a permanent burden on the Bitcoin network storage requirements, as each Stamp effectively bloats the UTXO set with image data that serves no monetary function but must be maintained forever by every participant in the network.",
-    "category": "Technical",
+    "description": "On March 7, 2023, Bitcoin Stamps were launched by developer mikeinspace as a method to inscribe image data onto Bitcoin using the Counterparty protocol. Unlike Ordinals, which rely on witness data, Stamps embed data in unspent multisig outputs held in the UTXO set, making it much harder to prune. Critics argued that this intentionally bloats the UTXO set.",
+    "category": "technical",
     "importance": 7,
-    "source_url": "https://github.com/mikeinspace/bitcoin-stamps",
+    "source_url": "https://todayinthemarkets.com/?p=35763",
     "created_at": "2025-08-06 21:27:18"
   },
   {
     "id": 129,
-    "date": "2009-01-11",
+    "date": "2009-01-09",
     "month": 1,
-    "day": 11,
+    "day": 9,
     "year": 2009,
     "title": "Bitcoin Block 9 Mined",
-    "description": "On January 11, 2009, Bitcoin Block 9 was mined. Block 9 is monumental for several reasons. It marks the first instance where bitcoins from the coinbase transaction were spent, transitioning Bitcoin from a purely mining-focused activity to a functional digital currency used for transactions",
-    "category": "Launch",
+    "description": "On January 9, 2009, Bitcoin Block 9 was mined. Block 9 is monumental for several reasons. Its coinbase reward became the first mined bitcoins to be spent, in the transaction to Hal Finney confirmed in block 170 on January 12, 2009, transitioning Bitcoin from a purely mining-focused activity to a functional digital currency used for transactions",
+    "category": "launch",
     "importance": 7,
     "source_url": "https://www.blockchain.com/explorer/blocks/btc/9",
     "created_at": "2025-08-06 21:39:27"
@@ -1437,9 +1411,9 @@
     "year": 2013,
     "title": "Hal Finney Final Bitcointalk Post",
     "description": "On August 9, 2013, Hal Finney, a pioneering cryptographer and one of Bitcoin earliest contributors, made his final post on the Bitcointalk forum. He, battling ALS at the time, passed away the following year on August 28, 2014, but remains celebrated as one of the most influential figures in Bitcoin history.",
-    "category": "Community",
+    "category": "community",
     "importance": 8,
-    "source_url": "https://bitcointalk.org/index.php?topic=155054.msg1643833#msg1643833",
+    "source_url": "https://bitcointalk.org/index.php?action=profile;u=2436;sa=showPosts",
     "created_at": "2025-08-10 02:41:30"
   },
   {
@@ -1449,10 +1423,10 @@
     "day": 21,
     "year": 2021,
     "title": "China Announces Major Bitcoin Mining Crackdown",
-    "description": "On May 21, 2021, China's State Council Financial Stability and Development Committee, led by Vice Premier Liu He, announced a major crackdown on Bitcoin mining and trading. The statement cited concerns over financial risk prevention and environmental impact. This announcement triggered a massive shutdown of mining operations across multiple provinces, leading to a sharp drop in Bitcoin’s global hash rate and accelerating the migration of miners to other countries.",
-    "category": "Regulation",
+    "description": "On May 21, 2021, China's State Council Financial Stability and Development Committee, led by Vice Premier Liu He, announced a major crackdown on Bitcoin mining and trading. The statement cited concerns over financial risk prevention. This announcement triggered a massive shutdown of mining operations across multiple provinces, leading to a sharp drop in Bitcoin’s global hash rate and accelerating the migration of miners to other countries.",
+    "category": "regulation",
     "importance": 9,
-    "source_url": "https://www.reuters.com/world/china/china-calls-crackdown-bitcoin-mining-trading-2021-05-21/",
+    "source_url": "https://www.malaymail.com/news/money/2021/05/22/china-vows-to-crack-down-on-bitcoin-mining-trading-activities/1976179",
     "created_at": "2025-08-10 05:00:45"
   },
   {
@@ -1462,10 +1436,10 @@
     "day": 9,
     "year": 2012,
     "title": "Mt. Gox $1 Billion Price Glitch",
-    "description": "On August 9, 2012, a glitch on the Mt. Gox exchange, then the world's largest Bitcoin trading platform, briefly displayed Bitcoin's price as $1 billion per coin. The error was due to a database issue and did not reflect actual trades, but it became a memorable moment in Bitcoin's early history and was widely discussed in the community.",
-    "category": "Exchange",
+    "description": "On August 9, 2012, a glitch on the Mt. Gox exchange, then the world's largest Bitcoin trading platform, briefly displayed Bitcoin's price as $1 billion per coin. The error was due to an old bug in the trade engine and the resulting invalid trades were cancelled, but it became a memorable moment in Bitcoin's early history and was widely discussed in the community.",
+    "category": "exchange",
     "importance": 6,
-    "source_url": "https://www.coindesk.com/markets/2012/08/09/mt-gox-price-glitch-shows-bitcoin-at-1-billion/",
+    "source_url": "https://bitcoinmagazine.com/markets/mt-gox-glitch-results-in-1000000000-high-1345095599",
     "created_at": "2025-08-10 07:10:53"
   },
   {
@@ -1476,9 +1450,9 @@
     "year": 2022,
     "title": "BlackRock Spot Bitcoin Private Trust Announced",
     "description": "On August 11, 2022, BlackRock, the world's largest asset manager, announced the launch of its Spot Bitcoin Private Trust. The trust offers institutional clients in the United States direct exposure to Bitcoin's price, reflecting growing mainstream acceptance of Bitcoin as an investable asset class.",
-    "category": "Adoption",
+    "category": "adoption",
     "importance": 7,
-    "source_url": "https://www.blackrock.com/corporate/newsroom/blackrock-launches-spot-bitcoin-private-trust",
+    "source_url": "https://www.kitco.com/news/article/2022-08-11/blackrock-launches-bitcoin-trust-only-select-clients",
     "created_at": "2025-08-11 18:09:08"
   },
   {
@@ -1488,23 +1462,23 @@
     "day": 10,
     "year": 2010,
     "title": "Stone Man Reports Loss of 8,999 BTC",
-    "description": "On August 10, 2010, a BitcoinTalk forum user known as 'Stone Man' reported accidentally losing access to a wallet containing 8,999 BTC. This incident is one of the earliest known major losses of bitcoins, highlighting the risks of self-custody without proper backup and security practices.",
-    "category": "Security",
+    "description": "On August 10, 2010, a BitcoinTalk forum user known as 'Stone Man' reported accidentally losing access to 8,999 BTC after restoring an older wallet backup. This incident is one of the earliest known major losses of bitcoins, highlighting the risks of self-custody without proper backup and security practices.",
+    "category": "security",
     "importance": 7,
-    "source_url": "https://bitcointalk.org/index.php?topic=1647.0",
+    "source_url": "https://bitcointalk.org/index.php?topic=782.0",
     "created_at": "2025-08-11 18:17:04"
   },
   {
     "id": 135,
-    "date": "2013-08-07",
+    "date": "2013-08-06",
     "month": 8,
-    "day": 7,
+    "day": 6,
     "year": 2013,
-    "title": "First Legal Recognition of Bitcoin as Money",
-    "description": "On August 7, 2013, U.S. Magistrate Judge Amos Mazzant ruled in the SEC v. Shavers case that Bitcoin is a form of money and subject to securities laws. The ruling came during proceedings against Trendon Shavers, founder of Bitcoin Savings and Trust, and marked the first time a U.S. court formally recognized Bitcoin's monetary status.",
-    "category": "Regulation",
+    "title": "Federal Court Finds Bitcoin Is a Form of Money",
+    "description": "On August 6, 2013, U.S. Magistrate Judge Amos Mazzant ruled in the SEC v. Shavers case that Bitcoin is a currency or form of money and that investments in Bitcoin Savings and Trust were securities. The ruling came during proceedings against Trendon Shavers, founder of Bitcoin Savings and Trust.",
+    "category": "regulation",
     "importance": 9,
-    "source_url": "https://www.texasmonthly.com/news-politics/bitcoin-is-money-says-federal-judge-in-texas/",
+    "source_url": "https://web.archive.org/web/2023/https://law.justia.com/cases/federal/district-courts/texas/txedce/4:2013cv00416/146063/23/",
     "created_at": "2025-08-11 18:23:31"
   },
   {
@@ -1514,10 +1488,10 @@
     "day": 6,
     "year": 2012,
     "title": "First Bitcoin Lawsuit Filed",
-    "description": "On August 6, 2012, the first known lawsuit involving Bitcoin was filed in the U.S. District Court for the Northern District of California. The case involved Bitcoinica, a Bitcoin trading platform, and investor Brian Cartmell, who alleged losses due to security breaches and mismanagement. This lawsuit marked the beginning of Bitcoin's presence in the legal system.",
-    "category": "Regulation",
+    "description": "On August 6, 2012, the first known lawsuit involving Bitcoin was filed in the Superior Court of California in San Francisco. The case involved Bitcoinica, a Bitcoin trading platform, and investor Brian Cartmell and other plaintiffs, who alleged losses due to security breaches and mismanagement. This lawsuit marked the beginning of Bitcoin's presence in the legal system.",
+    "category": "regulation",
     "importance": 7,
-    "source_url": "https://www.courthousenews.com/bitcoin-exchange-sued-over-460000-loss/",
+    "source_url": "https://fordhamcorporatejournal.org/?p=357",
     "created_at": "2025-08-11 18:26:55"
   },
   {
@@ -1528,9 +1502,9 @@
     "year": 2004,
     "title": "Hal Finney Releases Reusable Proofs of Work",
     "description": "On August 15, 2004, Hal Finney, a renowned cryptographer and one of the early pioneers of Bitcoin, released a system called Reusable Proofs of Work (RPOW). RPOW was a significant milestone in the history of digital cash, serving as a prototype for a digital currency based on Nick Szabo's theory of collectibles. It demonstrated a method for reusing proof-of-work tokens without double-spending, influencing the conceptual foundations of Bitcoin.",
-    "category": "Pre-Bitcoin",
+    "category": "pre-bitcoin",
     "importance": 9,
-    "source_url": "https://web.archive.org/web/20040920134512/http://rpow.net/",
+    "source_url": "https://www.metzdowd.com/pipermail/cryptography/2004-August/007362.html",
     "created_at": "2025-08-11 18:38:55"
   },
   {
@@ -1541,22 +1515,22 @@
     "year": 2002,
     "title": "Adam Back Publishes Updated Hashcash Whitepaper",
     "description": "On August 1, 2002, Adam Back published an updated whitepaper on Hashcash, a proof-of-work system originally proposed in 1997 to combat email spam. The updated paper refined the concept and explained its broader applications for limiting denial-of-service attacks. Hashcash later became a key component in Bitcoin's mining algorithm, influencing Satoshi Nakamoto's design.",
-    "category": "Pre-Bitcoin",
+    "category": "pre-bitcoin",
     "importance": 8,
     "source_url": "http://www.hashcash.org/papers/hashcash.pdf",
     "created_at": "2025-08-11 18:43:35"
   },
   {
     "id": 139,
-    "date": "2011-08-19",
-    "month": 8,
+    "date": "2011-09-19",
+    "month": 9,
     "day": 19,
     "year": 2011,
     "title": "First Bitcoin Improvement Proposal (BIP 0001) Submitted",
-    "description": "On August 19, 2011, the first Bitcoin Improvement Proposal, BIP 0001, was submitted by Amir Taaki. BIP 0001 outlined the BIP process itself, establishing a standardized method for proposing and documenting changes to the Bitcoin protocol. This framework has since guided the development and governance of Bitcoin through community discussion and consensus.",
-    "category": "Governance",
+    "description": "On September 19, 2011, the first Bitcoin Improvement Proposal, BIP 0001, was submitted by Amir Taaki. BIP 0001 outlined the BIP process itself, establishing a standardized method for proposing and documenting changes to the Bitcoin protocol. This framework has since guided the development and governance of Bitcoin through community discussion and consensus.",
+    "category": "governance",
     "importance": 8,
-    "source_url": "https://github.com/bitcoin/bips/blob/master/bip-0001.mediawiki",
+    "source_url": "https://github.com/bitcoin/bips/commit/ffa6783a853be73937b08055baaa8d8202aeee9f",
     "created_at": "2025-08-11 18:49:33"
   },
   {
@@ -1567,9 +1541,9 @@
     "year": 2011,
     "title": "First Bitcoin Conference",
     "description": "On August 20, 2011, the Roosevelt Hotel in New York City hosted the first-ever Bitcoin conference. Organized by Bruce Wagner, the event brought together developers, entrepreneurs, and enthusiasts to discuss Bitcoin's technology, potential applications, and future. This gathering marked a milestone in community building and public awareness of Bitcoin.",
-    "category": "Community",
+    "category": "community",
     "importance": 7,
-    "source_url": "https://bitcointalk.org/index.php?topic=40344.0",
+    "source_url": "https://bitcointalk.org/index.php?topic=6150.0",
     "created_at": "2025-08-11 18:54:01"
   },
   {
@@ -1580,9 +1554,9 @@
     "year": 2021,
     "title": "Bitcoin Infinity Day",
     "description": "On August 21, 2021, the Bitcoin community celebrated a unique event known as 'Bitcoin Infinity Day.' The date 8/21 was chosen for its symbolic connection to the infinity symbol (∞) and Bitcoin's fixed supply of 21 million coins. The event highlighted Bitcoin's scarcity and the idea of holding it indefinitely as a store of value.",
-    "category": "Cultural",
+    "category": "cultural",
     "importance": 6,
-    "source_url": "https://bitcoinmagazine.com/culture/august-21st-is-bitcoin-infinity-day",
+    "source_url": "https://bitbo.io/calendar/bitcoin-infinity-day/",
     "created_at": "2025-08-11 18:56:12"
   },
   {
@@ -1593,36 +1567,23 @@
     "year": 2014,
     "title": "Hal Finney Passes Away",
     "description": "On August 28, 2014, the Bitcoin community mourned the loss of Hal Finney, a renowned cryptographer and one of Bitcoin's earliest pioneers. Finney was the recipient of the first Bitcoin transaction from Satoshi Nakamoto and a key contributor to its early development. His work in cryptography and his advocacy for digital freedom left a lasting legacy in the cryptocurrency world.",
-    "category": "Community",
+    "category": "community",
     "importance": 10,
     "source_url": "https://www.wired.com/2014/08/hal-finney/",
     "created_at": "2025-08-11 19:01:29"
   },
   {
     "id": 143,
-    "date": "2013-08-29",
+    "date": "2013-08-28",
     "month": 8,
-    "day": 29,
+    "day": 28,
     "year": 2013,
-    "title": "\"Bitcoin\" Added to Oxford English Dictionary",
-    "description": "On August 29, 2013, the word \"Bitcoin\" was officially added to the Oxford English Dictionary. The entry defined Bitcoin as a digital currency in which transactions are verified by a decentralized system using cryptography, rather than by a centralized authority. The inclusion reflected Bitcoin's growing cultural and economic significance.",
-    "category": "Cultural",
+    "title": "\"Bitcoin\" Added to Oxford Dictionaries Online",
+    "description": "On August 28, 2013, the word \"Bitcoin\" was officially added to Oxford Dictionaries Online. The entry defined Bitcoin as a digital currency in which transactions can be performed without the need for a central bank. The inclusion reflected Bitcoin's growing cultural and economic significance.",
+    "category": "cultural",
     "importance": 6,
-    "source_url": "https://public.oed.com/updates/new-words-august-2013/",
+    "source_url": "https://cointelegraph.com/news/recognition-from-oxford-dictionary-how-is-that-for-bitcoin-legitimacy",
     "created_at": "2025-08-11 19:02:37"
-  },
-  {
-    "id": 144,
-    "date": "2016-08-30",
-    "month": 8,
-    "day": 30,
-    "year": 2016,
-    "title": "Genesis Mining \"Bitcoin in Space\" Campaign",
-    "description": "On August 30, 2016, Genesis Mining launched a unique promotional campaign to raise awareness about Bitcoin by sending it into space. Inspired by the Bitcoin community's aspirational phrase \"to the moon,\" the company attached a Bitcoin wallet and a physical representation of the coin to a weather balloon, which ascended into the stratosphere. The stunt symbolized Bitcoin's limitless potential and growing mainstream curiosity.",
-    "category": "Cultural",
-    "importance": 5,
-    "source_url": "https://www.genesis-mining.com/blog/bitcoin-in-space",
-    "created_at": "2025-08-11 19:06:04"
   },
   {
     "id": 146,
@@ -1632,7 +1593,7 @@
     "year": 2011,
     "title": "Casascius Coins Released",
     "description": "On September 6, 2011, Casascius coins, one of the first physical representations of bitcoins, were released for sale on the BitcoinTalk forum. Created by Bitcoin enthusiast Mike Caldwell, these coins were designed to store digital Bitcoin value in a tangible form, with a private key hidden beneath a tamper-evident hologram. Casascius coins became popular collectibles and symbols of Bitcoin's early culture.",
-    "category": "Cultural",
+    "category": "cultural",
     "importance": 7,
     "source_url": "https://bitcointalk.org/index.php?topic=41892.0",
     "created_at": "2025-08-11 19:21:27"
@@ -1643,11 +1604,11 @@
     "month": 9,
     "day": 15,
     "year": 2012,
-    "title": "First Bitcoin Conference in London",
-    "description": "On September 15, 2012, the first Bitcoin conference in London was held, bringing together developers, entrepreneurs, investors, and enthusiasts to discuss Bitcoin's technology, economics, and potential applications. The event marked a significant step in expanding Bitcoin's presence in the United Kingdom and fostering its European community.",
-    "category": "Community",
+    "title": "Bitcoin London 2012 Conference",
+    "description": "On September 15-16, 2012, a Bitcoin conference was held in London, bringing together developers, entrepreneurs, investors, and enthusiasts to discuss Bitcoin's technology, economics, and potential applications. The event marked a significant step in expanding Bitcoin's presence in the United Kingdom and fostering its European community.",
+    "category": "community",
     "importance": 6,
-    "source_url": "https://bitcoinmagazine.com/culture/bitcoin-london-conference-2012",
+    "source_url": "https://bitcoinmagazine.com/articles/the-london-2012-bitcoin-conference-1343146418",
     "created_at": "2025-08-11 19:28:52"
   },
   {
@@ -1658,7 +1619,7 @@
     "year": 2015,
     "title": "CFTC Declares Bitcoin a Commodity",
     "description": "On September 17, 2015, the U.S. Commodity Futures Trading Commission (CFTC) officially declared Bitcoin to be a commodity, placing it under the agency's regulatory oversight. This decision established that Bitcoin and other virtual currencies fall under the definition of commodities in U.S. law, paving the way for regulated Bitcoin derivatives markets.",
-    "category": "Regulation",
+    "category": "regulation",
     "importance": 9,
     "source_url": "https://www.cftc.gov/PressRoom/PressReleases/7231-15",
     "created_at": "2025-08-11 19:31:12"
@@ -1670,23 +1631,23 @@
     "day": 12,
     "year": 2009,
     "title": "First Recorded Bitcoin Trade for USD via PayPal",
-    "description": "On October 12, 2009, the first recorded Bitcoin trade for U.S. dollars via PayPal took place. Martti Malmi, a Finnish computer science student known online as \"Sirius,\" sold 5,050 bitcoins for $5.02. This transaction valued each bitcoin at approximately $0.0009 and marked a landmark event in Bitcoin's early history as it bridged the gap between the cryptocurrency and traditional fiat money.",
-    "category": "Adoption",
+    "description": "On October 12, 2009, the first recorded Bitcoin trade for U.S. dollars via PayPal took place. Martti Malmi, a Finnish college student known online as \"Sirius,\" sold 5,050 bitcoins for $5.02. This transaction valued each bitcoin at approximately $0.00099 and marked a landmark event in Bitcoin's early history as it bridged the gap between the cryptocurrency and traditional fiat money.",
+    "category": "adoption",
     "importance": 10,
-    "source_url": "https://bitcointalk.org/index.php?topic=837.msg10016#msg10016",
+    "source_url": "https://bitcoinmagazine.com/markets/bitcoins-first-trade-now-worth-130-million",
     "created_at": "2025-08-11 19:44:59"
   },
   {
     "id": 150,
-    "date": "2019-10-15",
+    "date": "2019-10-09",
     "month": 10,
-    "day": 15,
+    "day": 9,
     "year": 2019,
     "title": "\"Satoshi\" Added to Oxford English Dictionary",
-    "description": "On October 15, 2019, the Oxford English Dictionary (OED), a renowned authority on the English language, added the word \"Satoshi\" to its lexicon. This addition recognized the growing influence of cryptocurrency and the digital economy on modern language and culture. In Bitcoin terms, a satoshi represents the smallest unit of bitcoin, equal to one hundred millionth of a single BTC.",
-    "category": "Cultural",
+    "description": "On October 9, 2019, Oxford University Press announced the Oxford English Dictionary's October 2019 update, which added the word \"satoshi.\" This addition recognized the growing influence of cryptocurrency and the digital economy on modern language and culture. In Bitcoin terms, a satoshi represents the smallest unit of bitcoin, equal to one hundred millionth of a single BTC.",
+    "category": "cultural",
     "importance": 6,
-    "source_url": "https://public.oed.com/updates/october-2019/",
+    "source_url": "https://web.archive.org/web/20191015003112/https://public.oed.com/updates/new-words-list-october-2019/",
     "created_at": "2025-08-11 19:47:49"
   },
   {
@@ -1696,10 +1657,10 @@
     "day": 16,
     "year": 2010,
     "title": "First Documented Escrowed Bitcoin Transaction",
-    "description": "On October 16, 2010, the first documented escrowed Bitcoin transaction took place between Bitcoin Forum members Diablo-D3 and Nanotube, with Theymos acting as the escrow agent. This event demonstrated Bitcoin's ability to facilitate trustless transactions through community-mediated processes, paving the way for more sophisticated escrow and smart contract systems in the future.",
-    "category": "Adoption",
+    "description": "On October 16, 2010, the first documented escrowed Bitcoin transaction took place between Bitcoin Forum members Diablo-D3 and Nanotube, with Theymos acting as the escrow agent. This event demonstrated Bitcoin's ability to facilitate transactions through community-mediated processes, paving the way for more sophisticated escrow and smart contract systems in the future.",
+    "category": "adoption",
     "importance": 7,
-    "source_url": "https://bitcointalk.org/index.php?topic=2227.0",
+    "source_url": "https://en.bitcoin.it/wiki/2010",
     "created_at": "2025-08-11 19:50:39"
   },
   {
@@ -1709,10 +1670,10 @@
     "day": 18,
     "year": 2022,
     "title": "Bitcoin Recognized as First Decentralized Cryptocurrency by Guinness World Records",
-    "description": "On October 18, 2022, Bitcoin was officially recognized by Guinness World Records as the \"First Decentralized Cryptocurrency.\" This acknowledgment highlighted Bitcoin's groundbreaking role in creating a trustless, peer-to-peer financial system and its profound impact on the global economy.",
-    "category": "Cultural",
+    "description": "On October 18, 2022, it was reported that Guinness World Records 2023, published the previous month, recognizes Bitcoin as the \"First Decentralized Cryptocurrency.\" Guinness dates the record itself to January 3, 2009. This acknowledgment highlighted Bitcoin's groundbreaking role in creating a trustless, peer-to-peer financial system and its profound impact on the global economy.",
+    "category": "cultural",
     "importance": 7,
-    "source_url": "https://www.guinnessworldrecords.com/world-records/first-decentralised-cryptocurrency",
+    "source_url": "https://cointelegraph.com/news/bitcoin-space-travel-and-tiktok-debut-in-guinness-world-records",
     "created_at": "2025-08-11 19:52:09"
   },
   {
@@ -1723,9 +1684,9 @@
     "year": 2011,
     "title": "First Bitcoin Conference in Europe",
     "description": "From November 25–27, 2011, the first Bitcoin conference in Europe was held in Prague, Czech Republic. The event gathered developers, entrepreneurs, and enthusiasts from across the continent to discuss Bitcoin's technology, economics, and adoption. It marked a pivotal moment in fostering the European Bitcoin community.",
-    "category": "Community",
+    "category": "community",
     "importance": 7,
-    "source_url": "https://bitcointalk.org/index.php?topic=43266.0",
+    "source_url": "https://bitcointalk.org/index.php?topic=40272.0",
     "created_at": "2025-08-11 20:03:34"
   },
   {
@@ -1734,37 +1695,37 @@
     "month": 11,
     "day": 27,
     "year": 2010,
-    "title": "Launch of Slush Pool",
-    "description": "On November 27, 2010, Slush Pool, the world's first Bitcoin mining pool, was launched by Marek Palatinus (Slush). Mining pools allow miners to combine their computational resources to increase the chances of successfully mining blocks, with rewards distributed proportionally among participants. This innovation transformed Bitcoin mining from a solo activity into a collaborative effort, paving the way for large-scale mining operations.",
-    "category": "Technical",
+    "title": "Slush Pool Announced",
+    "description": "On November 27, 2010, Slush Pool, the world's first Bitcoin mining pool, was announced by Marek Palatinus (Slush). Mining pools allow miners to combine their computational resources to increase the chances of successfully mining blocks, with rewards distributed proportionally among participants. This innovation transformed Bitcoin mining from a solo activity into a collaborative effort, paving the way for large-scale mining operations.",
+    "category": "technical",
     "importance": 9,
-    "source_url": "https://bitcointalk.org/index.php?topic=1976.0",
+    "source_url": "https://en.bitcoin.it/wiki/Bitcoin_Pooled_Mining",
     "created_at": "2025-08-11 20:07:36"
   },
   {
     "id": 155,
-    "date": "2010-12-07",
+    "date": "2010-12-08",
     "month": 12,
-    "day": 7,
+    "day": 8,
     "year": 2010,
     "title": "First Phone-to-Phone Bitcoin Transaction",
-    "description": "On December 7, 2010, the first phone-to-phone Bitcoin transaction was conducted using two Nokia N900 smartphones. This groundbreaking event demonstrated the practical use of Bitcoin in a mobile setting, a significant advancement at the time. The transaction amount was 0.42 BTC. The Nokia N900, known for its versatility, was among the few smartphones capable of handling such transactions in Bitcoin's early days.",
-    "category": "Adoption",
+    "description": "On December 8, 2010, the first phone-to-phone Bitcoin transaction was conducted using two Nokia N900 smartphones. This groundbreaking event demonstrated the practical use of Bitcoin in a mobile setting, a significant advancement at the time. The transaction amount was 0.42 BTC. The Nokia N900, known for its versatility, was among the few smartphones capable of handling such transactions in Bitcoin's early days.",
+    "category": "adoption",
     "importance": 7,
-    "source_url": "https://bitcointalk.org/index.php?topic=2216.0",
+    "source_url": "https://bitcointalk.org/index.php?topic=2125.msg27918",
     "created_at": "2025-08-11 20:15:54"
   },
   {
     "id": 156,
-    "date": "2017-12-17",
+    "date": "2017-12-15",
     "month": 12,
-    "day": 17,
+    "day": 15,
     "year": 2017,
     "title": "First Professional Athlete Paid Fully in Bitcoin",
-    "description": "On December 17, 2017, Danish hockey player Nikolaj Rosenthal, who played for the Rungsted Seier Capital in Denmark's top hockey league, became the first professional athlete to be paid fully and exclusively in Bitcoin. This event highlighted Bitcoin's growing adoption as a legitimate form of payment in the sports industry.",
-    "category": "Adoption",
+    "description": "On December 15, 2017, it was reported that Danish hockey player Nikolaj Rosenthal, who played for the Rungsted Seier Capital in Denmark's top hockey league, would become the first professional athlete to be paid fully and exclusively in Bitcoin. This event highlighted Bitcoin's growing adoption as a legitimate form of payment in the sports industry.",
+    "category": "adoption",
     "importance": 6,
-    "source_url": "https://www.ccn.com/first-professional-athlete-salary-paid-in-bitcoin/",
+    "source_url": "https://bitcoinist.com/danish-hockey-player-athlete-bitcoin",
     "created_at": "2025-08-11 20:20:40"
   },
   {
@@ -1775,9 +1736,9 @@
     "year": 2014,
     "title": "Overstock Becomes First Major Retailer to Accept Bitcoin",
     "description": "On January 9, 2014, Overstock became the world's first major retailer to accept Bitcoin payments. The integration was made possible through a partnership with Coinbase, allowing customers to pay for goods using Bitcoin. This milestone was a significant step in the mainstream adoption of cryptocurrency in e-commerce.",
-    "category": "Adoption",
+    "category": "adoption",
     "importance": 8,
-    "source_url": "https://www.coindesk.com/business/2014/01/09/overstock-becomes-first-major-retailer-to-accept-bitcoin/",
+    "source_url": "https://prnewswire.com/news-releases/overstockcom-first-online-retailer-to-accept-bitcoin-239488961.html",
     "created_at": "2025-08-11 20:22:53"
   },
   {
@@ -1786,11 +1747,11 @@
     "month": 11,
     "day": 7,
     "year": 2021,
-    "title": "Yellow's Bitcoin X Spaces Marathon Begins",
-    "description": "On November 7, 2021, Twitter user yellow (@ICOffenderII) began a daily marathon of hosting X Spaces, playing \"Don't Stop Believin'\" by Journey three times (with the third being the live Houston version). Yellow vowed to continue approximately at the same time every day until Bitcoin reached $100,000. The streak lasted for 1,123 days, ending on December 5, 2024, when Bitcoin first surpassed $100,000.",
-    "category": "Cultural",
+    "title": "Yellow's Bitcoin Twitter Spaces Marathon Begins",
+    "description": "On November 7, 2021, Twitter user yellow (@ICOffenderII) began a daily marathon of hosting Twitter Spaces (now X Spaces), playing \"Don't Stop Believin'\" by Journey three times (with the third being the live Houston version). Yellow vowed to continue approximately at the same time every day until Bitcoin reached $100,000. The streak lasted for 1,123 days, ending on December 5, 2024, when Bitcoin first surpassed $100,000.",
+    "category": "cultural",
     "importance": 6,
-    "source_url": "https://twitter.com/ICOffenderII",
+    "source_url": "https://web.archive.org/web/20231211122242/https://fomo21.com/blogs/news/uncovering-the-daily-routine-of-bitcoin-personality-yellow-icoffenderii-why-he-hosts-twitter-spaces",
     "created_at": "2025-08-11 20:34:26"
   },
   {
@@ -1801,7 +1762,7 @@
     "year": 2015,
     "title": "First Bitcoin Transaction from Antarctica",
     "description": "On February 4, 2015, the first known Bitcoin transaction from Antarctica was sent by Chris Lamprecht (@mthreat on Twitter), who transferred 0.1337 BTC. This event demonstrated Bitcoin's global reach and borderless nature, enabling financial transactions even from the most remote and isolated continent on Earth.",
-    "category": "Adoption",
+    "category": "adoption",
     "importance": 6,
     "source_url": "https://twitter.com/mthreat/status/562885595188514816",
     "created_at": "2025-08-11 20:40:13"
@@ -1814,9 +1775,9 @@
     "year": 2013,
     "title": "Magic Internet Money Wizard Meme Created",
     "description": "On February 18, 2013, Bitcoin subreddit moderator /u/theymos created a thread asking the community to submit ideas for a Reddit ad for /r/Bitcoin. Within an hour, /u/mavensbot responded with an MS Paint drawing of the Magic Internet Money Wizard. The whimsical image quickly became the most popular Reddit ad ever for the subreddit, helping to grow its audience and becoming an enduring part of Bitcoin's online culture.",
-    "category": "Cultural",
+    "category": "cultural",
     "importance": 6,
-    "source_url": "https://www.reddit.com/r/Bitcoin/comments/18kiju/ideas_for_a_reddit_ad/",
+    "source_url": "https://meme.com/memes/magic-internet-money-bitcoin-wizard",
     "created_at": "2025-08-11 20:45:31"
   },
   {
@@ -1827,9 +1788,9 @@
     "year": 2014,
     "title": "Newsweek Mistakenly Identifies Dorian Nakamoto as Bitcoin's Creator",
     "description": "On March 6, 2014, Newsweek published a cover story claiming that Dorian Satoshi Nakamoto, a retired engineer living in California, was the creator of Bitcoin. The article ignited a media frenzy, but Dorian Nakamoto denied any involvement with Bitcoin. The incident sparked discussions about privacy, journalistic ethics, and the importance of protecting the identity of Bitcoin's pseudonymous founder.",
-    "category": "Identity",
+    "category": "identity",
     "importance": 8,
-    "source_url": "https://www.newsweek.com/2014/03/14/face-behind-bitcoin-247957.html",
+    "source_url": "https://www.npr.org/sections/alltechconsidered/2014/03/06/286833324/4-things-to-take-away-from-newsweek-s-report-on-the-founder-of-bitcoin",
     "created_at": "2025-08-14 19:53:06"
   },
   {
@@ -1840,9 +1801,9 @@
     "year": 2009,
     "title": "Bitcoin Wikipedia Page Created",
     "description": "On March 8, 2009, the Bitcoin Wikipedia page was created, marking one of the earliest public knowledge resources about the cryptocurrency. The page provided a basic overview of Bitcoin's concept, technology, and purpose, helping to introduce the idea to a broader audience outside of cryptography-focused communities.",
-    "category": "Adoption",
+    "category": "adoption",
     "importance": 7,
-    "source_url": "https://en.wikipedia.org/w/index.php?title=Bitcoin&oldid=275079280",
+    "source_url": "https://en.wikipedia.org/w/index.php?title=Bitcoin&oldid=275832581",
     "created_at": "2025-08-14 19:56:50"
   },
   {
@@ -1853,22 +1814,22 @@
     "year": 2018,
     "title": "World's First Bitcoin Monument Unveiled in Kranj, Slovenia",
     "description": "On March 13, 2018, the Slovenian town of Kranj unveiled the world's first monument dedicated to Bitcoin, symbolizing the country's embrace of blockchain technology and cryptocurrencies. The monument, located at a roundabout, features a large Bitcoin logo and serves as a public statement of Slovenia's progressive stance on digital innovation.",
-    "category": "Cultural",
+    "category": "cultural",
     "importance": 6,
-    "source_url": "https://www.coindesk.com/markets/2018/03/15/slovenian-town-installs-first-ever-public-bitcoin-monument/",
+    "source_url": "https://phys.org/news/2018-03-slovenia-inaugurates-world-bitcoin-monument.html",
     "created_at": "2025-08-14 19:58:56"
   },
   {
     "id": 164,
-    "date": "2019-03-14",
+    "date": "2019-03-15",
     "month": 3,
-    "day": 14,
+    "day": 15,
     "year": 2019,
     "title": "Mark Karpelès Convicted in Tokyo",
-    "description": "On March 14, 2019, Mark Karpelès, the former CEO of the infamous Mt. Gox bitcoin exchange, was found guilty by the Tokyo District Court of falsifying financial records to inflate Mt. Gox's holdings by $33.5 million. He was sentenced to 30 months in prison, with the sentence suspended for four years, avoiding immediate incarceration.",
-    "category": "Legal",
+    "description": "On March 15, 2019, Mark Karpelès, the former CEO of the infamous Mt. Gox bitcoin exchange, was found guilty by the Tokyo District Court of falsifying financial records to inflate Mt. Gox's holdings by $33.5 million. He was sentenced to 30 months in prison, with the sentence suspended for four years, avoiding immediate incarceration.",
+    "category": "legal",
     "importance": 8,
-    "source_url": "https://www.bbc.com/news/technology-47564760",
+    "source_url": "https://bitcoinmagazine.com/culture/karpeles-beats-embezzlement-charges-mt-gox-ruling",
     "created_at": "2025-08-14 20:11:36"
   },
   {
@@ -1879,9 +1840,9 @@
     "year": 2010,
     "title": "Bitcoinmarket.com Launches",
     "description": "On March 17, 2010, Bitcoinmarket.com launched as one of the first Bitcoin exchanges. It allowed users to trade bitcoin for U.S. dollars via PayPal, establishing an early market price for the cryptocurrency and creating a foundation for the global Bitcoin trading ecosystem.",
-    "category": "Adoption",
+    "category": "adoption",
     "importance": 9,
-    "source_url": "https://bitcointalk.org/index.php?topic=20.0",
+    "source_url": "https://guinnessworldrecords.com/world-records/696258-first-cryptocurrency-exchange",
     "created_at": "2025-08-14 20:52:32"
   },
   {
@@ -1891,10 +1852,10 @@
     "day": 20,
     "year": 2010,
     "title": "First Bitcoin Poker Tournament",
-    "description": "On March 20, 2010, the world's first Bitcoin poker tournament was organized by early Bitcointalk forum user BitcoinFX. The buy-in for the tournament was set at 50 BTC, and the winner was awarded 1,000 BTC. Four players participated, including \"dwdollar,\" the creator of the first Bitcoin exchange, who won the tournament. Theymos, a future Bitcointalk and r/Bitcoin moderator, finished second.",
-    "category": "Cultural",
+    "description": "On March 20, 2010, the world's first Bitcoin poker tournament was organized by early Bitcointalk forum user BitcoinFX. The buy-in for the tournament was set at 50 + 5 BTC, and the winner was awarded 600 BTC from a 1,200 BTC prize pool. Four real players participated, including \"dwdollar,\" the creator of the first Bitcoin exchange, who won the tournament. Theymos, a future Bitcointalk and r/Bitcoin moderator, finished second.",
+    "category": "cultural",
     "importance": 7,
-    "source_url": "https://bitcointalk.org/index.php?topic=48.0",
+    "source_url": "https://bitcointalk.org/index.php?topic=80.0",
     "created_at": "2025-08-14 20:56:07"
   },
   {
@@ -1905,9 +1866,9 @@
     "year": 2021,
     "title": "Tesla Announces Bitcoin Payments for Vehicles",
     "description": "On March 24, 2021, Tesla, the electric car company led by CEO Elon Musk, announced that it would start accepting Bitcoin as a form of payment for its vehicles. Musk stated that Tesla would operate Bitcoin nodes directly and that payments made in Bitcoin would be retained as bitcoin rather than converted to fiat currency.",
-    "category": "Adoption",
+    "category": "adoption",
     "importance": 9,
-    "source_url": "https://twitter.com/elonmusk/status/1374617643446063105",
+    "source_url": "https://decrypt.co/62640/elon-musk-you-can-now-buy-a-tesla-with-bitcoin",
     "created_at": "2025-08-14 20:58:49"
   },
   {
@@ -1918,35 +1879,22 @@
     "year": 2010,
     "title": "Bitcoin Wiki Launched",
     "description": "On April 14, 2010, the Bitcoin Wiki, a comprehensive community-driven resource about Bitcoin, was launched by Martti Malmi, one of Bitcoin's earliest developers and advocates. The platform became a pivotal source for documenting technical details, history, and development of Bitcoin, serving both newcomers and experts in the cryptocurrency space.",
-    "category": "Adoption",
+    "category": "adoption",
     "importance": 8,
     "source_url": "https://en.bitcoin.it/wiki/Bitcoin.it_Wiki",
     "created_at": "2025-08-14 21:03:43"
   },
   {
-    "id": 169,
-    "date": "2019-04-17",
-    "month": 4,
-    "day": 17,
-    "year": 2019,
-    "title": "Bhutan Revealed as First Country to Mine Bitcoin",
-    "description": "On April 17, 2019, it was reported that Bhutan had become the first country to mine Bitcoin. This initiative, which was not widely publicized at the time, leveraged the nation's abundant hydropower resources, aligning with its sustainability goals and philosophy of Gross National Happiness. Mining operations began when Bitcoin's price was around $5,000, a figure that would rise substantially in the years that followed.",
-    "category": "Adoption",
-    "importance": 7,
-    "source_url": "https://forbesindia.com/article/cryptocurrency/how-bhutan-secretly-entered-the-bitcoin-mining-business/84615/1",
-    "created_at": "2025-08-14 21:05:40"
-  },
-  {
     "id": 170,
-    "date": "2017-04-21",
-    "month": 4,
+    "date": "2017-08-21",
+    "month": 8,
     "day": 21,
     "year": 2017,
-    "title": "First Bitcoin Transaction Sent from Space",
-    "description": "On April 21, 2017, the first Bitcoin transaction was sent from space, made possible by Blockstream, led by Adam Back. This initiative used satellite technology to bolster the resilience and reach of the Bitcoin network, enabling access in areas with unreliable or non-existent internet connectivity.",
-    "category": "Technical",
+    "title": "First Bitcoin Transaction Relayed Through Space",
+    "description": "On August 21, 2017, the first Bitcoin transaction was relayed through space, made possible by Blockstream, led by Adam Back. This initiative used satellite technology to bolster the resilience and reach of the Bitcoin network, enabling access in areas with unreliable or non-existent internet connectivity.",
+    "category": "technical",
     "importance": 8,
-    "source_url": "https://blockstream.com/2017/08/15/announcing-blockstream-satellite.html",
+    "source_url": "https://cointelegraph.com/news/bitcoin-in-space-blockchain-satellite-receives-first-transaction",
     "created_at": "2025-08-14 21:08:04"
   },
   {
@@ -1956,10 +1904,10 @@
     "day": 22,
     "year": 2014,
     "title": "Dorian Nakamoto Thanks Bitcoin Community",
-    "description": "On April 22, 2014, Dorian Nakamoto, a man mistakenly identified by Newsweek as the creator of Bitcoin, Satoshi Nakamoto, expressed his gratitude to the Bitcoin community for their support. In a video message beside Andreas Antonopoulos, who organized a fundraiser on his behalf, Dorian thanked donors for contributing approximately 47.6 BTC. The campaign was launched to help him after facing unemployment and health issues following the Newsweek article's publication.",
-    "category": "Community",
+    "description": "On April 22, 2014, Dorian Nakamoto, a man mistakenly identified by Newsweek as the creator of Bitcoin, Satoshi Nakamoto, expressed his gratitude to the Bitcoin community for their support. In a video message beside Andreas Antonopoulos, who organized a fundraiser on his behalf, Dorian thanked donors for contributing approximately 47.9 BTC. The campaign was launched to help him following the Newsweek article's publication.",
+    "category": "community",
     "importance": 7,
-    "source_url": "https://www.coindesk.com/markets/2014/04/22/dorian-nakamoto-breaks-silence-to-thank-bitcoin-community/",
+    "source_url": "https://www.theregister.com/2014/04/23/dorian_nakamoto_gets_23000_payout_over_bitcoin_invention_saga/",
     "created_at": "2025-08-14 21:09:49"
   },
   {
@@ -1970,9 +1918,9 @@
     "year": 2011,
     "title": "Gavin Andresen Announces Upcoming CIA Visit",
     "description": "On April 27, 2011, Gavin Andresen, a former lead Bitcoin developer, announced to the Bitcoin community on the BitcoinTalk forum that he was going to visit the headquarters of the United States Central Intelligence Agency (CIA). Andresen intended to give a presentation about Bitcoin at the CIA headquarters as part of an emerging technologies conference for the U.S. intelligence community. He believed that Bitcoin was already on the CIA's radar and saw this as an opportunity to discuss its potential benefits.",
-    "category": "Governance",
+    "category": "governance",
     "importance": 7,
-    "source_url": "https://bitcointalk.org/index.php?topic=6430.0",
+    "source_url": "https://bitcointalk.org/index.php?topic=6652.msg97181#msg97181",
     "created_at": "2025-08-14 21:12:47"
   },
   {
@@ -1983,22 +1931,22 @@
     "year": 2014,
     "title": "Bloomberg Adds Bitcoin Pricing",
     "description": "On April 30, 2014, Bloomberg began providing Bitcoin (BTC) pricing to its more than 320,000 subscribers via the Bloomberg Professional service. This integration allowed users to monitor and chart data from prominent Bitcoin exchanges such as Coinbase and Kraken. Bloomberg Professional users could access the new feature by typing VCCY into their terminals.",
-    "category": "Adoption",
+    "category": "adoption",
     "importance": 7,
-    "source_url": "https://www.bloomberg.com/news/articles/2014-04-30/bloomberg-terminal-offers-bitcoin-data",
+    "source_url": "https://web.archive.org/web/2015/https://www.finextra.com/newsarticle/26020/bloomberg-adds-bitcoin-pricing-to-professional-terminal",
     "created_at": "2025-08-14 21:15:09"
   },
   {
     "id": 174,
-    "date": "2012-05-02",
+    "date": "2012-05-01",
     "month": 5,
-    "day": 2,
+    "day": 1,
     "year": 2012,
     "title": "First Physical Copy of Bitcoin Magazine Published",
-    "description": "On May 2, 2012, the first physical copy of Bitcoin Magazine was published. Co-founded by Vitalik Buterin and Mihai Alisie, Bitcoin Magazine became one of the earliest regular publications dedicated to covering Bitcoin's technology, community, and economic impact. It played a key role in documenting the cryptocurrency's formative years.",
-    "category": "Cultural",
+    "description": "On May 1, 2012, the first issue of Bitcoin Magazine went to print. Co-founded by Vitalik Buterin and Mihai Alisie, Bitcoin Magazine became one of the earliest regular publications dedicated to covering Bitcoin's technology, community, and economic impact. It played a key role in documenting the cryptocurrency's formative years.",
+    "category": "cultural",
     "importance": 7,
-    "source_url": "https://bitcoinmagazine.com/culture/bitcoin-magazine-volume-1-issue-1",
+    "source_url": "https://en.bitcoin.it/wiki/Bitcoin_Magazine",
     "created_at": "2025-08-14 21:16:13"
   },
   {
@@ -2009,7 +1957,7 @@
     "year": 1956,
     "title": "Birthday of Hal Finney",
     "description": "On May 4, 1956, Hal Finney was born. A renowned cryptographer and early Bitcoin pioneer, Finney was the recipient of the first Bitcoin transaction from Satoshi Nakamoto and contributed significantly to Bitcoin's early development. His work in cryptography and digital cash systems left a lasting legacy in the cryptocurrency world.",
-    "category": "Community",
+    "category": "community",
     "importance": 9,
     "source_url": "https://en.wikipedia.org/wiki/Hal_Finney_(computer_scientist)",
     "created_at": "2025-08-14 21:17:55"
@@ -2022,7 +1970,7 @@
     "year": 2018,
     "title": "Warren Buffett Calls Bitcoin \"Rat Poison Squared\"",
     "description": "On May 5, 2018, during the Berkshire Hathaway annual shareholder meeting, renowned investor and CEO Warren Buffett referred to Bitcoin as \"probably rat poison squared.\" The remark quickly became one of the most quoted and controversial statements in Bitcoin discourse, reflecting skepticism from traditional finance while galvanizing Bitcoin supporters.",
-    "category": "Cultural",
+    "category": "cultural",
     "importance": 6,
     "source_url": "https://www.cnbc.com/2018/05/05/warren-buffett-says-bitcoin-is-probably-rat-poison-squared.html",
     "created_at": "2025-08-14 21:19:45"
