@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
-    "test": "bash test/run.sh",
+    "test": "node --test test/facts.test.js && bash test/run.sh",
     "build": "electron-builder",
     "dist": "electron-builder --publish=never"
   },
