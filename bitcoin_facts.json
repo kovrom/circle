@@ -2216,5 +2216,18 @@
     "importance": 6,
     "source_url": "https://news.bitcoin.com/crypto-news/bip-110-supporters-revive-minority-fork-slash-block-size-to-just-300-kb/",
     "created_at": "2026-11-10 00:20:55"
+  },
+  {
+    "id": 193,
+    "date": "2017-12-06",
+    "month": 12,
+    "day": 6,
+    "year": 2017,
+    "title": "First Lightning Payments on Bitcoin Mainnet Across All Implementations",
+    "description": "The developers of the three Lightning Network implementations (ACINQ's eclair, Blockstream's c-lightning and Lightning Labs' lnd) announce the first release candidate of the Lightning protocol 1.0 specification, along with the first Lightning payments on Bitcoin's mainnet routed between all three implementations. The milestone showed that a single, unified Lightning Network could work on Bitcoin, months before the first mainnet beta releases in 2018.",
+    "category": "technical",
+    "importance": 8,
+    "source_url": "https://blog.blockstream.com/en-lightning-spec-electrifies-bitcoin-with-release-candidate/",
+    "created_at": "2026-11-10 01:19:50"
   }
 ]
