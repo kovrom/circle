@@ -1,4 +1,4 @@
-const { app, BrowserWindow, BrowserView, ipcMain, Menu, session } = require('electron');
+const { app, BrowserWindow, WebContentsView, ipcMain, Menu, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -20,6 +20,7 @@ process.on('warning', (warning) => {
 });
 
 const ERR_ABORTED = -3; // Chromium's code for a navigation that was replaced or cancelled
+const TRANSPARENT = '#00000000';
 const RETRY_BASE_MS = 5000;
 const RETRY_MAX_MS = 60000;
 
@@ -169,7 +170,8 @@ function syncAttachedView() {
   }
 
   if (attachedView !== target) {
-    mainWindow.setBrowserView(target);
+    if (attachedView) mainWindow.contentView.removeChildView(attachedView);
+    if (target) mainWindow.contentView.addChildView(target);
     attachedView = target;
   }
   if (target) target.setBounds(bounds);
@@ -214,14 +216,23 @@ function markViewFailed(entry, message) {
   scheduleRetry(entry);
 }
 
-function createView(url, backgroundColor) {
-  const view = new BrowserView({
+// Slides and the screensaver sit on top of the main window's own page. Like the
+// old BrowserView they start transparent, so while a page loads the slide's
+// background colour (painted by the renderer underneath) shows instead of white.
+function createPageView() {
+  const view = new WebContentsView({
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true
     }
   });
+  view.setBackgroundColor(TRANSPARENT);
+  return view;
+}
+
+function createView(url, backgroundColor) {
+  const view = createPageView();
   const entry = { view, url, backgroundColor, error: null, loadFailed: false, retryTimer: null, retryCount: 0, closed: false };
 
   view.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
@@ -266,14 +277,14 @@ function closeView(entry) {
   entry.closed = true;
   clearTimeout(entry.retryTimer);
   if (attachedView === entry.view) {
-    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setBrowserView(null);
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.contentView.removeChildView(entry.view);
     attachedView = null;
   }
   closeWebContents(entry.view);
 }
 
 // Match the views to config.urls, keeping any page whose URL is still wanted.
-function syncBrowserViews() {
+function syncSlideViews() {
   const current = views[currentViewIndex];
   const reusable = [...views];
 
@@ -293,7 +304,7 @@ function syncBrowserViews() {
   publishCurrentView();
 }
 
-function showBrowserView(index) {
+function showSlide(index) {
   if (!Number.isInteger(index) || index < 0 || index >= views.length) return;
   if (isScreensaverActive) return;
 
@@ -309,13 +320,7 @@ function retryView(entry) {
 }
 
 function createScreensaverView() {
-  const view = new BrowserView({
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      webSecurity: true
-    }
-  });
+  const view = createPageView();
   const contents = view.webContents;
 
   contents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
@@ -408,7 +413,7 @@ function handleKeyPress(event, input) {
       if (!input.meta && !input.control && !input.alt) {
         event.preventDefault();
         const prevIndex = (currentViewIndex - 1 + views.length) % views.length;
-        showBrowserView(prevIndex);
+        showSlide(prevIndex);
       }
       break;
       
@@ -416,7 +421,7 @@ function handleKeyPress(event, input) {
       if (!input.meta && !input.control && !input.alt) {
         event.preventDefault();
         const nextIndex = (currentViewIndex + 1) % views.length;
-        showBrowserView(nextIndex);
+        showSlide(nextIndex);
       }
       break;
       
@@ -456,7 +461,9 @@ function createWindow() {
     },
     show: true, // Show window immediately
     titleBarStyle: 'hidden',
-    frame: false
+    frame: false,
+    // Electron 43+ rounds frameless windows on Linux; the kiosk wants square edges
+    roundedCorners: false
   });
 
   mainWindow.loadFile('index.html');
@@ -464,8 +471,8 @@ function createWindow() {
   // Send config to renderer once content is loaded
   mainWindow.webContents.once('did-finish-load', () => {
     mainWindow.webContents.send('config-loaded', config);
-    // Create BrowserViews after main window is ready
-    syncBrowserViews();
+    // Create the slide views after main window is ready
+    syncSlideViews();
   });
 
   mainWindow.on('resize', syncAttachedView);
@@ -569,17 +576,17 @@ ipcMain.handle('get-config', () => {
 
 // Navigation handlers
 ipcMain.handle('go-to-slide', (event, index) => {
-  showBrowserView(index);
+  showSlide(index);
 });
 
 ipcMain.handle('next-slide', () => {
   const nextIndex = (currentViewIndex + 1) % views.length;
-  showBrowserView(nextIndex);
+  showSlide(nextIndex);
 });
 
 ipcMain.handle('previous-slide', () => {
   const prevIndex = (currentViewIndex - 1 + views.length) % views.length;
-  showBrowserView(prevIndex);
+  showSlide(prevIndex);
 });
 
 ipcMain.handle('reload-current-slide', () => {
@@ -610,7 +617,7 @@ ipcMain.handle('save-config', async (event, newConfig) => {
 // Apply a config that save-config has already stored
 ipcMain.handle('reload-with-new-config', () => {
   log.info('Applying new config');
-  syncBrowserViews();
+  syncSlideViews();
   return { success: true };
 });
 

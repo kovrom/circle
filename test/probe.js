@@ -24,7 +24,7 @@ require(PROJ+'/main.js');
 const T0=Date.now();const meteo={n:0,temp:0,urls:[]};
 const JSONH={'content-type':'application/json','access-control-allow-origin':'*'};
 const meteoBody=JSON.stringify({daily:{sunrise:['2026-11-09T06:30'],sunset:['2026-11-09T16:45'],uv_index_max:[3]},current:{uv_index:4,temperature_2m:21,relative_humidity_2m:55}});
-const done=c=>{global.__done=true;console.log('DONE ['+SC+'] fails='+fails);app.exit(c)};
+const done=c=>{global.__done=true;clearInterval(global.__sampler);console.log('DONE ['+SC+'] fails='+fails);app.exit(c)};
 app.whenReady().then(async()=>{
   session.defaultSession.protocol.handle('https',async req=>{
     if(req.url.includes('open-meteo')){meteo.n++;if(req.url.includes('temperature_2m'))meteo.temp++;meteo.urls.push(req.url);
@@ -37,7 +37,14 @@ app.whenReady().then(async()=>{
   const mainWin=BrowserWindow.getAllWindows()[0];const win=()=>mainWin;
   const R=js=>win().webContents.executeJavaScript(js);
   const inst=f=>R(f);
-  const cur=()=>{const v=win().getBrowserView();return v?v.webContents.getURL():null};
+  // The page on screen is the main window's only child view. Sample the child count
+  // throughout, since stacked or leaked views would otherwise go unnoticed.
+  let maxKids=0;const kids=()=>{if(win().isDestroyed())return [];const c=win().contentView.children;maxKids=Math.max(maxKids,c.length);return c};
+  global.__sampler=setInterval(kids,50);
+  const attached=()=>kids()[0]??null;
+  const cur=()=>{const v=attached();return v?v.webContents.getURL():null};
+  const real=()=>win().getBounds().width>400; // headless windows are 1x1
+  const inset=()=>{const w=win().getBounds(),b=attached().getBounds();return b.x===190&&b.y===120&&b.width===w.width-380&&b.height===w.height-220?'ok':JSON.stringify({w,b})};
   const overlayHidden=()=>R(`document.getElementById('error-overlay').classList.contains('hidden')`);
   const loadingGone=()=>R(`getComputedStyle(document.getElementById('loading-screen')).display==='none'`);
   const tabs=()=>app.getAppMetrics().filter(m=>m.type==='Tab').length;
@@ -54,6 +61,14 @@ app.whenReady().then(async()=>{
     win().isFocused=()=>true;
     let i0=idx();win().webContents.focus();win().webContents.sendInputEvent({type:'keyDown',keyCode:'Right'});await sleep(400);win().webContents.sendInputEvent({type:'keyUp',keyCode:'Right'});await sleep(400);
     check('one key press moves one slide',idx()===(i0+1)%3,i0+'->'+idx());
+    const px=(await attached().webContents.capturePage({x:0,y:0,width:2,height:2})).toBitmap();
+    // Headless runs capture nothing; in a real window this catches a white page background
+    if(px.length)check('page without a background is transparent, not white',px[3]===0,Array.from(px.subarray(0,4)).join(','));
+    if(real()){
+      check('slide inset inside the window',inset()==='ok',inset());
+      win().setFullScreen(true);await sleep(1500);check('slide inset after going fullscreen',inset()==='ok',inset());
+      win().setFullScreen(false);await sleep(1500);check('slide inset after leaving fullscreen',inset()==='ok',inset());
+    }
     for(let n=0;n<3;n++){await openS();if(n<2)await closeS();}
     await R(`document.getElementById('wifi-refresh-btn').click()`);await sleep(1000);
     check('one Refresh click runs one scan',count(/wifi list/g)===1,count(/wifi list/g));
@@ -82,13 +97,13 @@ app.whenReady().then(async()=>{
     const svc=path.join(process.env.HOME,'.config/systemd/user/circle.service');check('service file written under fake HOME',fs.existsSync(svc));
     fs.writeFileSync(STUB,'');await openS();await sleep(400);await R(`document.getElementById('autostart-enabled').checked=false`);await saveS();
     check('autostart off disables without stop',count(/ disable circle/g)===1&&count(/ stop circle/g)===0,JSON.stringify(stub()));
-    const wn=BrowserWindow.getAllWindows().length;const vw=win().getBrowserView().webContents;await vw.executeJavaScript(`window.open('about:blank','_blank')?1:0`,true).catch(()=>{});await sleep(800);
+    const wn=BrowserWindow.getAllWindows().length;const vw=attached().webContents;await vw.executeJavaScript(`window.open('about:blank','_blank')?1:0`,true).catch(()=>{});await sleep(800);
     check('window.open denied',BrowserWindow.getAllWindows().length===wn,wn+'->'+BrowserWindow.getAllWindows().length);
     BrowserWindow.getAllWindows().filter(w=>w!==mainWin).forEach(w=>w.destroy());
     const perm=await vw.executeJavaScript(`navigator.permissions.query({name:'notifications'}).then(p=>p.state)`);check('notifications not granted',perm!=='granted',perm);
     const t0=tabs();await R(`window.electronAPI.invoke('show-screensaver')`);await sleep(2500);
     check('screensaver covers window',cur()&&cur().includes('Quotes'),cur());
-    check('screensaver loaded quotes',(await win().getBrowserView().webContents.executeJavaScript(`document.querySelectorAll('.ts-line').length`))>0);
+    check('screensaver loaded quotes',(await attached().webContents.executeJavaScript(`document.querySelectorAll('.ts-line').length`))>0);
     win().webContents.focus();win().webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});await sleep(500);
     check('Esc on screensaver hides it, no quit',quitAttempts===0&&!(cur()||'').includes('Quotes'),'quits='+quitAttempts+' cur='+cur());
     if((cur()||'').includes('Quotes')){await R(`window.electronAPI.invoke('hide-screensaver')`);}
@@ -116,7 +131,8 @@ app.whenReady().then(async()=>{
    async hang(){await sleep(4000);check('loading clears with weather hung',await loadingGone());},
    async meteofail(){await sleep(36000);check('weather retried after failure',meteo.n>=2,meteo.n);check('value recovered',(await R(`document.getElementById('temperature-value').textContent`)).startsWith('21'),await R(`document.getElementById('temperature-value').textContent`)+' / unit C=21');},
    async uvoff(){await sleep(11000);check('temp keeps refreshing with UV off',meteo.temp>=3,meteo.temp);check('uv group hidden',await R(`getComputedStyle(document.querySelector('.uv-index-group')).display==='none'`));},
-   async corrupt(){await sleep(3000);check('broken config not overwritten',fs.readFileSync(cfgPath,'utf8')===CFG);check('broken config backed up',fs.existsSync(cfgPath+'.broken'));check('app still up with defaults',await R(`document.querySelectorAll('.indicator').length`)>=1);},
+   async corrupt(){await sleep(3000);check('broken config not overwritten',fs.readFileSync(cfgPath,'utf8')===CFG);check('broken config backed up',fs.existsSync(cfgPath+'.broken'));check('app still up with defaults',await R(`document.querySelectorAll('.indicator').length`)>=1);
+     if(real()){check('starts fullscreen like the Pi',win().isFullScreen());check('slide inset at fullscreen start',inset()==='ok',inset());}},
    async legacy(){await sleep(3000);check('string urls load',cur()===U('a'),cur());check('indicators',await R(`document.querySelectorAll('.indicator').length`)===2);await openS();await saveS();const c=JSON.parse(fs.readFileSync(cfgPath,'utf8'));check('saved as objects',typeof c.urls[0]==='object');check('view after save',cur()===U('a'),cur());},
 
    async extras(){
@@ -140,17 +156,18 @@ app.whenReady().then(async()=>{
     win().isFocused=()=>true;win().webContents.focus();win().webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});await sleep(500);
     check('Esc closes history modal',await R(`document.getElementById('bitcoin-history-overlay').classList.contains('hidden')`));check('page back after modal',cur()!==null);check('no quit from Esc in modal',quitAttempts===0);
     const t0=tabs();await R(`window.electronAPI.invoke('show-screensaver')`);await sleep(1500);
-    await win().getBrowserView().webContents.executeJavaScript(`document.body.click();1`);await sleep(1200);
+    await attached().webContents.executeJavaScript(`document.body.click();1`);await sleep(1200);
     check('click dismisses screensaver',!(cur()||'').includes('Quotes')&&cur()!==null,cur());check('no leftover process',tabs()===t0,t0+'->'+tabs());
-    await R(`window.electronAPI.invoke('show-screensaver')`);await sleep(1200);win().getBrowserView().webContents.sendInputEvent({type:'keyDown',keyCode:'A'});await sleep(1200);
+    await R(`window.electronAPI.invoke('show-screensaver')`);await sleep(1200);attached().webContents.sendInputEvent({type:'keyDown',keyCode:'A'});await sleep(1200);
     check('key in screensaver dismisses',!(cur()||'').includes('Quotes'),cur());
     await R(`window.electronAPI.invoke('show-screensaver')`);await sleep(800);check('screensaver reopens',(cur()||'').includes('Quotes'),cur());await R(`window.electronAPI.invoke('hide-screensaver')`);await sleep(600);
-    const pageWc=win().getBrowserView().webContents;const u=pageWc.getURL();pageWc.forcefullyCrashRenderer();await sleep(9000);
+    const pageWc=attached().webContents;const u=pageWc.getURL();pageWc.forcefullyCrashRenderer();await sleep(9000);
     check('crashed page comes back',cur()===u&&await overlayHidden(),'cur='+cur()+' overlayHidden='+await overlayHidden());
     check('no CSP violations',csp.length===0,csp[0]||'');
    },
    async minimal(){await sleep(3000);check('urls-only config loads',cur()===U('a'),cur());check('loading cleared',await loadingGone());await openS();await saveS();check('save works',cur()===U('a'),cur());},
   })[SC]();}catch(e){check('scenario threw',false,e.stack);}
+  check('never more than one page view attached',maxKids<=1,maxKids);
   done(fails?1:0);
 });
 setTimeout(()=>{console.log('WATCHDOG ['+SC+']');global.__done=true;app.exit(3)},115000);

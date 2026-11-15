@@ -18,7 +18,7 @@
   "author": "Rom Kov",
   "license": "GPLv3",
   "devDependencies": {
-    "electron": "^37.2.6",
+    "electron": "^45.3.2",
     "electron-builder": "^26.0.12"
   },
   "build": {

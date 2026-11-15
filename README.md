@@ -22,8 +22,9 @@ Short video demo: https://www.youtube.com/watch?v=7DtQNCBLffI
 
 ## Requirements
 
-- Node.js
+- Node.js 22.12 or newer
 - npm
+- A 64-bit OS. Electron no longer ships 32-bit ARM builds, so on a Raspberry Pi use 64-bit Raspberry Pi OS.
 
 ## Hardware to make the same build
 
@@ -81,6 +82,14 @@ npm run dist
 
 The built applications will be available in the `dist/` directory.
 
+## Testing
+
+```bash
+npm test
+```
+
+This checks the facts file and then runs the app headless through a set of scenarios (slides, settings, Wi-Fi, autostart, screensaver, offline pages), using a throwaway profile and stubbed `nmcli`/`systemctl`, so your real config, Wi-Fi and services are never touched. `WINDOWED=1 npm test` runs the same scenarios in real windows on your desktop, which adds the checks that need a real screen. Keep hands off the mouse and keyboard while it runs, since real input can close the screensaver mid-check. On a Raspberry Pi, run one scenario at a time, e.g. `WINDOWED=1 SCENARIOS=main npm test`.
+
 ## To auto start it on system boot in linux
 You can either use Autostart option in the Settings or do it manually:
 
@@ -114,6 +123,8 @@ systemctl --user enable circle.service
 systemctl --user start circle.service
 
 ```
+
+On a Wayland desktop (the Raspberry Pi OS default) Circle runs as a native Wayland app. If the screen stays blank or touch input misbehaves, add `--ozone-platform=x11` after the AppImage path in `ExecStart` to run it through X11 instead. Toggling Autostart in Settings rewrites the service file, so re-add the flag if you do that.
 ## Moon Phase Color Emoji
 
 If you want some color and texture for the moon phase icon, make sure you have Noto Color Emoji font installed
